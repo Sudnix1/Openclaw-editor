@@ -1,0 +1,42 @@
+<!-- views/setup-websites.ejs -->
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-md-8 offset-md-2">
+      <div class="card">
+        <div class="card-header bg-primary text-white">
+          <h4 class="mb-0">Website Management Setup</h4>
+        </div>
+        <div class="card-body">
+          <div class="alert alert-info">
+            <h5><i class="fas fa-info-circle"></i> Website Management Features</h5>
+            <p>This will set up the multi-website management system, allowing you to:</p>
+            <ul>
+              <li>Manage multiple websites within one organization</li>
+              <li>Keep data (recipes, keywords, settings) separate per website</li>
+              <li>Have different WordPress settings for each website</li>
+              <li>Switch between websites easily</li>
+            </ul>
+          </div>
+          
+          <% if (locals.errorMessage) { %>
+            <div class="alert alert-danger">
+              <%= errorMessage %>
+            </div>
+          <% } %>
+          
+          <% if (locals.successMessage) { %>
+            <div class="alert alert-success">
+              <%= successMessage %>
+            </div>
+          <% } %>
+          
+          <p>Click the button below to set up the website management system:</p>
+          
+          <a href="/run-website-migration" class="btn btn-primary btn-lg">
+            <i class="fas fa-cogs"></i> Setup Website Management
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

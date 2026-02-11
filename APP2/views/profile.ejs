@@ -1,0 +1,251 @@
+<!-- views/profile.ejs -->
+<div class="row">
+  <div class="col-lg-12">
+    <div class="section-card mb-4">
+      <div class="section-header">
+        <h2><i class="bi bi-person-circle"></i> User Profile</h2>
+      </div>
+      <div class="section-body">
+        <div class="row">
+          <div class="col-md-3 text-center">
+            <div class="profile-avatar">
+              <%= user.name.charAt(0).toUpperCase() %>
+            </div>
+            <h3 class="mt-3"><%= user.name %></h3>
+            <p><%= user.email %></p>
+            <p><span class="badge bg-<%= user.role === 'admin' ? 'danger' : 'primary' %>"><%= user.role %></span></p>
+          </div>
+          <div class="col-md-9">
+            <div class="row">
+              <div class="col-md-4">
+                <div class="stat-card mb-3">
+                  <div class="stat-icon icon-blue">
+                    <i class="bi bi-journal-richtext"></i>
+                  </div>
+                  <div class="stat-info">
+                    <h3><%= stats.recipeCount || 0 %></h3>
+                    <p>Recipes Created</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="stat-card mb-3">
+                  <div class="stat-icon icon-green">
+                    <i class="bi bi-list-check"></i>
+                  </div>
+                  <div class="stat-info">
+                    <h3><%= stats.keywordCounts.processed || 0 %></h3>
+                    <p>Keywords Processed</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="stat-card mb-3">
+                  <div class="stat-icon icon-purple">
+                    <i class="bi bi-wordpress"></i>
+                  </div>
+                  <div class="stat-info">
+                    <h3><%= stats.wpPostCount || 0 %></h3>
+                    <p>Posts Published</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <h4 class="mt-3">Productivity Summary</h4>
+            <div class="progress mb-3">
+              <div class="progress-bar" role="progressbar" style="width: <%= Math.min(100, stats.totalContent * 5) %>%;" 
+                   aria-valuenow="<%= stats.totalContent %>" aria-valuemin="0" aria-valuemax="20">
+                <%= stats.totalContent %> / 20
+              </div>
+            </div>
+            
+            <p class="text-muted">
+              <% if (stats.totalContent > 20) { %>
+                <span class="badge bg-success">Excellent</span> You're a top performer! Your content creation is outstanding.
+              <% } else if (stats.totalContent > 10) { %>
+                <span class="badge bg-primary">Good</span> You're doing well! Keep up the good work.
+              <% } else if (stats.totalContent > 5) { %>
+                <span class="badge bg-warning">Average</span> You're on the right track. Try to increase your productivity.
+              <% } else { %>
+                <span class="badge bg-secondary">Getting Started</span> Just getting started! Let's create some great content.
+              <% } %>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-lg-6">
+    <div class="section-card">
+      <div class="section-header">
+        <h2><i class="bi bi-activity"></i> Recent Activity</h2>
+      </div>
+      <div class="section-body">
+        <% if (activity && activity.length > 0) { %>
+          <div class="activity-feed">
+            <% activity.forEach(function(item) { %>
+              <div class="activity-item">
+                <div class="activity-icon">
+                  <% if (item.action_type === 'create') { %>
+                    <i class="bi bi-plus-circle text-success"></i>
+                  <% } else if (item.action_type === 'update') { %>
+                    <i class="bi bi-pencil text-primary"></i>
+                  <% } else if (item.action_type === 'delete') { %>
+                    <i class="bi bi-trash text-danger"></i>
+                  <% } else if (item.action_type === 'publish') { %>
+                    <i class="bi bi-cloud-upload text-info"></i>
+                  <% } else { %>
+                    <i class="bi bi-check-circle text-secondary"></i>
+                  <% } %>
+                </div>
+                <div class="activity-content">
+                  <div class="activity-title">
+                    You <%= item.action_type %>d <%= item.entity_type.toLowerCase() %>
+                    <% if (item.entity_id) { %>
+                      <a href="/<%= item.entity_type.toLowerCase() %>/<%= item.entity_id %>">
+                        <%= item.details ? item.details.substring(0, 30) : '#' + item.entity_id.substring(0, 8) %>
+                      </a>
+                    <% } %>
+                  </div>
+                  <div class="activity-time">
+                    <%= moment(item.created_at).fromNow() %>
+                  </div>
+                </div>
+              </div>
+            <% }); %>
+          </div>
+        <% } else { %>
+          <p>No recent activity found.</p>
+        <% } %>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-lg-6">
+    <div class="section-card">
+      <div class="section-header">
+        <h2><i class="bi bi-pie-chart"></i> Content Breakdown</h2>
+      </div>
+      <div class="section-body">
+        <canvas id="contentPieChart" width="100%" height="250"></canvas>
+      </div>
+    </div>
+    
+    <div class="section-card mt-4">
+      <div class="section-header">
+        <h2><i class="bi bi-bar-chart"></i> Monthly Production</h2>
+      </div>
+      <div class="section-body">
+        <canvas id="monthlyChart" width="100%" height="250"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .profile-avatar {
+    width: 100px;
+    height: 100px;
+    background-color: #4e73df;
+    color: white;
+    font-size: 40px;
+    font-weight: bold;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Pie chart for content breakdown
+    const ctxPie = document.getElementById('contentPieChart').getContext('2d');
+    new Chart(ctxPie, {
+      type: 'pie',
+      data: {
+        labels: ['Recipes', 'Processed Keywords', 'Pending Keywords', 'Failed Keywords', 'WordPress Posts'],
+        datasets: [{
+          data: [
+            <%= stats.recipeCount || 0 %>, 
+            <%= stats.keywordCounts.processed || 0 %>, 
+            <%= stats.keywordCounts.pending || 0 %>, 
+            <%= stats.keywordCounts.failed || 0 %>, 
+            <%= stats.wpPostCount || 0 %>
+          ],
+          backgroundColor: [
+            'rgba(54, 162, 235, 0.7)',
+            'rgba(75, 192, 192, 0.7)',
+            'rgba(255, 206, 86, 0.7)',
+            'rgba(255, 99, 132, 0.7)',
+            'rgba(153, 102, 255, 0.7)'
+          ],
+          borderColor: [
+            'rgba(54, 162, 235, 1)',
+            'rgba(75, 192, 192, 1)',
+            'rgba(255, 206, 86, 1)',
+            'rgba(255, 99, 132, 1)',
+            'rgba(153, 102, 255, 1)'
+          ],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'bottom',
+          }
+        }
+      }
+    });
+    
+    // Monthly production chart
+    const ctxBar = document.getElementById('monthlyChart').getContext('2d');
+    
+    // Get the last 6 months
+    const months = [];
+    const currentDate = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const month = new Date(currentDate);
+      month.setMonth(currentDate.getMonth() - i);
+      months.push(month.toLocaleString('default', { month: 'short' }));
+    }
+    
+    // Sample data - in a real app, this would come from your backend
+    new Chart(ctxBar, {
+      type: 'bar',
+      data: {
+        labels: months,
+        datasets: [{
+          label: 'Content Created',
+          data: [
+            <%= Math.floor(Math.random() * 10) %>,
+            <%= Math.floor(Math.random() * 10) %>,
+            <%= Math.floor(Math.random() * 10) %>,
+            <%= Math.floor(Math.random() * 15) %>,
+            <%= Math.floor(Math.random() * 20) %>,
+            <%= stats.totalContent || 0 %>
+          ],
+          backgroundColor: 'rgba(75, 192, 192, 0.7)',
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              precision: 0
+            }
+          }
+        }
+      }
+    });
+  });
+</script>

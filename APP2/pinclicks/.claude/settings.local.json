@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm start)",
+      "Bash(tasklist:*)",
+      "Bash(findstr:*)",
+      "Bash(where chrome)",
+      "Bash(dir \"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe\")",
+      "Bash(taskkill:*)",
+      "Bash(copy:*)",
+      "Bash(npm install:*)",
+      "Bash(powershell \"Stop-Process -Name node -Force\")",
+      "Bash(dir /b)",
+      "Bash(cmd /c dir /b)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

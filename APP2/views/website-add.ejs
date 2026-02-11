@@ -1,0 +1,57 @@
+<!-- views/website-add.ejs -->
+<div class="container mt-4">
+  <div class="card shadow">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h3 class="mb-0">Add New Website</h3>
+      <a href="/websites" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Back to Websites
+      </a>
+    </div>
+    <div class="card-body">
+      <% if (locals.errorMessage) { %>
+        <div class="alert alert-danger">
+          <%= errorMessage %>
+        </div>
+      <% } %>
+
+      <form action="/websites/add" method="POST">
+        <div class="mb-3">
+          <label for="name" class="form-label">Website Name*</label>
+          <input type="text" class="form-control" id="name" name="name" required>
+          <div class="form-text">Enter a name to identify this website (e.g., "Main Blog", "Recipe Site")</div>
+        </div>
+
+        <div class="mb-3">
+          <label for="url" class="form-label">Website URL</label>
+          <input type="url" class="form-control" id="url" name="url" placeholder="https://example.com">
+          <div class="form-text">The full URL of your website (optional)</div>
+        </div>
+
+        <h4 class="mt-4 mb-3">WordPress Integration (Optional)</h4>
+        
+        <div class="mb-3">
+          <label for="wordpressApiUrl" class="form-label">WordPress API URL</label>
+          <input type="url" class="form-control" id="wordpressApiUrl" name="wordpressApiUrl" placeholder="https://example.com/wp-json">
+          <div class="form-text">The WordPress REST API base URL</div>
+        </div>
+
+        <div class="mb-3">
+          <label for="wordpressUsername" class="form-label">WordPress Username</label>
+          <input type="text" class="form-control" id="wordpressUsername" name="wordpressUsername">
+        </div>
+
+        <div class="mb-3">
+          <label for="wordpressPassword" class="form-label">WordPress Password/Application Password</label>
+          <input type="password" class="form-control" id="wordpressPassword" name="wordpressPassword">
+          <div class="form-text">For better security, use an application password instead of your main account password</div>
+        </div>
+
+        <div class="text-end">
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-save"></i> Add Website
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

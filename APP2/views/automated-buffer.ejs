@@ -1,0 +1,435 @@
+<!-- Automated Buffer System Dashboard -->
+        <div class="page-header">
+            <h1><i class="fas fa-robot"></i> Automated Buffer System</h1>
+            <p>Fully automated posting system that bypasses Cloudflare</p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <div class="stat-content">
+                    <h3><%= stats.scheduled || 0 %></h3>
+                    <p>Scheduled Posts</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <h3><%= stats.published || 0 %></h3>
+                    <p>Published Posts</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="stat-content">
+                    <h3><%= stats.failed || 0 %></h3>
+                    <p>Failed Posts</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-list"></i>
+                </div>
+                <div class="stat-content">
+                    <h3><%= stats.total || 0 %></h3>
+                    <p>Total Posts</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <div class="panel-header">
+                <h2><i class="fas fa-cogs"></i> Control Panel</h2>
+            </div>
+            <div class="panel-content">
+                <button id="processPostsBtn" class="btn btn-primary">
+                    <i class="fas fa-play"></i> Process Ready Posts
+                </button>
+                <button id="refreshStatsBtn" class="btn btn-secondary">
+                    <i class="fas fa-sync"></i> Refresh Stats
+                </button>
+            </div>
+        </div>
+
+        <!-- Posts Table -->
+        <div class="posts-section">
+            <div class="section-header">
+                <h2><i class="fas fa-list"></i> Recent Posts</h2>
+            </div>
+            
+            <div class="posts-table-container">
+                <table class="posts-table">
+                    <thead>
+                        <tr>
+                            <th>Recipe</th>
+                            <th>Title</th>
+                            <th>Status</th>
+                            <th>Scheduled</th>
+                            <th>Published</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (posts && posts.length > 0) { %>
+                            <% posts.forEach(post => { %>
+                                <tr>
+                                    <td>
+                                        <div class="recipe-info">
+                                            <div class="recipe-title">
+                                                <% 
+                                                const recipeTitle = post.facebook_title || post.recipe_title || 'Unknown Recipe';
+                                                const displayTitle = recipeTitle.length > 30 ? recipeTitle.substring(0, 30) + '...' : recipeTitle;
+                                                %>
+                                                <%= displayTitle %>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="post-title">
+                                            <%= post.title ? post.title.substring(0, 50) + '...' : 'No title' %>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="status-badge status-<%= post.status %>">
+                                            <% if (post.status === 'scheduled') { %>
+                                                <i class="fas fa-clock"></i> Scheduled
+                                            <% } else if (post.status === 'published') { %>
+                                                <i class="fas fa-check"></i> Published
+                                            <% } else if (post.status === 'failed') { %>
+                                                <i class="fas fa-times"></i> Failed
+                                            <% } %>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="datetime">
+                                            <%= post.scheduled_time ? new Date(post.scheduled_time).toLocaleDateString() : 'N/A' %>
+                                            <br>
+                                            <small><%= post.scheduled_time ? new Date(post.scheduled_time).toLocaleTimeString() : '' %></small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="datetime">
+                                            <%= post.posted_at ? new Date(post.posted_at).toLocaleDateString() : 'Not yet' %>
+                                            <br>
+                                            <small><%= post.posted_at ? new Date(post.posted_at).toLocaleTimeString() : '' %></small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <% if (post.image_url && post.image_url !== 'direct_url_used') { %>
+                                                <a href="<%= post.image_url %>" target="_blank" class="btn-icon" title="View Image">
+                                                    <i class="fas fa-image"></i>
+                                                </a>
+                                            <% } %>
+                                            <% if (post.direct_link) { %>
+                                                <a href="<%= post.direct_link %>" target="_blank" class="btn-icon" title="View Recipe">
+                                                    <i class="fas fa-external-link-alt"></i>
+                                                </a>
+                                            <% } %>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="6" class="no-data">
+                                    <i class="fas fa-inbox"></i>
+                                    <p>No automated posts yet</p>
+                                    <small>Posts will appear here when you use the automated Buffer system</small>
+                                </td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- How It Works -->
+        <div class="how-it-works">
+            <div class="section-header">
+                <h2><i class="fas fa-info-circle"></i> How Automated Buffer Works</h2>
+            </div>
+            <div class="info-grid">
+                <div class="info-card">
+                    <div class="info-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>Bypasses Cloudflare</h3>
+                    <p>Uses direct image URLs from your server instead of uploading to Buffer's protected endpoints.</p>
+                </div>
+                <div class="info-card">
+                    <div class="info-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h3>100% Automated</h3>
+                    <p>Schedules posts automatically without manual intervention or Cloudflare challenges.</p>
+                </div>
+                <div class="info-card">
+                    <div class="info-icon">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <h3>Local Storage</h3>
+                    <p>Stores all post data locally in your database for complete control and reliability.</p>
+                </div>
+                <div class="info-card">
+                    <div class="info-icon">
+                        <i class="fas fa-link"></i>
+                    </div>
+                    <h3>Direct URLs</h3>
+                    <p>Uses your server images directly - no uploads needed, just direct links to content.</p>
+                </div>
+            </div>
+        </div>
+
+    <script>
+        // Process ready posts
+        document.getElementById('processPostsBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('processPostsBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            
+            try {
+                const response = await fetch('/api/automated-buffer/process', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(`✅ Success: ${result.message}`);
+                    location.reload();
+                } else {
+                    alert(`❌ Error: ${result.message}`);
+                }
+            } catch (error) {
+                alert('❌ Error processing posts: ' + error.message);
+            }
+            
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-play"></i> Process Ready Posts';
+        });
+        
+        // Refresh stats
+        document.getElementById('refreshStatsBtn').addEventListener('click', () => {
+            location.reload();
+        });
+        
+        // Auto-refresh every 30 seconds
+        setInterval(() => {
+            fetch('/api/automated-buffer/stats')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update stats cards
+                        document.querySelector('.stat-card:nth-child(1) h3').textContent = data.stats.scheduled || 0;
+                        document.querySelector('.stat-card:nth-child(2) h3').textContent = data.stats.published || 0;
+                        document.querySelector('.stat-card:nth-child(3) h3').textContent = data.stats.failed || 0;
+                        document.querySelector('.stat-card:nth-child(4) h3').textContent = data.stats.total || 0;
+                    }
+                })
+                .catch(error => console.log('Auto-refresh error:', error));
+        }, 30000);
+    </script>
+
+<style>
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: var(--dark-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .stat-icon {
+            background: var(--primary-purple);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        
+        .stat-content h3 {
+            font-size: 2rem;
+            margin: 0;
+            color: var(--text-primary);
+        }
+        
+        .stat-content p {
+            margin: 0;
+            color: var(--text-secondary);
+        }
+        
+        .control-panel, .posts-section, .how-it-works {
+            background: var(--dark-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        
+        .panel-header, .section-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--dark-elevated);
+        }
+        
+        .panel-content {
+            padding: 1.5rem;
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .posts-table-container {
+            overflow-x: auto;
+        }
+        
+        .posts-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .posts-table th, .posts-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .posts-table th {
+            background: var(--dark-elevated);
+            font-weight: 600;
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .status-scheduled {
+            background: rgba(255, 193, 7, 0.1);
+            color: #ffc107;
+            border: 1px solid rgba(255, 193, 7, 0.2);
+        }
+        
+        .status-published {
+            background: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+            border: 1px solid rgba(40, 167, 69, 0.2);
+        }
+        
+        .status-failed {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+            border: 1px solid rgba(220, 53, 69, 0.2);
+        }
+        
+        .datetime {
+            font-size: 0.875rem;
+        }
+        
+        .datetime small {
+            color: var(--text-secondary);
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .btn-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            background: var(--primary-purple);
+            color: white;
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-icon:hover {
+            background: var(--primary-purple-hover);
+            transform: scale(1.05);
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+        
+        .no-data i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            padding: 1.5rem;
+        }
+        
+        .info-card {
+            text-align: center;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--dark-elevated);
+        }
+        
+        .info-icon {
+            background: var(--accent-teal);
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin: 0 auto 1rem;
+        }
+        
+        .info-card h3 {
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+        
+        .info-card p {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+</style>

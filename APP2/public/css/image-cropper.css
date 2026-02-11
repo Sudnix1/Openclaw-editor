@@ -1,0 +1,240 @@
+/* Simplified Image Cropper Styles */
+
+/* Modal sizing for grid layout */
+#cropModal .modal-dialog {
+  max-width: 900px; /* Increased to accommodate 2 columns */
+  margin: 1rem auto;
+}
+
+#cropModal .modal-content {
+  padding: 24px;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  border: none;
+  max-height: 95vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#cropModal .modal-body {
+  overflow-y: auto;
+  flex: 1;
+  max-height: calc(95vh - 140px); /* Account for header and footer */
+}
+
+#cropModal .modal-header {
+  border-bottom: none;
+  padding-bottom: 16px;
+  text-align: center;
+}
+
+#cropModal .modal-header .modal-title {
+  color: #2d3748;
+  font-size: 18px;
+  font-weight: 500;
+  width: 100%;
+  text-align: center;
+}
+
+#cropModal .modal-header .btn-close {
+  position: absolute;
+  right: 20px;
+  top: 20px;
+}
+
+#cropModal .modal-footer {
+  border-top: none;
+  padding-top: 16px;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* Simplified crop container */
+#cropContainer {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* 2 columns */
+  gap: 20px; /* Space between images */
+  padding: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Clean crop item styling - 2x2 grid layout */
+.crop-item {
+  width: 100%;
+  margin: 0; /* Remove auto centering for grid */
+  padding: 0;
+  background: none;
+  box-shadow: none;
+  border-radius: 0;
+  display: block !important; /* Force all images to show */
+}
+
+.crop-item:hover {
+  transform: none;
+}
+
+/* Add separator between multiple images */
+.crop-item:not(:last-child)::after {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 1px;
+  background: #e2e8f0;
+  margin: 16px 0;
+}
+
+/* Override any existing rules that might hide images */
+#cropContainer .crop-item {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.crop-title {
+  text-align: center;
+  font-weight: 500;
+  margin-bottom: 16px;
+  color: #4a5568;
+  font-size: 14px;
+  padding: 0;
+  background: none;
+  border-radius: 0;
+}
+
+.crop-img-container {
+  width: 100%;
+  height: 300px; /* Slightly smaller for grid layout */
+  background-color: #f7fafc;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.crop-img-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* Show full image */
+}
+
+/* Simplified buttons */
+#saveCroppedImages {
+  background: #4299e1;
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+#saveCroppedImages:hover {
+  background: #3182ce;
+}
+
+#saveCroppedImages:disabled {
+  background: #a0aec0;
+  cursor: not-allowed;
+}
+
+/* Override Cropper.js styles for simplified look */
+.cropper-container {
+  border-radius: 6px;
+}
+
+.cropper-view-box {
+  outline: 2px solid #4299e1 !important;
+  box-shadow: none !important;
+}
+
+.cropper-face {
+  background-color: rgba(66, 153, 225, 0.1) !important;
+}
+
+/* Hide all cropper handles and lines for simplicity */
+.cropper-point,
+.cropper-line {
+  display: none !important;
+}
+
+/* Hide cropper center point */
+.cropper-center {
+  display: none !important;
+}
+
+/* Simplified drag cursor */
+.cropper-crop {
+  cursor: move !important;
+}
+
+/* Remove all complex elements */
+.crop-counter,
+.crop-navigation,
+.crop-nav-dot {
+  display: none !important;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  #cropModal .modal-dialog {
+    max-width: 95%;
+    margin: 0.5rem auto;
+  }
+  
+  .crop-img-container {
+    height: 250px;
+  }
+  
+  #cropModal .modal-content {
+    padding: 16px;
+  }
+}
+
+/* Remove any advanced controls */
+.crop-controls,
+.preset-section,
+.advanced-controls {
+  display: none !important;
+}
+
+/* Ensure only one image is shown at a time */
+.crop-item:not(:first-child) {
+  display: none;
+}
+
+/* Navigation for multiple images (simple) */
+.crop-navigation-simple {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+
+.crop-nav-simple {
+  padding: 6px 12px;
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #4a5568;
+  transition: all 0.2s;
+}
+
+.crop-nav-simple:hover {
+  background: #edf2f7;
+  border-color: #cbd5e0;
+}
+
+.crop-nav-simple.active {
+  background: #4299e1;
+  color: white;
+  border-color: #4299e1;
+}

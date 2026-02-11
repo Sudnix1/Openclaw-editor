@@ -1,0 +1,8 @@
+2026/01/24-00:45:02.921 8af4 Reusing MANIFEST C:\Users\ZITAN\OneDrive\Bureau\App vf 17-12-2025\APP2\pinclicks\chrome-profile-new\Default\Local Storage\leveldb/MANIFEST-000001
+2026/01/24-00:45:02.928 8af4 Recovering log #947
+2026/01/24-00:45:02.932 8af4 Reusing old log C:\Users\ZITAN\OneDrive\Bureau\App vf 17-12-2025\APP2\pinclicks\chrome-profile-new\Default\Local Storage\leveldb/000947.log 
+2026/01/24-00:46:02.947 6cbc Level-0 table #951: started
+2026/01/24-00:46:02.953 6cbc Level-0 table #951: 34485 bytes OK
+2026/01/24-00:46:02.958 6cbc Delete type=0 #947
+2026/01/24-00:46:56.464 6cbc Level-0 table #953: started
+2026/01/24-00:46:56.477 6cbc Level-0 table #953: 78300 bytes OK

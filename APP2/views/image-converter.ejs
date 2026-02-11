@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PNG to WebP Converter - Free Tool</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .drop-zone {
+            border: 3px dashed #007bff;
+            border-radius: 10px;
+            padding: 60px 20px;
+            text-align: center;
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: #0056b3;
+            background: #e3f2fd;
+        }
+        .image-preview {
+            max-width: 150px;
+            max-height: 150px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+        .conversion-item {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .progress-custom {
+            height: 8px;
+        }
+        .quality-slider {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <!-- Header -->
+        <div class="text-center mb-5">
+            <h1 class="display-4 text-primary">
+                <i class="bi bi-image"></i> PNG to WebP Converter
+            </h1>
+            <p class="lead text-muted">Convert your PNG images to WebP format instantly - No uploads, 100% client-side processing</p>
+            <div class="badge bg-success mb-3">✅ No server storage • ✅ Privacy friendly • ✅ Bulk processing</div>
+        </div>
+
+        <!-- Quality Setting -->
+        <div class="row justify-content-center mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <label for="qualitySlider" class="form-label">
+                            <i class="bi bi-sliders"></i> WebP Quality: <span id="qualityValue">80</span>%
+                        </label>
+                        <input type="range" class="form-range quality-slider" id="qualitySlider" 
+                               min="10" max="100" value="80" step="5">
+                        <small class="text-muted">Lower quality = smaller file size</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload Area -->
+        <div class="row justify-content-center mb-4">
+            <div class="col-lg-8">
+                <div class="drop-zone" id="dropZone">
+                    <i class="bi bi-cloud-upload display-1 text-primary mb-3"></i>
+                    <h4>Drag & Drop PNG Images Here</h4>
+                    <p class="text-muted mb-3">or click to browse your computer</p>
+                    <button type="button" class="btn btn-primary">
+                        <i class="bi bi-folder2-open"></i> Choose Files
+                    </button>
+                    <input type="file" id="fileInput" multiple accept=".png,image/png" class="d-none">
+                    <div class="mt-3 text-muted small">
+                        <i class="bi bi-info-circle"></i> Supports multiple PNG files • Max recommended: 50 images
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Processing Stats -->
+        <div class="row justify-content-center mb-4" id="statsSection" style="display: none;">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-3">
+                                <h5 class="text-primary mb-1" id="totalFiles">0</h5>
+                                <small class="text-muted">Files Selected</small>
+                            </div>
+                            <div class="col-md-3">
+                                <h5 class="text-success mb-1" id="convertedFiles">0</h5>
+                                <small class="text-muted">Converted</small>
+                            </div>
+                            <div class="col-md-3">
+                                <h5 class="text-info mb-1" id="totalSavings">0%</h5>
+                                <small class="text-muted">Size Reduction</small>
+                            </div>
+                            <div class="col-md-3">
+                                <button class="btn btn-success" id="downloadAllBtn" style="display: none;">
+                                    <i class="bi bi-download"></i> Download All
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conversion Results -->
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div id="conversionResults"></div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-5 text-muted">
+            <p><i class="bi bi-shield-check"></i> Your images never leave your browser - 100% private processing</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script>
+        let selectedFiles = [];
+        let convertedImages = [];
+        let currentQuality = 0.8;
+
+        // DOM Elements
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const qualitySlider = document.getElementById('qualitySlider');
+        const qualityValue = document.getElementById('qualityValue');
+        const statsSection = document.getElementById('statsSection');
+        const conversionResults = document.getElementById('conversionResults');
+        const downloadAllBtn = document.getElementById('downloadAllBtn');
+
+        // Quality slider
+        qualitySlider.addEventListener('input', (e) => {
+            currentQuality = e.target.value / 100;
+            qualityValue.textContent = e.target.value;
+        });
+
+        // File drop and selection
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        // Handle selected files
+        function handleFiles(files) {
+            selectedFiles = Array.from(files).filter(file => file.type === 'image/png');
+            
+            if (selectedFiles.length === 0) {
+                alert('Please select PNG images only.');
+                return;
+            }
+
+            if (selectedFiles.length > 50) {
+                alert('Please select maximum 50 images for optimal performance.');
+                selectedFiles = selectedFiles.slice(0, 50);
+            }
+
+            updateStats();
+            convertImages();
+        }
+
+        // Update statistics
+        function updateStats() {
+            document.getElementById('totalFiles').textContent = selectedFiles.length;
+            document.getElementById('convertedFiles').textContent = convertedImages.length;
+            statsSection.style.display = selectedFiles.length > 0 ? 'block' : 'none';
+        }
+
+        // Convert images to WebP
+        async function convertImages() {
+            conversionResults.innerHTML = '';
+            convertedImages = [];
+            
+            for (let i = 0; i < selectedFiles.length; i++) {
+                const file = selectedFiles[i];
+                await convertSingleImage(file, i);
+            }
+            
+            calculateSavings();
+            downloadAllBtn.style.display = convertedImages.length > 0 ? 'block' : 'none';
+        }
+
+        // Convert single image
+        function convertSingleImage(file, index) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        // Create conversion item UI
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'conversion-item';
+                        itemDiv.innerHTML = `
+                            <div class="row align-items-center">
+                                <div class="col-md-2">
+                                    <img src="${e.target.result}" class="image-preview" alt="Original">
+                                </div>
+                                <div class="col-md-3">
+                                    <strong>${file.name}</strong><br>
+                                    <small class="text-muted">Original: ${formatFileSize(file.size)}</small>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="progress progress-custom mb-2">
+                                        <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                                    </div>
+                                    <span class="small" id="status-${index}">Converting...</span>
+                                </div>
+                                <div class="col-md-2 text-center" id="savings-${index}">
+                                    <span class="badge bg-light">Processing...</span>
+                                </div>
+                                <div class="col-md-2 text-end" id="download-${index}">
+                                    <!-- Download button will appear here -->
+                                </div>
+                            </div>
+                        `;
+                        conversionResults.appendChild(itemDiv);
+
+                        // Convert to WebP
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        
+                        ctx.drawImage(img, 0, 0);
+                        
+                        // Convert to WebP
+                        canvas.toBlob((webpBlob) => {
+                            const progressBar = itemDiv.querySelector('.progress-bar');
+                            const statusEl = document.getElementById(`status-${index}`);
+                            const savingsEl = document.getElementById(`savings-${index}`);
+                            const downloadEl = document.getElementById(`download-${index}`);
+                            
+                            progressBar.style.width = '100%';
+                            progressBar.classList.add('bg-success');
+                            statusEl.innerHTML = '<i class="bi bi-check-circle text-success"></i> Complete';
+                            
+                            // Calculate savings
+                            const savings = Math.round((1 - webpBlob.size / file.size) * 100);
+                            savingsEl.innerHTML = `<span class="badge bg-success">-${savings}%</span>`;
+                            
+                            // Create download button
+                            const webpFileName = file.name.replace('.png', '.webp');
+                            downloadEl.innerHTML = `
+                                <button class="btn btn-sm btn-outline-primary" onclick="downloadSingle('${webpFileName}', ${index})">
+                                    <i class="bi bi-download"></i> Download
+                                </button>
+                            `;
+                            
+                            // Store for bulk download
+                            convertedImages.push({
+                                name: webpFileName,
+                                blob: webpBlob,
+                                originalSize: file.size,
+                                newSize: webpBlob.size
+                            });
+                            
+                            updateStats();
+                            resolve();
+                            
+                        }, 'image/webp', currentQuality);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Calculate total savings
+        function calculateSavings() {
+            if (convertedImages.length === 0) return;
+            
+            const totalOriginalSize = convertedImages.reduce((sum, img) => sum + img.originalSize, 0);
+            const totalNewSize = convertedImages.reduce((sum, img) => sum + img.newSize, 0);
+            const totalSavings = Math.round((1 - totalNewSize / totalOriginalSize) * 100);
+            
+            document.getElementById('totalSavings').textContent = totalSavings + '%';
+        }
+
+        // Download single file
+        window.downloadSingle = function(fileName, index) {
+            const img = convertedImages[index];
+            if (img) {
+                const url = URL.createObjectURL(img.blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+        };
+
+        // Download all as ZIP
+        downloadAllBtn.addEventListener('click', async () => {
+            if (convertedImages.length === 0) return;
+            
+            downloadAllBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Creating ZIP...';
+            downloadAllBtn.disabled = true;
+            
+            const zip = new JSZip();
+            
+            // Add all converted images to ZIP
+            for (const img of convertedImages) {
+                zip.file(img.name, img.blob);
+            }
+            
+            // Generate and download ZIP
+            const zipBlob = await zip.generateAsync({ type: 'blob' });
+            const url = URL.createObjectURL(zipBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `converted-webp-images-${Date.now()}.zip`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            downloadAllBtn.innerHTML = '<i class="bi bi-download"></i> Download All';
+            downloadAllBtn.disabled = false;
+        });
+
+        // Utility function
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+    </script>
+</body>
+</html>

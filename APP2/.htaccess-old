@@ -1,0 +1,19 @@
+DirectoryIndex Disabled
+
+
+RewriteEngine On
+
+
+RewriteBase /
+
+
+# Rediriger les requetes index.php vers la racine (votre Dashboard Node.js)
+
+
+RewriteRule ^index\.php$ [R=301,L]
+
+
+# Puis rediriger tout vers Node.js
+
+
+RewriteRule ^(.*)$ http://127.0.0.1:3000/$1 [P,L]

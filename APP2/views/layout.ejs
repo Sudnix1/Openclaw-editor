@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof title !== 'undefined' ? title : 'RecipeGen AI' %></title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Gagalin Font for Pinterest Images -->
+  <link href="https://fonts.googleapis.com/css2?family=Gagalin&display=swap" rel="stylesheet">
+  <!-- Permanent Marker Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+  <!-- Updated Sidebar Styles -->
+  <style>
+    /* Sidebar styling */
+    .sidebar {
+      position: fixed;
+      width: 16.666667%; /* Equivalent to col-md-2 */
+      background-color: #1a1e35; /* Consistent dark sidebar */
+      color: white;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      z-index: 1020;
+    }
+    
+    .sidebar-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 1rem;
+      overflow-y: auto; /* Allow scrolling for the main content */
+    }
+    
+    .sidebar-header {
+      margin-bottom: 1rem;
+    }
+    
+    .sidebar-brand {
+      font-size: 1.5rem;
+      color: #ffffff;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    
+    /* Navigation section - this will scroll if needed */
+    .nav-section {
+      flex: 1;
+      overflow-y: auto;
+      padding-bottom: 1rem;
+    }
+    
+    .sidebar-heading {
+      font-size: 0.8rem;
+      font-weight: bold;
+      margin: 1.5rem 0 0.5rem 0;
+      color: rgba(255, 255, 255, 0.6);
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+    }
+    
+    .nav-link {
+      color: white;
+      display: flex;
+      align-items: center;
+      padding: 0.5rem 0.8rem;
+      border-radius: 8px;
+      margin: 2px 0;
+      transition: all 0.2s ease;
+    }
+    
+    .nav-link i {
+      margin-right: 10px;
+      width: 20px;
+      text-align: center;
+      font-size: 16px;
+    }
+    
+    .nav-link.active {
+      color: #3cd5af;
+      background-color: rgba(110, 71, 204, 0.15);
+      font-weight: 500;
+    }
+    
+    .nav-link:hover:not(.active) {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    /* Website selector styling - enhanced */
+    .website-selector {
+      margin-bottom: 15px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .website-selector .dropdown-toggle {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      color: white;
+      background-color: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      padding: 10px 15px;
+      text-align: left;
+      transition: all 0.2s ease;
+    }
+    
+    .website-selector .dropdown-toggle:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .website-selector .dropdown-toggle i {
+      margin-right: 8px;
+      color: #6e47cc;
+    }
+    
+    .website-selector .dropdown-menu {
+      width: 100%;
+      background-color: #232a47;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      margin-top: 5px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .website-selector .dropdown-item {
+      color: white;
+      padding: 8px 15px;
+      border-radius: 4px;
+      margin: 2px 5px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .website-selector .dropdown-item:hover {
+      background-color: rgba(110, 71, 204, 0.1);
+    }
+    
+    .website-selector .dropdown-item.active {
+      background-color: #6e47cc;
+      color: white;
+    }
+    
+    /* User profile styling - now part of bottom section */
+    .user-profile-widget {
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      margin-top: auto; /* Push to bottom of available space */
+    }
+    
+    .user-avatar {
+      background-color: #1cc88a; /* Admin color */
+      min-width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      margin-right: 10px;
+    }
+    
+    .user-info {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: calc(100% - 46px); /* Avatar width + margin */
+    }
+    
+    /* Sidebar footer for logout */
+    .sidebar-footer {
+      padding: 15px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      background-color: #1a1e35; /* Match sidebar color */
+    }
+    
+    /* Logout link styling */
+    .sidebar-footer .nav-link.text-danger {
+      color: #ff5c75 !important;
+      font-weight: 500;
+    }
+    
+    .sidebar-footer .nav-link.text-danger:hover {
+      background-color: rgba(255, 92, 117, 0.1);
+    }
+    
+    /* Mobile sidebar toggle */
+    .toggle-sidebar {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      z-index: 1030;
+      background: #6e47cc;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      display: none;
+    }
+    
+    /* Login container styling */
+    .login-container {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    
+    /* Main content area */
+    .main-content {
+      padding: 20px;
+    }
+    
+    /* Dashboard header */
+    .dashboard-header {
+      margin-bottom: 20px;
+    }
+    
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+      .toggle-sidebar {
+        display: flex;
+      }
+      
+      .sidebar {
+        position: fixed;
+        left: -250px;
+        width: 250px;
+        z-index: 1030;
+        transition: left 0.3s ease;
+      }
+      
+      .sidebar.show {
+        left: 0;
+      }
+      
+      .main-content {
+        width: 100%;
+        margin-left: 0;
+        padding-top: 50px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container-fluid">
+    <% if (locals.needsWebsiteSetup && locals.user && locals.user.role === 'admin') { %>
+      <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <strong>Website Management Not Set Up</strong> - Your application is missing the website management tables. 
+        <a href="/setup-websites" class="alert-link">Click here to set up website management</a>.
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    <% } %>
+    
+    <div class="row">
+      <% if (locals.isAuthenticated) { %>
+        <!-- Sidebar - Only show when logged in -->
+        <div class="col-md-2 sidebar-container p-0">
+          <div class="sidebar">
+            <div class="sidebar-content">
+              <div class="sidebar-header">
+                <h1 class="sidebar-brand font-handwritten-accent">RecipeGen AI</h1>
+              </div>
+              
+              <!-- Website Selector Dropdown -->
+              <div class="website-selector">
+                <div class="dropdown">
+                  <button class="dropdown-toggle" type="button" id="websiteDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-globe"></i> 
+                    <% if (locals.websites && locals.websites.length > 0) { %>
+                      <% const currentWebsite = locals.websites.find(w => w.id === locals.currentWebsiteId) || locals.websites[0]; %>
+                      <%= currentWebsite ? currentWebsite.name : 'Select Website' %>
+                    <% } else { %>
+                      Select Website
+                    <% } %>
+                  </button>
+                  <ul class="dropdown-menu" aria-labelledby="websiteDropdown">
+                    <% if (locals.websites && locals.websites.length > 0) { %>
+                      <% locals.websites.forEach(website => { %>
+                        <li>
+                          <form action="/websites/switch" method="POST" style="margin:0">
+                            <input type="hidden" name="websiteId" value="<%= website.id %>">
+                            <input type="hidden" name="returnUrl" value="<%= locals.originalUrl || req.originalUrl %>">
+                            <button type="submit" class="dropdown-item <%= locals.currentWebsiteId === website.id ? 'active' : '' %>">
+                              <%= website.name %>
+                              <% if (locals.currentWebsiteId === website.id) { %>
+                                <i class="fas fa-check ms-2"></i>
+                              <% } %>
+                            </button>
+                          </form>
+                        </li>
+                      <% }); %>
+                      <% if (locals.isAdmin) { %>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/websites"><i class="fas fa-cog"></i> Manage Websites</a></li>
+                      <% } %>
+                    <% } else { %>
+                      <li><span class="dropdown-item disabled">No websites available</span></li>
+                    <% } %>
+                  </ul>
+                </div>
+              </div>
+              
+              <!-- Navigation section with scrolling -->
+              <div class="nav-section">
+                <!-- MAIN SECTION - All users can see this -->
+                <h6 class="sidebar-heading">MAIN</h6>
+                <ul class="nav flex-column">
+                  <li class="nav-item">
+                    <a class="nav-link <%= activePage === 'dashboard' ? 'active' : '' %>" href="/">
+                      <i class="bi bi-house-door"></i> Dashboard
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link <%= activePage === 'recipes' ? 'active' : '' %>" href="/recipes">
+                      <i class="bi bi-file-text"></i> Browse Recipes
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link <%= activePage === 'xlsx-recipes' ? 'active' : '' %>" href="/xlsx-recipes">
+                      <i class="bi bi-file-earmark-spreadsheet" style="color: #e65100;"></i> XLSX Browse Recipes
+                    </a>
+                  </li>
+                </ul>
+                
+                <!-- GENERATE SECTION - Only show specific items to employees -->
+                <h6 class="sidebar-heading">GENERATE</h6>
+                <ul class="nav flex-column">
+                  <% if (locals.user && locals.user.role === 'admin') { %>
+                  
+                  <% } %>
+                  
+                  <!-- All users (both admin and employee) can see Keywords Manager -->
+                  <li class="nav-item">
+                    <a class="nav-link <%= activePage === 'keywords' ? 'active' : '' %>" href="/keywords">
+                      <i class="bi bi-list"></i> Keywords Manager
+                    </a>
+                  </li>
+
+                  <!-- GPT XLSX Manager -->
+                  <li class="nav-item">
+                    <a class="nav-link <%= activePage === 'gpt-xlsx-manager' ? 'active' : '' %>" href="/gpt-xlsx-manager">
+                      <i class="bi bi-file-earmark-spreadsheet"></i> GPT XLSX Manager
+                    </a>
+                  </li>
+
+                  <!-- Public Image Converter Tool -->
+                  <li class="nav-item">
+                    <a class="nav-link <%= activePage === 'image-converter' ? 'active' : '' %>" href="/image-converter">
+                      <i class="bi bi-image"></i> PNG to WebP Converter
+                    </a>
+                  </li>
+                  
+                  
+                  
+                  
+                  <!-- Discord Settings - Available to employees only -->
+                  <% if (user && user.role === 'employee') { %>
+                  <li class="nav-item">
+                    <a class="nav-link <%= activePage === 'employee-discord' ? 'active' : '' %>" href="/employee-discord">
+                      <i class="fab fa-discord"></i> Discord Settings
+                    </a>
+                  </li>
+                  <% } %>
+                 
+                </ul>
+
+
+                
+                <!-- ADMIN SECTION - Only shown to admins -->
+                <% if (locals.user && locals.user.role === 'admin') { %>
+                  <h6 class="sidebar-heading">ADMIN</h6>
+                  <ul class="nav flex-column">
+                    <li class="nav-item">
+                      <a class="nav-link <%= activePage === 'users' ? 'active' : '' %>" href="/users">
+                        <i class="bi bi-people"></i> User Management
+                      </a>
+                    </li>
+
+                    <li class="nav-item">
+    <a class="nav-link" href="/image-queue">
+        <i class="fas fa-clock"></i> Image Queue
+    </a>
+</li>
+                    <li class="nav-item">
+                      <a class="nav-link <%= activePage === 'settings' ? 'active' : '' %>" href="/settings">
+                        <i class="bi bi-gear"></i> Settings
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link <%= activePage === 'wordpress-settings' ? 'active' : '' %>" href="/wordpress-settings">
+                        <i class="bi bi-wordpress"></i> WordPress Settings
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link <%= activePage === 'websites' ? 'active' : '' %>" href="/websites">
+                        <i class="bi bi-globe"></i> Website Management
+                      </a>
+                    </li>
+                  </ul>
+                <% } %>
+              </div>
+              
+              <% if (locals.user) { %>
+                <!-- User profile widget - now positioned at the bottom -->
+                <div class="user-profile-widget d-flex align-items-center">
+                  <a href="/profile" class="nav-link d-flex align-items-center w-100">
+                    <div class="user-avatar" style="background-color: <%= locals.user && locals.user.role === 'admin' ? '#1cc88a' : '#4e73df' %>;">
+                      <%= locals.user && locals.user.name ? locals.user.name.charAt(0).toUpperCase() : 'U' %>
+                    </div>
+                    <div class="user-info">
+                      <div style="font-size: 0.9rem;"><%= locals.user && locals.user.name %></div>
+                      <div style="font-size: 0.75rem;">
+                        <span class="badge <%= locals.user && locals.user.role === 'admin' ? 'bg-success' : 'bg-primary' %>">
+                          <%= locals.user && locals.user.role %>
+                        </span>
+                        <% if (locals.user && locals.user.role === 'employee') { %>
+                          <span class="badge bg-warning" title="Total content created">
+                            <i class="bi bi-star-fill"></i> <%= locals.user.stats ? locals.user.stats.totalContent : '0' %>
+                          </span>
+                        <% } %>
+                      </div>
+                    </div>
+                  </a>
+                </div>
+              <% } %>
+            </div>
+            
+            <!-- Logout button at the bottom -->
+            <div class="sidebar-footer">
+              <a href="/logout" class="nav-link text-danger">
+                <i class="bi bi-box-arrow-right"></i> Logout
+              </a>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Main content area - adjusted when sidebar is visible -->
+        <div class="col-md-10 main-content">
+          <!-- Mobile menu toggle button -->
+          <button id="toggle-sidebar" class="toggle-sidebar d-md-none">
+            <i class="bi bi-list"></i>
+          </button>
+          
+          <div class="dashboard-header">
+            <h1><%= typeof pageTitle !== 'undefined' ? pageTitle : 'Dashboard' %></h1>
+          </div>
+          
+          <%- body %>
+        </div>
+      <% } else { %>
+        <!-- Full width content when not logged in (login/register pages) -->
+        <div class="col-12 login-container">
+          <%- body %>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Website switching function for dropdown -->
+  <script>
+    function switchWebsite(websiteId) {
+      fetch('/api/website-switch', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ websiteId: websiteId })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Show toast notification if available
+          if (typeof showToast === 'function') {
+            showToast(`Switched to ${data.website.name}`, 'success');
+            setTimeout(() => {
+              window.location.reload();
+            }, 1000);
+          } else {
+            // Simple alert as fallback
+            alert(`Switched to ${data.website.name}`);
+            window.location.reload();
+          }
+        } else {
+          alert(`Error: ${data.message}`);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while switching websites');
+      });
+    }
+  </script>
+
+  <!-- Mobile sidebar toggle functionality -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Mobile sidebar toggle
+      const toggleSidebarBtn = document.getElementById('toggle-sidebar');
+      const sidebar = document.querySelector('.sidebar');
+      
+      if (toggleSidebarBtn && sidebar) {
+        toggleSidebarBtn.addEventListener('click', function() {
+          sidebar.classList.toggle('show');
+        });
+        
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+          const isClickInsideSidebar = sidebar.contains(event.target);
+          const isClickOnToggleBtn = toggleSidebarBtn.contains(event.target);
+          
+          if (!isClickInsideSidebar && !isClickOnToggleBtn && sidebar.classList.contains('show')) {
+            sidebar.classList.remove('show');
+          }
+        });
+      }
+    });
+
+    
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="/js/main.js"></script>
+  <script src="/js/website-switcher.js"></script>
+
+  <!-- Add this right before the closing </body> tag in layout.ejs -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Force sidebar links to have correct colors on all pages
+    const navLinks = document.querySelectorAll('.sidebar .nav-link:not(.active)');
+    navLinks.forEach(link => {
+      link.style.color = 'white';
+    });
+    
+    const activeNavLinks = document.querySelectorAll('.sidebar .nav-link.active');
+    activeNavLinks.forEach(link => {
+      link.style.color = '#3cd5af';
+      link.style.backgroundColor = 'rgba(110, 71, 204, 0.15)';
+      link.style.fontWeight = '500';
+    });
+    
+    // Prevent any inherited or conflicting styles
+    document.querySelectorAll('.sidebar a').forEach(link => {
+      link.style.transition = 'all 0.2s ease';
+    });
+  });
+</script>
+</body>
+</html>

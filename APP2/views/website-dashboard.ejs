@@ -1,0 +1,128 @@
+<!-- views/website-dashboard.ejs -->
+<%- include('layout', { title: 'Website Dashboard' }) %>
+
+<div class="container mt-4">
+  <div class="card shadow mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <div>
+        <h3 class="mb-0"><%= website.name %> Dashboard</h3>
+        <% if (website.url) { %>
+          <p class="mb-0 text-muted">
+            <a href="<%= website.url %>" target="_blank" class="text-decoration-none">
+              <i class="fas fa-external-link-alt"></i> <%= website.url %>
+            </a>
+          </p>
+        <% } %>
+      </div>
+      <div class="btn-group">
+        <a href="/websites" class="btn btn-outline-secondary">
+          <i class="fas fa-cog"></i> Manage Websites
+        </a>
+        <a href="/websites/edit/<%= website.id %>" class="btn btn-outline-primary">
+          <i class="fas fa-edit"></i> Edit Website
+        </a>
+      </div>
+    </div>
+    <div class="card-body">
+      <% if (locals.successMessage) { %>
+        <div class="alert alert-success">
+          <%= successMessage %>
+        </div>
+      <% } %>
+      
+      <% if (locals.errorMessage) { %>
+        <div class="alert alert-danger">
+          <%= errorMessage %>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="row mb-4">
+    <div class="col-md-4 mb-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <h5 class="card-title">Recipes</h5>
+          <h2 class="display-4"><%= stats.recipes %></h2>
+          <a href="/recipes" class="btn btn-sm btn-outline-primary mt-2">View Recipes</a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-4 mb-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <h5 class="card-title">Keywords</h5>
+          <h2 class="display-4"><%= stats.totalKeywords %></h2>
+          <div class="small text-muted">
+            <%= stats.pendingKeywords %> pending, 
+            <%= stats.processedKeywords %> processed, 
+            <%= stats.failedKeywords %> failed
+          </div>
+          <a href="/keywords" class="btn btn-sm btn-outline-primary mt-2">Manage Keywords</a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-4 mb-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <h5 class="card-title">WordPress Posts</h5>
+          <h2 class="display-4"><%= stats.wordpressPosts %></h2>
+          <% if (website.wordpress_api_url) { %>
+            <div class="text-success small">
+              <i class="fas fa-check-circle"></i> WordPress Connected
+            </div>
+          <% } else { %>
+            <div class="text-danger small">
+              <i class="fas fa-times-circle"></i> WordPress Not Connected
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WordPress Configuration -->
+  <% if (!website.wordpress_api_url) { %>
+    <div class="alert alert-info mb-4">
+      <h5>WordPress Integration</h5>
+      <p>Connect this website to WordPress to publish your recipes directly to your blog.</p>
+      <a href="/websites/edit/<%= website.id %>" class="btn btn-primary">Configure WordPress</a>
+    </div>
+  <% } %>
+
+  <!-- Quick Actions -->
+  <div class="card mb-4">
+    <div class="card-header">
+      <h5 class="mb-0">Quick Actions</h5>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-3 mb-3">
+          <a href="/keywords" class="btn btn-outline-primary w-100">
+            <i class="fas fa-tags fa-fw"></i> Manage Keywords
+          </a>
+        </div>
+        <div class="col-md-3 mb-3">
+          <a href="/recipes" class="btn btn-outline-primary w-100">
+            <i class="fas fa-book fa-fw"></i> Browse Recipes
+          </a>
+        </div>
+        <div class="col-md-3 mb-3">
+          <a href="/generate/all" class="btn btn-outline-success w-100">
+            <i class="fas fa-magic fa-fw"></i> Generate Content
+          </a>
+        </div>
+        <% if (website.wordpress_api_url) { %>
+          <div class="col-md-3 mb-3">
+            <a href="/wordpress-settings" class="btn btn-outline-secondary w-100">
+              <i class="fab fa-wordpress fa-fw"></i> WordPress Settings
+            </a>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>

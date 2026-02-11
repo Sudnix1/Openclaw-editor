@@ -1,0 +1,223 @@
+<!-- Pinterest Template Manager -->
+<div class="container-fluid mt-4">
+  <div class="card shadow">
+    <div class="card-header bg-pinterest text-white">
+      <div class="d-flex justify-content-between align-items-center">
+        <h3 class="mb-0">
+          <i class="fas fa-palette me-2"></i>Pinterest Template Manager
+        </h3>
+        <a href="/pinterest-gallery" class="btn btn-outline-light">
+          <i class="bi bi-arrow-left"></i> Back to Gallery
+        </a>
+      </div>
+    </div>
+    
+    <div class="card-body">
+      <div class="alert alert-info">
+        <h5><i class="bi bi-lightbulb"></i> How to Create the Perfect Template:</h5>
+        <ol>
+          <li><strong>Use your reference image</strong> as a base design</li>
+          <li><strong>Create a template in Canva/Photoshop</strong> with your exact design</li>
+          <li><strong>Replace the text area</strong> with placeholder text like "[TEXT]" or "[RECIPE]"</li>
+          <li><strong>Upload the template</strong> and we'll automatically replace the placeholder with your recipe text</li>
+          <li><strong>Generate perfect images</strong> every time with your exact design</li>
+        </ol>
+      </div>
+
+      <!-- Template Upload Section -->
+      <div class="row">
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header">
+              <h5><i class="bi bi-upload"></i> Upload New Template</h5>
+            </div>
+            <div class="card-body">
+              <form id="templateUploadForm" enctype="multipart/form-data">
+                <div class="mb-3">
+                  <label for="templateName" class="form-label">Template Name</label>
+                  <input type="text" class="form-control" id="templateName" name="templateName" 
+                         placeholder="e.g., Orange Food Template" required>
+                </div>
+                
+                <div class="mb-3">
+                  <label for="templateFile" class="form-label">Template Image (561x1120 recommended)</label>
+                  <input type="file" class="form-control" id="templateFile" name="templateFile" 
+                         accept="image/*" required>
+                  <div class="form-text">Upload your designed template with placeholder text where you want recipe names to appear.</div>
+                </div>
+                
+                <div class="mb-3">
+                  <label for="placeholderText" class="form-label">Placeholder Text to Replace</label>
+                  <input type="text" class="form-control" id="placeholderText" name="placeholderText" 
+                         value="[TEXT]" placeholder="e.g., [TEXT] or [RECIPE]">
+                  <div class="form-text">The text in your template that will be replaced with recipe names.</div>
+                </div>
+                
+                <div class="mb-3">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <label for="textX" class="form-label">Text X Position (%)</label>
+                      <input type="number" class="form-control" id="textX" name="textX" 
+                             value="50" min="0" max="100">
+                    </div>
+                    <div class="col-md-6">
+                      <label for="textY" class="form-label">Text Y Position (%)</label>
+                      <input type="number" class="form-control" id="textY" name="textY" 
+                             value="50" min="0" max="100">
+                    </div>
+                  </div>
+                  <div class="form-text">Where to place the recipe text on your template (50%, 50% = center).</div>
+                </div>
+                
+                <button type="submit" class="btn btn-pinterest">
+                  <i class="bi bi-upload"></i> Upload Template
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header">
+              <h5><i class="bi bi-eye"></i> Template Preview</h5>
+            </div>
+            <div class="card-body">
+              <div id="templatePreview" class="text-center">
+                <p class="text-muted">Select a template file to see preview</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Existing Templates -->
+      <div class="mt-5">
+        <h4><i class="bi bi-collection"></i> Your Templates</h4>
+        <div class="row" id="templatesGrid">
+          <!-- Templates will be loaded here -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Solution Modal -->
+<div class="modal fade" id="quickSolutionModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content bg-dark">
+      <div class="modal-header border-secondary">
+        <h5 class="modal-title text-light">
+          <i class="fas fa-magic"></i> Quick Solution - Use Your Exact Design!
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-warning">
+          <h6><i class="bi bi-lightbulb"></i> Easiest Solution:</h6>
+          <p><strong>Instead of trying to recreate your design in code, let's use your exact reference image!</strong></p>
+        </div>
+        
+        <div class="row">
+          <div class="col-md-6">
+            <h6>Option 1: Template Upload (Recommended)</h6>
+            <ol>
+              <li>Take your reference image</li>
+              <li>Edit it in any image editor (Paint, Canva, Photoshop)</li>
+              <li>Replace the text with "[TEXT]"</li>
+              <li>Upload it here as a template</li>
+              <li>Generate perfect images with your exact design!</li>
+            </ol>
+          </div>
+          <div class="col-md-6">
+            <h6>Option 2: Manual Creation</h6>
+            <ol>
+              <li>Use your Pinterest image generator normally</li>
+              <li>Download the generated image</li>
+              <li>Edit in Canva/Photoshop to match your reference exactly</li>
+              <li>Save the edited version</li>
+            </ol>
+          </div>
+        </div>
+        
+        <div class="alert alert-success mt-3">
+          <strong>Result:</strong> You'll get exactly the design you want, with the exact fonts, colors, and layout from your reference image!
+        </div>
+      </div>
+      <div class="modal-footer border-secondary">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">I'll Try This</button>
+        <button type="button" class="btn btn-pinterest" onclick="startTemplateUpload()">Upload Template Now</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Show quick solution modal on page load
+  const modal = new bootstrap.Modal(document.getElementById('quickSolutionModal'));
+  modal.show();
+  
+  // File preview
+  document.getElementById('templateFile').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('templatePreview').innerHTML = `
+          <img src="${e.target.result}" class="img-fluid" style="max-height: 400px;">
+        `;
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+  
+  // Form submission
+  document.getElementById('templateUploadForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    try {
+      const response = await fetch('/api/pinterest/templates', {
+        method: 'POST',
+        body: formData
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        alert('Template uploaded successfully!');
+        location.reload();
+      } else {
+        alert('Upload failed: ' + result.message);
+      }
+    } catch (error) {
+      alert('Upload error: ' + error.message);
+    }
+  });
+});
+
+function startTemplateUpload() {
+  bootstrap.Modal.getInstance(document.getElementById('quickSolutionModal')).hide();
+  document.getElementById('templateFile').click();
+}
+</script>
+
+<style>
+.bg-pinterest {
+  background: linear-gradient(135deg, #e60023, #bd001c);
+}
+
+.btn-pinterest {
+  background-color: #e60023;
+  border-color: #e60023;
+  color: white;
+}
+
+.btn-pinterest:hover {
+  background-color: #bd001c;
+  border-color: #bd001c;
+  color: white;
+}
+</style>

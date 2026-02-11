@@ -1,0 +1,587 @@
+Pinterest XLSX Export Feature - Complete Documentation
+Overview
+The Pinterest XLSX export feature generates Excel spreadsheet files in Pinterest's bulk upload format. This feature allows users to schedule and upload multiple recipe pins to Pinterest at once with proper timing, board assignment, and media URLs.
+Complete Feature Components
+1. Settings Configuration (Pinterest Boards)
+File: views/settings.ejs (Lines 328-334)
+<div class="mb-3 row">
+  <label for="pinterestBoards" class="col-md-3 col-form-label">Pinterest Boards</label>
+  <div class="col-md-9">
+    <input type="text" class="form-control" id="pinterestBoards" name="pinterestBoards" 
+           value="<%= promptConfig.pinterestBoards || 'Breakfast,Lunch,Dinner,Dessert' %>" 
+           placeholder="Enter boards separated by commas (e.g., Breakfast,Lunch,Dinner,Dessert)">
+    <small class="form-text text-muted">Enter your Pinterest board names separated by commas. 
+    These boards will be available for selection when adding keywords.</small>
+  </div>
+</div>
+Backend Save Logic: File: server.js (Lines 4074-4075)
+// Pinterest Boards for export (comma-separated list)
+pinterestBoards: req.body.pinterestBoards || 'Breakfast,Lunch,Dinner,Dessert',
+Default Configuration: File: server.js (Line 2256)
+pinterestBoards: 'Breakfast,Lunch,Dinner,Dessert',
+2. Keyword Manager - Pinterest Board Dropdown
+A. Manual Entry Form
+File: views/keywords.ejs (Lines 153-164)
+<div class="mb-3">
+  <label for="pinterestBoard" class="form-label">Pinterest Board</label>
+  <select class="form-select" id="pinterestBoard" name="pinterestBoard">
+    <%
+      const pinterestBoardsList = (promptConfig && promptConfig.pinterestBoards) ? 
+        promptConfig.pinterestBoards.split(',').map(b => b.trim()) : 
+        ['Breakfast', 'Lunch', 'Dinner', 'Dessert'];
+      pinterestBoardsList.forEach(board => {
+    %>
+      <option value="<%= board %>" <%= board === 'Dinner' ? 'selected' : '' %>><%= board %></option>
+    <% }); %>
+  </select>
+  <div class="form-text">Select the Pinterest board for this keyword</div>
+</div>
+B. Excel Upload Form
+File: views/keywords.ejs (Lines 207-218)
+<div class="mb-3">
+  <label for="excelPinterestBoard" class="form-label">Pinterest Board</label>
+  <select class="form-select" id="excelPinterestBoard" name="excelPinterestBoard">
+    <%
+      const pinterestBoardsListExcel = (promptConfig && promptConfig.pinterestBoards) ? 
+        promptConfig.pinterestBoards.split(',').map(b => b.trim()) : 
+        ['Breakfast', 'Lunch', 'Dinner', 'Dessert'];
+      pinterestBoardsListExcel.forEach(board => {
+    %>
+      <option value="<%= board %>" <%= board === 'Dinner' ? 'selected' : '' %>><%= board %></option>
+    <% }); %>
+  </select>
+  <div class="form-text">Select the Pinterest board for these keywords</div>
+</div>
+C. Pinclicks Analysis Form
+File: views/keywords.ejs (Lines 339-350)
+<div class="mb-3">
+  <label for="pinclicksPinterestBoard" class="form-label">Pinterest Board</label>
+  <select class="form-select" id="pinclicksPinterestBoard" name="pinclicksPinterestBoard">
+    <%
+      const pinterestBoardsListPinclicks = (promptConfig && promptConfig.pinterestBoards) ? 
+        promptConfig.pinterestBoards.split(',').map(b => b.trim()) : 
+        ['Breakfast', 'Lunch', 'Dinner', 'Dessert'];
+      pinterestBoardsListPinclicks.forEach(board => {
+    %>
+      <option value="<%= board %>" <%= board === 'Dinner' ? 'selected' : '' %>><%= board %></option>
+    <% }); %>
+  </select>
+  <div class="form-text">Select the Pinterest board for these keywords</div>
+</div>
+3. Frontend JavaScript - Board Capture
+Manual Entry Capture
+File: views/keywords.ejs (Line 3947)
+const pinterestBoard = document.getElementById('pinterestBoard').value || 'Dinner';
+
+// Added to form data (Line 3978)
+pinterest_board: pinterestBoard
+Excel Upload Capture
+File: views/keywords.ejs (Line 3871)
+const pinterestBoard = document.getElementById('excelPinterestBoard').value || 'Dinner';
+
+// Added to form data (Line 3904)
+pinterest_board: pinterestBoard
+Pinclicks Analysis Capture
+File: views/keywords.ejs (Lines 4005-4011)
+const pinterestBoard = document.getElementById('pinclicksPinterestBoard').value || 'Dinner';
+
+formData = {
+  keywords: analyzedPinclicksResults.map(result => ({
+    ...result,
+    pinterest_board: pinterestBoard
+  }))
+};
+4. Database Layer
+Migration Script
+File: migrations/add-pinterest-board-column.js
+const alterStatement = `ALTER TABLE keywords ADD COLUMN pinterest_board TEXT DEFAULT 'Dinner'`;
+Database Insert
+File: db.js (Lines 1049-1052)
+await runQuery(
+  `INSERT INTO keywords (id, keyword, category, interests, image_url, full_recipe, pinterest_board, 
+                         status, owner_id, organization_id, website_id, added_at)
+   VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, CURRENT_TIMESTAMP)`,
+  [id, keyword, category, interests, image_url, full_recipe, pinterest_board || 'Dinner', 
+   ownerId, organizationId, effectiveWebsiteId]
+);
+Database Select
+File: db.js (Lines 1077-1078)
+let query = `SELECT id, keyword, category, interests, image_url, full_recipe, pinterest_board, 
+             status, recipe_id, owner_id, organization_id, website_id, added_at, processed_at
+FROM keywords `;
+5. Server-Side Keyword Processing
+File: server.js (Lines 4361-4405)
+keywordsData = req.body.keywords.map(keyword => {
+  // String format
+  if (typeof keyword === 'string') {
+    return {
+      keyword: keyword.trim(),
+      full_recipe: null,
+      category: req.body.defaultCategory || null,
+      interests: req.body.defaultInterests || null,
+      image_url: req.body.imageUrl || null,
+      pinterest_board: req.body.pinterestBoard || 'Dinner',
+      ownerId: ownerId,
+      organizationId: organizationId
+    };
+  }
+  // Object with full_recipe
+  else if (typeof keyword === 'object' && keyword.full_recipe) {
+    return {
+      keyword: keyword.keyword.trim(),
+      full_recipe: keyword.full_recipe,
+      category: keyword.category || req.body.defaultCategory || null,
+      interests: keyword.interests || req.body.defaultInterests || null,
+      image_url: keyword.image_url || req.body.imageUrl || null,
+      pinterest_board: keyword.pinterest_board || req.body.pinterestBoard || 'Dinner',
+      ownerId: ownerId,
+      organizationId: organizationId
+    };
+  }
+  // Object with just keyword
+  else if (typeof keyword === 'object' && keyword.keyword) {
+    return {
+      keyword: keyword.keyword.trim(),
+      full_recipe: null,
+      category: keyword.category || req.body.defaultCategory || null,
+      interests: keyword.interests || req.body.defaultInterests || null,
+      image_url: keyword.image_url || req.body.imageUrl || null,
+      pinterest_board: keyword.pinterest_board || req.body.pinterestBoard || 'Dinner',
+      ownerId: ownerId,
+      organizationId: organizationId
+    };
+  }
+  return null;
+}).filter(k => k !== null && k.keyword && k.keyword.trim().length > 0);
+6. Pinterest XLSX Export - Complete Script
+File: server.js (Lines 8793-9080)
+// Pinterest XLSX export (for Pinterest bulk upload) - SELECTED recipes
+app.post('/api/export/recipes/pinterest-xlsx/selected', isAuthenticated, async (req, res) => {
+  try {
+    // ============ STEP 1: INPUT VALIDATION ============
+    // Handle both recipeIds and recipeIds[] array notation
+    let recipeIds = req.body.recipeIds || req.body['recipeIds[]'];
+    
+    // Ensure it's an array
+    if (!Array.isArray(recipeIds)) {
+      recipeIds = [recipeIds];
+    }
+    
+    if (!recipeIds || recipeIds.length === 0) {
+      return res.status(400).send('No recipes selected');
+    }
+    
+    const organizationId = req.session.user.organizationId;
+    const userId = req.session.user.role === 'employee' ? req.session.user.id : null;
+    
+    console.log(`📌 Exporting Pinterest XLSX for ${recipeIds.length} recipes`);
+    
+    // ============ STEP 2: EXCEL WORKBOOK SETUP ============
+    const ExcelJS = require('exceljs');
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Pinterest Pins');
+    
+    // Set column widths
+    worksheet.columns = [
+      { header: 'Title', key: 'title', width: 50 },
+      { header: 'Media URL', key: 'mediaUrl', width: 60 },
+      { header: 'Pinterest board', key: 'board', width: 20 },
+      { header: 'Thumbnail', key: 'thumbnail', width: 15 },
+      { header: 'Description', key: 'description', width: 70 },
+      { header: 'Link', key: 'link', width: 60 },
+      { header: 'Publish Date', key: 'publishDate', width: 20 },
+      { header: 'Keywords', key: 'keywords', width: 40 }
+    ];
+    
+    // Style the header row
+    worksheet.getRow(1).font = { bold: true, size: 12 };
+    worksheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFE0E0E0' }
+    };
+    
+    // ============ STEP 3: PUBLISH DATE CALCULATION ============
+    // Helper function to calculate publish dates with dynamic intervals
+    // First recipe: 2 hours from now
+    // Subsequent recipes: 4 hours after previous
+    const calculatePublishDates = (count) => {
+      const dates = [];
+      let currentDate = new Date();
+      
+      // First recipe: 2 hours from current time (preserves exact minutes/seconds)
+      currentDate = new Date(currentDate.getTime() + 2 * 60 * 60 * 1000);
+      
+      for (let i = 0; i < count; i++) {
+        dates.push(new Date(currentDate));
+        // Add 4 hours for next recipe (preserves exact minutes/seconds)
+        currentDate = new Date(currentDate.getTime() + 4 * 60 * 60 * 1000);
+      }
+      return dates;
+    };
+    
+    const publishDates = calculatePublishDates(recipeIds.length);
+    let validRecipeCount = 0;
+    
+    // ============ STEP 4: PROCESS EACH RECIPE ============
+    for (let i = 0; i < recipeIds.length; i++) {
+      const recipeId = recipeIds[i];
+      
+      try {
+        // 4.1: Load Recipe
+        const recipe = await recipeDb.getRecipeById(recipeId);
+        if (!recipe) continue;
+        
+        // 4.2: Permission Check
+        if (recipe.organization_id !== organizationId || (userId && recipe.owner_id !== userId)) {
+          continue;
+        }
+        
+        // 4.3: Load Pinterest Variations
+        const pinterestVariations = await pinterestDb.getVariationsByRecipeId(recipeId);
+        const pinterest = pinterestVariations && pinterestVariations.length > 0 ? 
+                         pinterestVariations[0] : null;
+        
+        let imageUrl = '';
+        let wordpressUrl = '';
+        
+        // ============ STEP 5: IMAGE URL PRIORITY LOGIC ============
+        
+        // PRIORITY 1: Get Canva image URL from blog_content table
+        try {
+          const blogContent = await blogDb.getBlogContentByRecipeId(recipeId);
+          
+          if (blogContent && blogContent.canva_image_url) {
+            imageUrl = blogContent.canva_image_url;
+            console.log(`✅ [XLSX Priority 1] Found Canva image from database: ${imageUrl}`);
+          }
+        } catch (blogError) {
+          console.log(`⚠️ [XLSX] Could not fetch blog content: ${blogError.message}`);
+        }
+        
+        // PRIORITY 2: Get WordPress URL and extract Pinterest image from article
+        try {
+          const wpPublications = await wordpressDb.getPublicationsByRecipeId(recipeId);
+          if (wpPublications && wpPublications.length > 0) {
+            const wpPostId = wpPublications[0].wp_post_id;
+            
+            if (wpPostId) {
+              try {
+                const wpSettings = await wordpressDb.getSettings(req.session.currentWebsiteId);
+                
+                if (wpSettings && wpSettings.site_url) {
+                  const axios = require('axios');
+                  const auth = Buffer.from(`${wpSettings.username}:${wpSettings.password}`)
+                                    .toString('base64');
+                  
+                  const postResponse = await axios.get(
+                    `${wpSettings.site_url}/wp-json/wp/v2/posts/${wpPostId}`,
+                    {
+                      headers: { Authorization: `Basic ${auth}` },
+                      timeout: 5000
+                    }
+                  );
+                  
+                  // Get WordPress permalink (full URL, not ?p= format)
+                  if (postResponse.data && postResponse.data.link) {
+                    wordpressUrl = postResponse.data.link;
+                    console.log(`✅ [XLSX] Got WordPress permalink: ${wordpressUrl}`);
+                  }
+                  
+                  // If no Canva image, extract Pinterest image from WordPress article content
+                  if (!imageUrl && postResponse.data && postResponse.data.content && 
+                      postResponse.data.content.rendered) {
+                    const content = postResponse.data.content.rendered;
+                    
+                    // Extract all images from WordPress article
+                    const allImagesMatches = content.matchAll(/<img[^>]+src="([^"]+)"/gi);
+                    const allImages = Array.from(allImagesMatches).map(match => match[1]);
+                    
+                    console.log(`🔍 [XLSX] Found ${allImages.length} images in WordPress article`);
+                    
+                    // Look for Pinterest Generator image (has pinterest_ in filename)
+                    const pinterestImage = allImages.find(img =>
+                      img &&
+                      img.startsWith('http') &&
+                      img.includes('pinterest_') &&
+                      (img.endsWith('.jpg') || img.endsWith('.jpeg') || 
+                       img.endsWith('.png') || img.endsWith('.webp'))
+                    );
+                    
+                    if (pinterestImage) {
+                      imageUrl = pinterestImage;
+                      console.log(`✅ [XLSX Priority 2] Found Pinterest image: ${imageUrl}`);
+                    } else {
+                      console.log(`⚠️ [XLSX] No Pinterest image found in WordPress article`);
+                    }
+                  }
+                }
+              } catch (wpApiError) {
+                console.log(`⚠️ [XLSX] WordPress API error: ${wpApiError.message}`);
+                wordpressUrl = wpPublications[0].wp_post_url || '';
+              }
+            } else {
+              wordpressUrl = wpPublications[0].wp_post_url || '';
+            }
+          }
+        } catch (wpError) {
+          console.log(`⚠️ [XLSX] WordPress lookup error: ${wpError.message}`);
+        }
+        
+        // Skip recipes without WordPress URLs
+        if (!wordpressUrl) {
+          console.log(`⚠️ Skipping recipe "${recipe.recipe_idea}" - no WordPress URL`);
+          continue;
+        }
+        
+        // ============ STEP 6: PINTEREST BOARD FROM KEYWORD ============
+        // Get user-selected Pinterest board from keywords table
+        let board = 'Dinner'; // Default
+        try {
+          const keyword = await getOne(`
+            SELECT k.pinterest_board FROM keywords k
+            WHERE k.recipe_id = ? AND k.organization_id = ? LIMIT 1
+          `, [recipeId, organizationId]);
+          
+          if (keyword && keyword.pinterest_board) {
+            board = keyword.pinterest_board;
+            console.log(`✅ [XLSX] Using selected Pinterest board: ${board}`);
+          }
+        } catch (boardError) {
+          console.warn(`[XLSX] Could not fetch Pinterest board, using default`);
+        }
+        
+        // ============ STEP 7: CONTENT GENERATION ============
+        
+        // 7.1: Title (max 100 characters)
+        const title = (pinterest?.pin_title || recipe.recipe_idea || '').substring(0, 100);
+        
+        // 7.2: Description (max 500 characters)
+        const description = (pinterest?.pin_description || '').substring(0, 500);
+        
+        // 7.3: Keywords Generation
+        const generateKeywords = () => {
+          const keywords = [];
+          
+          // Add category
+          if (recipe.category) keywords.push(recipe.category.toLowerCase());
+          
+          // Add existing interests (first 3)
+          if (recipe.interests) {
+            const existingInterests = recipe.interests.split(',')
+                                                     .map(k => k.trim())
+                                                     .filter(k => k);
+            keywords.push(...existingInterests.slice(0, 3));
+          }
+          
+          // Extract keywords from title (words > 4 chars, excluding common words)
+          const titleWords = (recipe.recipe_idea || title).toLowerCase()
+            .replace(/[^\w\s]/g, '')
+            .split(/\s+/)
+            .filter(word => word.length > 4)
+            .filter(word => !['recipe', 'recipes', 'discover', 'delicious', 
+                             'perfect', 'amazing'].includes(word));
+          
+          titleWords.forEach(word => {
+            if (keywords.length < 5 && !keywords.includes(word)) {
+              keywords.push(word);
+            }
+          });
+          
+          // Add default keywords if needed
+          const defaults = ['homemade', 'easy', 'tasty', 'cooking', 'food'];
+          defaults.forEach(def => {
+            if (keywords.length < 5 && !keywords.includes(def)) {
+              keywords.push(def);
+            }
+          });
+          
+          // Format keywords with quotes around multi-word phrases (Pinterest format)
+          return keywords.slice(0, 5).map(kw => {
+            // If keyword has spaces, wrap in quotes
+            return kw.includes(' ') ? `"${kw}"` : kw;
+          }).join(',');
+        };
+        
+        const interests = generateKeywords();
+        
+        // ============ STEP 8: PUBLISH DATE FORMATTING ============
+        // Pinterest date format: YYYY-MM-DDTHH:MM (with T separator, no seconds)
+        const dateObj = publishDates[i];
+        const publishDate = `${dateObj.getFullYear()}-` +
+                          `${String(dateObj.getMonth() + 1).padStart(2, '0')}-` +
+                          `${String(dateObj.getDate()).padStart(2, '0')}T` +
+                          `${String(dateObj.getHours()).padStart(2, '0')}:` +
+                          `${String(dateObj.getMinutes()).padStart(2, '0')}`;
+        
+        // ============ STEP 9: ADD ROW TO EXCEL ============
+        worksheet.addRow({
+          title: title,
+          mediaUrl: imageUrl,
+          board: board,
+          thumbnail: '', // Empty as per Pinterest format
+          description: description,
+          link: wordpressUrl,
+          publishDate: publishDate,
+          keywords: interests
+        });
+        
+        validRecipeCount++;
+        console.log(`✅ Added recipe "${title}" to XLSX`);
+        
+      } catch (error) {
+        console.error(`❌ Error processing recipe ${recipeId}:`, error);
+        continue;
+      }
+    }
+    
+    // ============ STEP 10: VALIDATION CHECK ============
+    if (validRecipeCount === 0) {
+      const errorMessage = `
+❌ No valid recipes found with WordPress URLs.
+
+📝 Note: Pinterest XLSX format requires published WordPress articles.
+
+Please:
+1. Publish the selected recipes to WordPress first
+2. Then try exporting to Pinterest XLSX again
+
+💡 Tip: Use Pinterest CSV or TXT formats if you need to export recipes without WordPress URLs.
+      `.trim();
+      
+      return res.status(400).send(errorMessage);
+    }
+    
+    // ============ STEP 11: GENERATE AND SEND FILE ============
+    const buffer = await workbook.xlsx.writeBuffer();
+    const filename = `pinterest-export-${new Date().toISOString().split('T')[0]}.xlsx`;
+    
+    res.setHeader('Content-Type', 
+                  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.send(buffer);
+    
+    console.log(`🎉 Pinterest XLSX export completed: ${validRecipeCount} recipes`);
+    
+  } catch (error) {
+    console.error('❌ Error in Pinterest XLSX export:', error);
+    res.status(500).send('Failed to export Pinterest XLSX: ' + error.message);
+  }
+});
+Feature Summary
+1. Pinterest Board Management
+Configuration Location: Settings → Pinterest Prompt Config
+Format: Comma-separated board names (e.g., "Breakfast,Lunch,Dinner,Dessert")
+Default: Breakfast,Lunch,Dinner,Dessert
+Storage: File-based in data/config-{orgId}-{websiteId}.json
+2. Keyword Manager Integration
+Three Entry Points:
+Manual Entry: Single recipe input with board selection
+Excel Upload: Bulk upload with single board for all
+Pinclicks Analysis: CSV analysis with board selection
+Default Selection: "Dinner" is pre-selected
+Storage: Saved to keywords.pinterest_board column in database
+3. Publish Date Logic
+First Recipe: 2 hours from current time
+Subsequent Recipes: 4 hours after previous recipe
+Time Preservation: Exact minutes and seconds preserved using millisecond arithmetic
+Format: YYYY-MM-DDTHH:MM (ISO 8601 with T separator, no seconds)
+Example: 2025-12-03T17:30
+4. Media URL Priority System
+Priority 1: Canva image from blog_content.canva_image_url (direct database lookup)
+Priority 2: Pinterest Generator image extracted from WordPress article content
+Uses WordPress REST API to fetch post content
+Searches for images with pinterest_ in filename
+Matches .jpg, .jpeg, .png, .webp extensions
+Requirement: Full public HTTP/HTTPS URL (not relative paths)
+5. WordPress URL Requirements
+Format: Full permalink (e.g., https://site.com/recipe-name/)
+Not Accepted: ?p=123 format
+Source: WordPress REST API /wp-json/wp/v2/posts/{id}
+Fallback: Uses stored wp_post_url if API fails
+Validation: Recipes without WordPress URLs are skipped
+6. Excel File Structure
+Title          | Media URL                  | Pinterest board | Thumbnail | Description       | Link                    | Publish Date     | Keywords
+---------------|----------------------------|-----------------|-----------|-------------------|------------------------|------------------|------------------
+Recipe Title   | https://i.ibb.co/xyz.jpg   | Dinner          |           | Recipe desc...    | https://site.com/...   | 2025-12-03T17:30 | lunch,homemade,...
+7. Keywords Generation Logic
+Recipe category (lowercase)
+First 3 interests from recipe
+Title words > 4 characters (excluding common words: recipe, recipes, discover, delicious, perfect, amazing)
+Default keywords: homemade, easy, tasty, cooking, food
+Limit: 5 keywords maximum
+Format: Multi-word phrases wrapped in quotes (e.g., lunch,"homemade alfredo","easy recipe")
+8. File Output
+Filename: pinterest-export-YYYY-MM-DD.xlsx
+Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+Styling: Bold header row with gray background (#E0E0E0)
+Column Widths: Optimized for readability (Title: 50, Media URL: 60, etc.)
+Complete Data Flow
+User Action: Select recipes in Browse Recipes
+     ↓
+Click Export → Select "XLSX - Pinterest Bulk Upload"
+     ↓
+Server receives recipe IDs
+     ↓
+For each recipe:
+  1. Load recipe data
+  2. Check permissions (organization + user)
+  3. Load Pinterest variations (title, description)
+  4. Get Canva image (Priority 1)
+  5. If no Canva: Get WordPress URL via REST API
+  6. If no Canva: Extract Pinterest image from WP article (Priority 2)
+  7. Get user-selected board from keywords table
+  8. Generate keywords (5 max, quoted multi-word)
+  9. Calculate publish date (2h first, +4h subsequent)
+  10. Format date as YYYY-MM-DDTHH:MM
+  11. Add row to Excel worksheet
+     ↓
+Validate: At least 1 valid recipe with WordPress URL
+     ↓
+Generate Excel buffer
+     ↓
+Send file to user with proper headers
+     ↓
+Download starts: pinterest-export-2025-12-03.xlsx
+Key Technical Details
+Database Schema
+ALTER TABLE keywords ADD COLUMN pinterest_board TEXT DEFAULT 'Dinner';
+Time Calculation (Millisecond Arithmetic)
+// First recipe: now + 2 hours
+currentDate = new Date(currentDate.getTime() + 2 * 60 * 60 * 1000);
+
+// Subsequent: +4 hours each
+currentDate = new Date(currentDate.getTime() + 4 * 60 * 60 * 1000);
+Image Extraction Regex
+// Extract all img src URLs from HTML
+const allImagesMatches = content.matchAll(/<img[^>]+src="([^"]+)"/gi);
+const allImages = Array.from(allImagesMatches).map(match => match[1]);
+
+// Filter for Pinterest images
+const pinterestImage = allImages.find(img =>
+  img && img.startsWith('http') && img.includes('pinterest_') &&
+  (img.endsWith('.jpg') || img.endsWith('.jpeg') || 
+   img.endsWith('.png') || img.endsWith('.webp'))
+);
+WordPress REST API Call
+const axios = require('axios');
+const auth = Buffer.from(`${username}:${password}`).toString('base64');
+
+const postResponse = await axios.get(
+  `${siteUrl}/wp-json/wp/v2/posts/${wpPostId}`,
+  { headers: { Authorization: `Basic ${auth}` }, timeout: 5000 }
+);
+
+wordpressUrl = postResponse.data.link; // Full permalink
+Error Handling
+No recipes selected: Returns 400 error
+No WordPress URLs: Returns 400 with helpful message
+WordPress API errors: Falls back to stored URL
+Image fetch errors: Logs warning, continues processing
+Board fetch errors: Uses "Dinner" as default
+Permission denied: Skips recipe silently
+General errors: Returns 500 with error message
+This is the complete XLSX export feature including all settings, database, frontend, and backend logic specific to the XLSX format only.

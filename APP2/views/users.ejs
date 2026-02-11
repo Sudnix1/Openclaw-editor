@@ -1,0 +1,60 @@
+<div class="container mt-4">
+  <div class="card shadow">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h3 class="mb-0">User Management</h3>
+      <a href="/users/add" class="btn btn-primary">
+        <i class="bi bi-person-plus"></i> Add User
+      </a>
+    </div>
+    <div class="card-body">
+      <% if (typeof errorMessage !== 'undefined' && errorMessage) { %>
+        <div class="alert alert-danger" role="alert">
+          <%= errorMessage %>
+        </div>
+      <% } %>
+      <% if (typeof successMessage !== 'undefined' && successMessage) { %>
+        <div class="alert alert-success" role="alert">
+          <%= successMessage %>
+        </div>
+      <% } %>
+      
+      <div class="table-responsive">
+        <table class="table table-striped table-hover">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Created</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% users.forEach(function(user) { %>
+              <tr>
+                <td><%= user.name %></td>
+                <td><%= user.username %></td>
+                <td><%= user.email %></td>
+                <td><span class="badge <%= user.role === 'admin' ? 'bg-danger' : 'bg-info' %>"><%= user.role %></span></td>
+                <td><%= moment(user.created_at).format('MMM D, YYYY') %></td>
+                <td>
+                  <a href="/users/edit/<%= user.id %>" class="btn btn-sm btn-warning">
+                    <i class="bi bi-pencil"></i>
+                  </a>
+                  <% if (user.id !== locals.user.id) { %>
+                    <a href="/users/delete/<%= user.id %>" class="btn btn-sm btn-danger confirm-delete">
+                      <i class="bi bi-trash"></i>
+                    </a>
+                  <% } %>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/simple-user-actions.js"></script>

@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Buffer Account Extractor",
+  "version": "1.0",
+  "description": "Automatically extract Buffer account information (ID, access token, etc.) for easy integration",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["*://*.buffer.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Extract Buffer Account Info"
+  }
+}

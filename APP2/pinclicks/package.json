@@ -1,0 +1,22 @@
+{
+  "name": "pinclicks-automation",
+  "version": "1.0.0",
+  "description": "Automation tool for downloading annotated interest data from pinclicks.com",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "ui": "node server.js"
+  },
+  "keywords": [
+    "automation",
+    "puppeteer",
+    "pinclicks"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.1.0",
+    "puppeteer": "^22.0.0",
+    "socket.io": "^4.8.1"
+  }
+}

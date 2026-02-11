@@ -1,0 +1,242 @@
+/* Updated midjourney-grid-viewer.css */
+
+.midjourney-grid-container {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.midjourney-grid-wrapper {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.midjourney-grid-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.midjourney-grid-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 2px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.midjourney-grid-quadrant {
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.midjourney-grid-quadrant:hover {
+  opacity: 1;
+  background-color: rgba(13, 110, 253, 0.6);
+  border-color: #0d6efd;
+}
+
+.midjourney-grid-quadrant.selected {
+  opacity: 1;
+  background-color: rgba(40, 167, 69, 0.8);
+  border-color: #28a745;
+}
+
+.quadrant-instruction {
+  color: white;
+  font-weight: bold;
+  text-align: center;
+  padding: 10px;
+  background-color: rgba(0, 0, 0, 0.7);
+  border-radius: 4px;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  font-size: 14px;
+}
+
+.selected-indicator {
+  color: white;
+  font-weight: bold;
+  text-align: center;
+  padding: 8px 12px;
+  background-color: rgba(40, 167, 69, 0.9);
+  border-radius: 4px;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  font-size: 14px;
+}
+
+.selected-indicator i {
+  margin-right: 5px;
+}
+
+.midjourney-status-area {
+  margin-top: 15px;
+  text-align: center;
+}
+
+.midjourney-message {
+  padding: 10px 15px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.midjourney-message.processing {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  border: 1px solid #bbdefb;
+}
+
+.midjourney-message.processing .spinner-border {
+  margin-right: 10px;
+}
+
+.midjourney-message.success {
+  background-color: #e8f5e8;
+  color: #2e7d32;
+  border: 1px solid #c8e6c9;
+}
+
+.midjourney-message.error {
+  background-color: #ffebee;
+  color: #c62828;
+  border: 1px solid #ffcdd2;
+}
+
+/* NEW: Styles for selected image interface */
+.midjourney-selected-container {
+  width: 100%;
+}
+
+.selected-image-display {
+  text-align: center;
+}
+
+.selected-image-wrapper {
+  position: relative;
+  display: inline-block;
+  margin: 20px 0;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.selected-recipe-image {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 8px;
+}
+
+.selected-image-overlay {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 10;
+}
+
+.selected-badge {
+  background-color: rgba(40, 167, 69, 0.9);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: bold;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.selected-badge i {
+  margin-right: 5px;
+}
+
+.selected-image-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.selected-image-actions .btn {
+  min-width: 120px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .midjourney-grid-container {
+    max-width: 100%;
+  }
+  
+  .quadrant-instruction {
+    font-size: 12px;
+    padding: 8px;
+  }
+  
+  .selected-indicator {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+  
+  .selected-image-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .selected-image-actions .btn {
+    min-width: 200px;
+  }
+}
+
+/* Animation for smooth transitions */
+.midjourney-grid-container * {
+  transition: all 0.3s ease;
+}
+
+/* Hover effects for better UX */
+.regenerate-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Loading state for regenerate */
+.regenerate-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Alert styling improvements */
+.midjourney-selected-container .alert {
+  border-radius: 8px;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.midjourney-selected-container .alert-success {
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  color: #155724;
+}
+
+.midjourney-selected-container .alert-info {
+  background: linear-gradient(135deg, #cce7ff 0%, #b3d9ff 100%);
+  color: #004085;
+}
+
+.midjourney-selected-container .alert-warning {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  color: #856404;
+}

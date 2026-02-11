@@ -1,0 +1,16 @@
+# Pinterest URLs for batch processing
+# Lines starting with # are comments and will be ignored
+# You can also add direct keywords instead of URLs
+
+# Example Pinterest URLs:
+https://pinterest.com/pin/123456789/
+https://fr.pinterest.com/pin/987654321/
+
+# Or direct keywords:
+chicken pasta
+pizza recipe
+healthy breakfast
+
+# Mix both:
+https://pinterest.com/pin/555555555/
+salad ideas

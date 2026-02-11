@@ -1,0 +1,889 @@
+<!-- Add this near the top of your settings pages -->
+<% if (locals.websites && locals.websites.length > 0 && locals.currentWebsiteId) { %>
+  <% const currentWebsite = locals.websites.find(w => w.id === locals.currentWebsiteId); %>
+  <div class="alert alert-info">
+    <i class="fas fa-info-circle"></i> 
+    You are editing settings for website: <strong><%= currentWebsite ? currentWebsite.name : 'Unknown' %></strong>
+    <div class="mt-2">
+      Use the website switcher in the navbar to edit settings for a different website.
+    </div>
+  </div>
+<% } %>
+
+<!-- Updated settings.ejs template with API key management -->
+<% if (typeof successMessage !== 'undefined' && successMessage) { %>
+  <div class="alert alert-success alert-dismissible fade show" role="alert">
+    <%= successMessage %>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+<% } %>
+
+<% if (typeof errorMessage !== 'undefined' && errorMessage) { %>
+  <div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <%= errorMessage %>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+<% } %>
+
+<form action="/settings" method="POST">
+  <div class="row mb-3">
+  <div class="col-12 mb-3">
+    <div class="card">
+      <div class="card-header bg-primary text-white">
+        <h5 class="card-title mb-0">API Key Settings</h5>
+      </div>
+      <div class="card-body">
+        <div class="mb-3 row">
+          <label for="openaiApiKey" class="col-md-3 col-form-label">OpenAI API Key</label>
+          <div class="col-md-9">
+            <!-- Using type="text" instead of "password" to show exactly what's typed -->
+            <input type="text" class="form-control" id="openaiApiKey" name="openaiApiKey" 
+              value="<%= promptConfig.apiKey || '' %>"
+              placeholder="Enter your OpenAI API key (sk-...)">
+            <div class="form-text">
+              Enter your OpenAI API key that starts with "sk-".
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add this after the API Key Settings section in settings.ejs -->
+<div class="col-12 mb-3">
+  <div class="card">
+    <div class="card-header bg-info text-white">
+      <h5 class="card-title mb-0">Discord Integration Settings</h5>
+    </div>
+    <div class="card-body">
+      <div class="mb-3 row">
+        <label for="discordChannelId" class="col-md-3 col-form-label">Discord Channel ID</label>
+        <div class="col-md-9">
+          <input type="text" class="form-control" id="discordChannelId" name="discordChannelId" 
+            value="<%= promptConfig.discordChannelId || '' %>"
+            placeholder="Enter Discord Channel ID (e.g., 1374421017333731369)">
+          <div class="form-text">
+            The Discord channel ID where messages will be sent. Right-click on your Discord channel and select "Copy ID".
+          </div>
+        </div>
+      </div>
+      
+      <div class="mb-3 row">
+        <label for="discordUserToken" class="col-md-3 col-form-label">Discord User Token</label>
+        <div class="col-md-9">
+          <input type="password" class="form-control" id="discordUserToken" name="discordUserToken" 
+            value="<%= promptConfig.discordUserToken || '' %>"
+            placeholder="Enter Discord User Token">
+          <div class="form-text">
+            Your Discord user token for authentication. Keep this secure and never share it.
+          </div>
+        </div>
+      </div>
+      
+      <div class="mb-3 row">
+        <label for="discordWebhookUrl" class="col-md-3 col-form-label">Discord Webhook URL</label>
+        <div class="col-md-9">
+          <input type="url" class="form-control" id="discordWebhookUrl" name="discordWebhookUrl" 
+            value="<%= promptConfig.discordWebhookUrl || '' %>"
+            placeholder="https://discord.com/api/webhooks/...">
+          <div class="form-text">
+            Optional: Discord webhook URL for posting messages (alternative to user token).
+          </div>
+        </div>
+      </div>
+      
+      <div class="mb-3 row">
+        <div class="col-md-9 offset-md-3">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="enableDiscord" name="enableDiscord" 
+              <%= promptConfig.enableDiscord ? 'checked' : '' %>>
+            <label class="form-check-label" for="enableDiscord">
+              Enable Discord Integration
+            </label>
+          </div>
+          <div class="form-text">
+            Check this to enable Discord notifications and integrations.
+          </div>
+        </div>
+      </div>
+      
+      <div class="mb-3 row">
+        <div class="col-md-9 offset-md-3">
+          <button type="button" class="btn btn-sm btn-outline-info" onclick="testDiscordConnection()">
+            Test Discord Connection
+          </button>
+          <div id="discordTestResult" class="mt-2"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Pinterest Content Generation Mode -->
+<div class="col-12 mb-3">
+  <div class="card">
+    <div class="card-header bg-success text-white">
+      <h5 class="card-title mb-0">
+        <i class="bi bi-pinterest"></i> Pinterest Settings
+      </h5>
+    </div>
+    <div class="card-body">
+      <div class="mb-3 row">
+        <label class="col-md-3 col-form-label">Content Generation Mode</label>
+        <div class="col-md-9">
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="radio" name="pinterestContentMode" id="modeAI"
+              value="ai" <%= !promptConfig.pinterestContentMode || promptConfig.pinterestContentMode === 'ai' ? 'checked' : '' %>>
+            <label class="form-check-label" for="modeAI">
+              <strong>AI Generated Mode</strong>
+              <div class="form-text">Generate Pinterest content using AI (OpenAI) - Fast and fully automated</div>
+            </label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="pinterestContentMode" id="modePinclicks"
+              value="pinclicks" <%= promptConfig.pinterestContentMode === 'pinclicks' ? 'checked' : '' %>>
+            <label class="form-check-label" for="modePinclicks">
+              <strong>Pinclicks Mode</strong>
+              <div class="form-text">
+                Use Pinclicks.com data analyzed by ChatGPT for SEO-optimized Pinterest content
+                <br>
+                <small class="text-muted">
+                  ⚠️ Requires: Pinclicks.com account + ChatGPT Plus | Takes 1-2 min per keyword
+                </small>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="mb-3 row">
+        <label for="pinterestBoards" class="col-md-3 col-form-label">Pinterest Boards</label>
+        <div class="col-md-9">
+          <input type="text" class="form-control" id="pinterestBoards" name="pinterestBoards"
+                 value="<%= promptConfig.pinterestBoards || 'Breakfast,Lunch,Dinner,Dessert' %>"
+                 placeholder="Enter boards separated by commas (e.g., Breakfast,Lunch,Dinner,Dessert)">
+          <small class="form-text text-muted">Enter your Pinterest board names separated by commas.
+          These boards will be available for selection when adding keywords and exporting to Pinterest.</small>
+        </div>
+      </div>
+
+      <div class="alert alert-info">
+        <strong><i class="bi bi-info-circle"></i> How it works:</strong>
+        <ul class="mb-0 mt-2">
+          <li><strong>AI Mode:</strong> When processing keywords, Pinterest content is generated instantly using AI</li>
+          <li><strong>Pinclicks Mode:</strong> Automatically runs Pinclicks automation before generating content - extracts real Pinterest data for better SEO and engagement</li>
+          <li><strong>Pinterest Boards:</strong> Used for XLSX bulk upload exports - each recipe can be assigned to a specific board</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <!-- Buffer Integration Settings -->
+    <div class="col-12 mb-3">
+      <div class="card">
+        <div class="card-header bg-warning text-white">
+          <h5 class="card-title mb-0">Buffer Integration Settings</h5>
+        </div>
+        <div class="card-body">
+          <div class="mb-3 row">
+            <div class="col-12">
+              <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="enableBuffer" name="bufferEnabled" 
+                  <%= promptConfig.bufferEnabled ? 'checked' : '' %>>
+                <label class="form-check-label" for="enableBuffer">
+                  <strong>Enable Buffer Integration</strong>
+                </label>
+                <div class="form-text">
+                  Enable this to allow publishing to Buffer social media platform.
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="mb-3 row">
+            <label for="bufferCookiesText" class="col-md-3 col-form-label">Buffer Cookies</label>
+            <div class="col-md-9">
+              <textarea class="form-control" id="bufferCookiesText" name="bufferCookiesText" rows="3" 
+                placeholder="Paste your Buffer cookies here (from browser dev tools)"><%= promptConfig.bufferCookiesText || '' %></textarea>
+              <div class="form-text">
+                Your Buffer authentication cookies. You can get these from browser developer tools.
+              </div>
+            </div>
+          </div>
+          
+          <div class="mb-3 row">
+            <label for="bufferProfileId" class="col-md-3 col-form-label">Buffer Profile ID</label>
+            <div class="col-md-9">
+              <input type="text" class="form-control" id="bufferProfileId" name="bufferProfileId" 
+                value="<%= promptConfig.bufferProfileId || '' %>"
+                placeholder="Your Buffer profile ID (e.g., 66bb4c7569c0b78ec64f5b6f)">
+              <div class="form-text">
+                The Buffer profile ID for your account. You can find this in Buffer's developer tools.
+              </div>
+            </div>
+          </div>
+          
+          <div class="mb-3 row">
+            <label for="bufferOrgId" class="col-md-3 col-form-label">Buffer Organization ID</label>
+            <div class="col-md-9">
+              <input type="text" class="form-control" id="bufferOrgId" name="bufferOrgId" 
+                value="<%= promptConfig.bufferOrgId || '' %>"
+                placeholder="Your Buffer organization ID">
+              <div class="form-text">
+                The Buffer organization ID for your account.
+              </div>
+            </div>
+          </div>
+          
+          <!-- Buffer Boards Section -->
+          <div class="mb-3">
+            <label class="form-label"><strong>Buffer Boards Configuration</strong></label>
+            <div class="form-text mb-3">
+              Configure multiple Buffer boards for different content types. Each board can have its own name and ID.
+            </div>
+            
+            <div id="bufferBoardsContainer">
+              <% const bufferBoards = promptConfig.bufferBoards || [{id: '', name: 'Default Board'}] %>
+              <% bufferBoards.forEach((board, index) => { %>
+                <div class="buffer-board-item card mb-2" data-index="<%= index %>">
+                  <div class="card-body">
+                    <div class="row align-items-center">
+                      <div class="col-md-5">
+                        <input type="text" class="form-control board-name" name="bufferBoards[<%= index %>][name]" 
+                          value="<%= board.name %>" placeholder="Board Name (e.g., Recipe Content)">
+                      </div>
+                      <div class="col-md-5">
+                        <input type="text" class="form-control board-id" name="bufferBoards[<%= index %>][id]" 
+                          value="<%= board.id %>" placeholder="Board ID (e.g., 688cbbf56cac34c8300f0378)">
+                      </div>
+                      <div class="col-md-2">
+                        <button type="button" class="btn btn-outline-danger btn-sm remove-board-btn" onclick="removeBoardItem(this)">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <% }); %>
+            </div>
+            
+            <button type="button" class="btn btn-outline-success btn-sm" onclick="addBoardItem()">
+              <i class="fas fa-plus me-1"></i>Add Board
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 mb-3">
+      <div class="card">
+        <div class="card-header bg-danger text-white">
+          <h5 class="card-title mb-0">PINTEREST Prompt Config</h5>
+        </div>
+        <div class="card-body">
+          <div class="mb-3 row">
+  <label for="pinTitleSystem" class="col-md-3 col-form-label">Pin title system prompt</label>
+  <div class="col-md-9">
+    <textarea class="form-control" id="pinTitleSystem" name="pinTitleSystem" rows="4"><%= promptConfig.prompts ? promptConfig.prompts.pinTitleSystem : 'You are a copywriting expert specialized in Pinterest Pin titles. Your task is to generate 10 different Pinterest titles for each keyword or idea, using proven high-conversion techniques.\n\n[SYSTEM PROMPT CONTENT]' %></textarea>
+    <div class="variables-hint">
+      <strong>Available variables:</strong> {{recipeIdea}}, {{language}}, {{pinCount}}, {{interest}}
+    </div>
+  </div>
+</div>
+         <div class="mb-3 row">
+  <label for="pinTitleUser" class="col-md-3 col-form-label">Pin title user prompt</label>
+  <div class="col-md-9">
+    <textarea class="form-control" id="pinTitleUser" name="pinTitleUser" rows="4"><%= promptConfig.prompts ? promptConfig.prompts.pinTitleUser : 'Recipe Idea: {{recipeIdea}}\nLanguage: {{language}}\nInterest: {{interest}}\nPlease generate {{pinCount}} different Pinterest Pin titles that follow the formatting and guidance provided in the system prompt. Use the keyword, interests, and recipe idea to create attention-grabbing, high-conversion titles. \nReturn only the final text without any numbering, dashes, labels, or quotation marks. Do not include "Title 1:", "1.", "-", or any symbols. Just plain clean text.' %></textarea>
+    <div class="variables-hint">
+      <strong>Available variables:</strong> {{recipeIdea}}, {{language}}, {{pinCount}}, {{interest}}
+    </div>
+  </div>
+</div>
+          <div class="mb-3 row">
+            <label for="pinDescSystem" class="col-md-3 col-form-label">Pin description system prompt</label>
+            <div class="col-md-9">
+              <textarea class="form-control" id="pinDescSystem" name="pinDescSystem" rows="4"><%= promptConfig.prompts ? promptConfig.prompts.pinDescSystem : 'You are a Pinterest marketing and copywriting expert. Your task is to generate highly effective Pinterest Pin descriptions for blog post Pins that maximize engagement and click-throughs. Each description must serve both the Pinterest algorithm and real human readers.\nFollow these strict principles:\n1. Start with relevant, **front-loaded keywords** based on the Pin topic — what users are likely to search\n2. Use **natural, conversational language** (like friendly advice from a blogger)\n3. Be **clear and benefit-driven** — what problem does this Pin solve or what value does it offer?\n4. Add a **a natural, benefit-focused nudge that encourages action without sounding pushy** (e.g., "Don\'t be surprised if this becomes your new favorite" or "A cozy dinner idea worth trying this week")\n5. End with **2–3 relevant broad hashtags** (max) that match Pinterest SEO best practices\n6. Keep each description between **100–200 characters**\nTone: Warm, helpful, modern. You are writing for American women home cooks or lifestyle lovers.\nBad vs Good examples (with indirect CTAs):\n❌ "Here\'s a pin about meal prep ideas for the week"\n✅ "Meal prep just got easier with these 5 make-ahead dinners for busy nights. One to keep in your weekly rotation. #mealprep #weeknightmeals"\n❌ "How to make fall wreaths"\n✅ "Learn how to make a beautiful fall wreath in under 30 minutes — a cozy DIY project you\'ll want to recreate. #fallwreath #diyhomedecor"\nAlways output:\n- 1 Pinterest-optimized description in 100–200 characters.' %></textarea>
+              <div class="variables-hint">
+                <strong>Available variables:</strong> {{pinTitle}}, {{category}}, {{interests}}, {{language}}, {{pinCount}}
+              </div>
+            </div>
+          </div>
+          <div class="mb-3 row">
+            <label for="pinDescUser" class="col-md-3 col-form-label">Pin description user prompt</label>
+            <div class="col-md-9">
+              <textarea class="form-control" id="pinDescUser" name="pinDescUser" rows="4"><%= promptConfig.prompts ? promptConfig.prompts.pinDescUser : 'Pin Title: {{pinTitle}}\nCategory: {{category}}\nAnnotated Interests: {{interests}}\nLanguage: {{language}}\nBased on the instructions provided, please write {{pinCount}} different Pinterest Pin description that is optimized for both engagement and SEO. \nReturn only the final text without any numbering, dashes, labels, or quotation marks. Do not include "Description 1:", "1.", "-", or any symbols. Just plain clean text.' %></textarea>
+              <div class="variables-hint">
+                <strong>Available variables:</strong> {{pinTitle}}, {{category}}, {{interests}}, {{language}}, {{pinCount}}
+              </div>
+            </div>
+          </div>
+          <div class="mb-3 row">
+            <label for="pinOverlaySystem" class="col-md-3 col-form-label">Pin image overlay system prompt</label>
+            <div class="col-md-9">
+              <textarea class="form-control" id="pinOverlaySystem" name="pinOverlaySystem" rows="4"><%= promptConfig.prompts ? promptConfig.prompts.pinOverlaySystem : 'You are a Pinterest marketing and visual copy expert. Your task is to create short, scroll-stopping overlay text for Pinterest images. This overlay should grab attention fast while sparking curiosity — using as few words as possible.\nFollow these principles:\n1. Use **minimal text** — 4 to 7 words max\n2. **Front-load keywords** for Pinterest SEO (if relevant)\n3. Focus on **benefit or transformation** — what will the viewer gain?\n4. Spark **curiosity** with surprise, specificity, or urgency\n5. Use **clear, bold, conversational language** — no fluff or vague words\n6. Do **not** include punctuation unless it\'s essential (like parentheses or exclamation points)\n7. No hashtags or branding\nTone: Friendly, modern, and direct — like a helpful blogger speaking to her Pinterest audience\nBad vs Good (with keyword included naturally):\n❌ "My best slow cooker idea ever!" ✅ "Slow Cooker Chicken That Falls Apart"\n❌ "Some fall organizing tips" ✅ "Fall Closet Organization Made Simple"\n❌ "Ways to save money" ✅ "Save Big on Your Weekly Grocery Bill"\n❌ "Tasty dinner tonight?" ✅ "Easy Crockpot Chicken Tacos Tonight"\n❌ "Meal prep goals!" ✅ "Vegan Meal Prep You\'ll Actually Love"\nAlways return 1 short overlay phrase only.' %></textarea>
+              <div class="variables-hint">
+                <strong>Available variables:</strong> {{pinTitle}}, {{interests}}, {{language}}, {{pinCount}}
+              </div>
+            </div>
+          </div>
+          <div class="mb-3 row">
+            <label for="pinOverlayUser" class="col-md-3 col-form-label">Pin image overlay user prompt</label>
+            <div class="col-md-9">
+              <textarea class="form-control" id="pinOverlayUser" name="pinOverlayUser" rows="4"><%= promptConfig.prompts ? promptConfig.prompts.pinOverlayUser : 'Pin Title: {{pinTitle}}\nLanguage: {{language}}\nCreate {{pinCount}} short Pinterest image overlay text (4–7 words max) that matches the tone and message of the Pin. Use curiosity and benefit-driven language. Keep it concise and bold. \nReturn only the final text without any numbering, dashes, labels, or quotation marks. Do not include "Image 1:", "1.", "-", or any symbols. Just plain clean text.' %></textarea>
+              <div class="variables-hint">
+                <strong>Available variables:</strong> {{pinTitle}},{{interests}}, {{language}}, {{pinCount}}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 mb-3">
+      <div class="card">
+        <div class="card-header bg-info text-white">
+          <h5 class="card-title mb-0">BLOG POST Prompt Config</h5>
+        </div>
+        <div class="card-body">
+          <div class="mb-3 row">
+            <label for="metaTitleSystem" class="col-md-3 col-form-label">Meta title system prompt</label>
+            <div class="col-md-9">
+              <textarea class="form-control" id="metaTitleSystem" name="metaTitleSystem" rows="4"><%= promptConfig.prompts ? promptConfig.prompts.metaTitleSystem : 'You are an SEO content strategist specializing in crafting compelling and optimized blog post titles.\nYour goal is to generate one SEO-friendly blog post title that aligns with current best practices to enhance visibility in search engines and drive clicks.\nContext:\nThe title must attract attention in search engine results pages (SERPs), accurately represent the blog post content, and include the keyword naturally.\nFollow these instructions:\n- Incorporate the Primary Keyword: Include the main keyword, ideally at the beginning.\n- Match Search Intent: Understand what the user is looking for and reflect that in the title.\n- Be Descriptive and Concise: Clearly express the value of the post in 50–60 characters.\n- Avoid Keyword Stuffing: Use keywords naturally — no repetition or awkward phrasing.\n- Use Power Words and Numbers: Include numbers, brackets, or compelling phrases to increase click-through rates (e.g. "10 Easy Tips", "[2025]", "Best", etc.).\nConstraints:\n- Character Limit: Maximum of 60 characters\n- Tone: Professional, clear, and engaging\n- Avoid misleading or clickbait titles\nBad vs Good Examples:\n1. Clear & Concise\n❌ Poor: "A Great Dinner Recipe I Love" ✅ Good: Easy Slow Cooker Chicken Tacos\n❌ Poor: "Make This Dish Tonight" ✅ Good: Creamy Garlic Mashed Potatoes Recipe\n2. Curiosity-Based\n❌ Poor: "This Might Be the Best Chicken Ever" ✅ Good: The Secret to the Best Slow Cooker Chicken\n❌ Poor: "Wow—Just Try This Pasta" ✅ Good: Why Everyone\'s Talking About This Pasta Bake\n3. Number-Based\n❌ Poor: "Tasty Dinners to Try" ✅ Good: 5 Quick Weeknight Dinners to Try Now\n❌ Poor: "Ideas for Soups" ✅ Good: 7 Cozy Fall Soups You Can Freeze\n4. How-To / Instructional\n❌ Poor: "Making Pancakes Like This Is Fun" ✅ Good: How to Make Fluffy Japanese Soufflé Pancakes\n❌ Poor: "Roast Chicken Is Easy If You Know How" ✅ Good: How to Roast Chicken Perfectly Every Time\n5. Question-Based\n❌ Poor: "Thinking of Prepping Chicken?" ✅ Good: What\'s the Best Way to Meal Prep Chicken?\n❌ Poor: "No Eggs? Try This" ✅ Good: Can You Bake a Cake Without Eggs?\n6. Mistake-Avoidance\n❌ Poor: "Bread Didn\'t Turn Out?" ✅ Good: 5 Mistakes That Ruin Banana Bread\n❌ Poor: "Watch Out When You Slow Cook" ✅ Good: Avoid These Slow Cooker Chicken Fails\n7. Ultimate Guide\n❌ Poor: "Learn Everything About Chicken Recipes" ✅ Good: The Ultimate Guide to Slow Cooker Chicken\n❌ Poor: "How to Meal Prep All Week" ✅ Good: Complete Guide to Keto Meal Prep for Beginners\n8. Comparison\n❌ Poor: "Different Cooking Appliances Compared" ✅ Good: Air Fryer vs. Oven: Which Cooks Faster?\n❌ Poor: "Quinoa or Rice—You Decide" ✅ Good: Quinoa vs. Rice: Which Is Better for Meal Prep?\n9. Seasonal / Occasion-Based\n❌ Poor: "Holiday Brunch Recipe Ideas" ✅ Good: Easy Christmas Brunch Ideas Everyone Will Love\n❌ Poor: "Dinner Ideas for Autumn" ✅ Good: Cozy Fall Dinner Recipes for Chilly Nights\n10. Trend-Focused\n❌ Poor: "The Newest Internet Food Thing" ✅ Good: TikTok\'s Viral Baked Oats: Worth the Hype?\n❌ Poor: "This Ice Cream Is Weird But Cool" ✅ Good: Try This Pinterest-Famous Cottage Cheese Ice Cream\nReturn only one SEO-optimized blog post title.' %></textarea>
+              <div class="variables-hint">
+                <strong>Available variables:</strong> {{pinTitle}}, {{language}}
+              </div>
+            </div>
+          </div>
+          <div class="mb-3 row">
+            <label for="metaTitleUser" class="col-md-3 col-form-label">Meta title user prompt</label>
+            <div class="col-md-9">
+              <textarea class="form-control" id="metaTitleUser" name="metaTitleUser" rows="4"><%= promptConfig.prompts ? promptConfig.prompts.metaTitleUser : 'Pinterest Pin title: {{pinTitle}}\nLanguage: {{language}}\nPlease generate 1 SEO blog post title that follows the instructions provided in the system prompt. Make it optimized for search, aligned with the pin title, and under 60 characters. \nReturn only the final text without any numbering, dashes, labels, or quotation marks. Do not include "Title 1:", "1.", "-", or any symbols. Just plain clean text.' %></textarea>
+              <div class="variables-hint">
+                <strong>Available variables:</strong> {{pinTitle}}, {{language}}
+              </div>
+            </div>
+          </div>
+          <div class="mb-3 row">
+            <label for="metaDescSystem" class="col-md-3 col-form-label">Meta description system prompt</label>
+            <div class="col-md-9">
+              <textarea class="form-control" id="metaDescSystem" name="metaDescSystem" rows="4"><%= promptConfig.prompts ? promptConfig.prompts.metaDescSystem : 'You are an SEO content strategist specializing in crafting compelling meta descriptions that enhance search engine visibility and click-through rates. Your goal is to generate an SEO-friendly meta description that accurately summarizes a blog post or webpage and entices users to click.\nContext:\nThe description should align with the page\'s actual content, include relevant keywords naturally, and appeal to the target audience\'s search intent.\nFollow these instructions:\n- Optimal Length: Keep the meta description between 120–155 characters so it displays properly in Google results.\n- Incorporate Target Keywords: Use the primary keyword naturally and early in the sentence.\n- Use Active Voice and Action-Oriented Language: Engage the reader with direct, clear phrasing.\n- Gently guide the reader toward clicking by hinting at the value of the content. Instead of direct commands, use friendly phrasing that suggests what they\'ll gain or enjoy. Encourage clicks with phrases like "A must-try if you love quick, comforting meals" "Discover," "Perfect for your next cozy dinner at home" or "The kind of recipe that saves busy weeknights."\n- Ensure Uniqueness: Every description must be unique and not duplicated from other pages.\n- Reflect Page Content Accurately: Ensure the summary represents what the post truly offers.\nConstraints:\n- Character Limit: Maximum of 155 characters\n- Tone: Professional, helpful, and engaging\n- Avoid keyword stuffing or vague language\nBad vs Good Examples:\n1. Clear & Concise Titles\n❌ Poor: "This blog post is about chicken tacos and how to cook them." ✅ Good: "Make these easy slow cooker chicken tacos with simple pantry staples — perfect for a no-fuss dinner everyone will love."\n2. Curiosity-Based Titles\n❌ Poor: "This recipe is a surprise and very good. You should try it." ✅ Good: "The secret to juicy, flavor-packed chicken is easier than you think — one you\'ll want to make again and again."\n3. Number-Based Titles\n❌ Poor: "Here are some recipes to try for dinner or lunch." ✅ Good: "Try these 5 quick dinner ideas that make busy weeknights feel a little easier — no fancy ingredients required."\n4. How-To Titles\n❌ Poor: "Learn about making pancakes with steps to follow." ✅ Good: "Follow this step-by-step guide to fluffy soufflé pancakes — soft, jiggly, and ready to impress."\n5. Question-Based Titles\n❌ Poor: "This blog post will answer your question about baking a cake." ✅ Good: "Wondering how to bake a cake without eggs? This easy recipe has you covered with simple swaps and delicious results."\n6. Mistake-Avoidance Titles\n❌ Poor: "Here are some mistakes to avoid when cooking." ✅ Good: "Avoid these common bread-baking mistakes to get soft, golden loaves every time — great if you\'re just starting out."\n7. Ultimate Guide Titles\n❌ Poor: "Everything you need to know is in this blog post." ✅ Good: "This ultimate slow cooker chicken guide has everything you need — from tips to variations and serving ideas."\n8. Comparison Titles\n❌ Poor: "This post compares two different cooking methods." ✅ Good: "Not sure if the air fryer or oven is better? This comparison breaks it down with time, texture, and taste in mind."\n9. Seasonal / Occasion-Based Titles\n❌ Poor: "Recipes for the holidays and other times of the year." ✅ Good: "Warm up your table with these cozy fall dinner recipes — easy comfort food perfect for chilly nights."\n10. Trend-Focused Titles\n❌ Poor: "Try this trending recipe from the internet." ✅ Good: "This TikTok-famous baked oats recipe is easy, wholesome, and totally worth the hype."\nReturn only one SEO-optimized meta description.' %></textarea>
+              <div class="variables-hint">
+                <strong>Available variables:</strong> {{pinTitle}}, {{pinDesc}}, {{language}}
+              </div>
+            </div>
+          </div>
+          <div class="mb-3 row">
+            <label for="metaDescUser" class="col-md-3 col-form-label">Meta description user prompt</label>
+            <div class="col-md-9">
+              <textarea class="form-control" id="metaDescUser" name="metaDescUser" rows="4"><%= promptConfig.prompts ? promptConfig.prompts.metaDescUser : 'Pinterest Pin title: {{pinTitle}}\nPinterest Pin description: {{pinDesc}}\nLanguage: {{language}}\nPlease generate 1 SEO meta description that aligns with this Pin\'s topic. Follow the system instructions to optimize for both search and click-throughs. \nReturn only the final text without any numbering, dashes, labels, or quotation marks. Do not include "Title 1:", "1.", "-", or any symbols. Just plain clean text.' %></textarea>
+              <div class="variables-hint">
+                <strong>Available variables:</strong> {{pinTitle}}, {{pinDesc}}, {{language}}
+              </div>
+            </div>
+          </div>
+          <div class="mb-3 row">
+            <label for="slugSystemPrompt" class="col-md-3 col-form-label">Meta slug system prompt</label>
+            <div class="col-md-9">
+              <textarea class="form-control" id="slugSystemPrompt" name="slugSystemPrompt" rows="4"><%= promptConfig.prompts ? promptConfig.prompts.slugSystemPrompt : 'You are an SEO specialist. Your task is to generate a short, clean, and keyword-optimized blog post slug based on the provided meta title and recipe idea.\nSlug Format Rules:\n- Use only lowercase letters\n- Replace spaces with hyphens (kebab-case)\n- Use 3 to 6 important words only (max ~60 characters total)\n- Include 1 or 2 primary keywords from the title or recipe idea\n- Remove stopwords like "a", "the", "and", "to", "with", "of", etc.\n- Do NOT include domain names, slashes, or punctuation\n- Match the title\'s core idea, but keep it short and search-friendly\nOutput Requirements:\nReturn only the final slug (no quotes, no formatting, no label).' %></textarea>
+              <div class="variables-hint">
+                <strong>Available variables:</strong> {{recipeIdea}}, {{metaTitle}}
+              </div>
+            </div>
+          </div>
+          <div class="mb-3 row">
+            <label for="slugUserPrompt" class="col-md-3 col-form-label">Meta slug user prompt</label>
+            <div class="col-md-9">
+              <textarea class="form-control" id="slugUserPrompt" name="slugUserPrompt" rows="4"><%= promptConfig.prompts ? promptConfig.prompts.slugUserPrompt : 'Recipe Idea: {{recipeIdea}}  \nMeta Title: {{metaTitle}}\nPlease generate a short, SEO-optimized blog post slug based on the title and keyword.' %></textarea>
+              <div class="variables-hint">
+                <strong>Available variables:</strong> {{recipeIdea}}, {{metaTitle}}, {{language}}
+              </div>
+            </div>
+          </div>
+          <div class="mb-3 row">
+            <label for="blogpostSystemPrompt" class="col-md-3 col-form-label">Blog post system prompt</label>
+            <div class="col-md-9">
+              <textarea class="form-control" id="blogpostSystemPrompt" name="blogpostSystemPrompt" rows="4"><%= promptConfig.prompts ? promptConfig.prompts.blogpostSystemPrompt : 'You are a food blogger and SEO content strategist writing for the brand Wanda Recipes.\nTone & Brand Voice:\n- Audience: American women who love quick, easy, homemade meals\n- Tone: Friendly, informative, and encouraging — like chatting with a friend in the kitchen\n- Guidelines: Use warm, clear language. Avoid jargon. Be helpful, real, and supportive. Make readers feel at home and inspired to try the recipe.\nYour task is to write a fully SEO-optimized blog post for a recipe based on the following inputs: meta title, meta description, category, and annotated interest.\nWrite with search performance and readability in mind. The blog post should rank well on Google and delight readers.\n🧠 CONTENT STRUCTURE:\nWrite a blog post using this structure, but DO NOT repeat these section headers literally. Instead, optimize all section titles dynamically for SEO and clarity.\n1. **INTRODUCTION**\n   - Begin with a friendly hook that draws the reader in\n   - Include the primary keyword naturally in the first 1–2 sentences\n   - Add a personal anecdote or story to build trust and relatability\n3. **INGREDIENTS**\n   - Break into clear bullet points\n   - Provide brief, helpful tips where relevant\n   - Mention tools needed for success\n4. **STEP-BY-STEP INSTRUCTIONS** \n   - Use numbered steps  \n   - Each step should begin with a short, clear title (like a mini heading) to guide the reader (e.g., "1. Whisk the Batter" or "3. Flip and Cook")  \n   - Follow the title with a beginner-friendly explanation  \n   - Add casual encouragement, helpful tips, or notes if relevant (e.g., "Don\'t worry if it looks messy here — that\'s normal!")  \n5. **FREQUENTLY ASKED QUESTIONS**\n   - Include 4–5 questions your audience might Google\n   - Answer clearly and supportively in Wanda\'s voice\n6. **CLOSING / CALL-TO-ACTION**\n   - Wrap up with encouragement to try the recipe\n   - Suggest sharing on Pinterest or tagging on social\n   - Include a soft, warm sign-off like a kitchen friend would use\n---\n🔍 SEO REQUIREMENTS (Based on Semrush Best Practices):\n- Use the **meta title** as the blog post\'s H1\n- Include the **primary keyword** within the first 100 words\n- Naturally include **secondary keywords** (if implied in annotated interest)\n- Use proper **H2 and H3 subheadings** with relevant keywords\n- Incorporate **internal links** (if relevant) and **external links** to reputable sources\n- Include **image suggestions** or alt text phrases with keywords\n- Ensure content length is 800–1,200 words\n- Avoid keyword stuffing, clickbait, or robotic phrasing\n---\n📋 OUTPUT RULES:\n- Use SEO-optimized section headings based on the content and recipe keyword but write them as plain text — do NOT use markdown symbols like `##`, `**`, or numbers\n- Format all headings as plain lines of text above their paragraph (e.g., "Why You\'ll Love This Recipe")\n- Do NOT repeat or copy the outline structure or headings from the system prompt\n- Do NOT use any markdown, HTML, or numbered formatting\n- Return ONLY clean, human-readable blog content ready to copy into WordPress\n---\nReturn **only the blog post content**. Do not include markdown or HTML. Format it as plain, publish-ready text.' %></textarea>
+              <div class="variables-hint">
+                <strong>Available variables:</strong> {{recipeIdea}}, {{metaTitle}}, {{metaDescription}}, {{category}}, {{interests}}, {{language}}
+              </div>
+            </div>
+          </div>
+          <div class="mb-3 row">
+            <label for="blogpostUserPrompt" class="col-md-3 col-form-label">Blog post user prompt</label>
+            <div class="col-md-9">
+              <textarea class="form-control" id="blogpostUserPrompt" name="blogpostUserPrompt" rows="4"><%= promptConfig.prompts ? promptConfig.prompts.blogpostUserPrompt : 'Please write a full SEO-optimized blog post for the following recipe topic:\nRecipe Idea (Main Keyword): {{recipeIdea}}  \nMeta Title: {{metaTitle}}  \nMeta Description: {{metaDescription}}  \nCategory: {{category}}  \nAnnotated Interests: {{interests}}\nLanguage: {{language}}\nDo not repeat or label the sections — just use helpful headings and clean, natural text.  \nAvoid any markdown symbols, numbers, or bold/italic styles.  \nReturn only the final blog content as plain text.\nUse the blog structure and tone described in the system prompt.  \nDo not include outline labels or formatting (no bold, headings, asterisks, or HTML).  \nReturn **only the blog content** as clean, plain text.  \nMake it copy-paste ready for WordPress.\nFollow the blog structure and tone described in the system prompt but rewrite section headings dynamically with SEO-friendly, benefit-focused language. Return only the blog post content as clean, publish-ready plain text. Do not include markdown, bullet formatting symbols, or explanations — just the blog content.' %></textarea>
+              <div class="variables-hint">
+                <strong>Available variables:</strong> {{recipeIdea}}, {{metaTitle}}, {{metaDescription}}, {{category}}, {{interests}}, {{language}}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 mb-3">
+      <div class="card">
+        <div class="card-header bg-primary text-white">
+          <h5 class="card-title mb-0">FACEBOOK & MIDJOURNEY Prompt Config</h5>
+        </div>
+        <div class="card-body">
+          <div class="mb-3 row">
+            <label for="fbPrompt" class="col-md-3 col-form-label">Recipe Generation Prompt</label>
+            <div class="col-md-9">
+              <textarea class="form-control" id="fbPrompt" name="fbPrompt" rows="4"><%= promptConfig.prompts ? promptConfig.prompts.fbPrompt : 'Create a complete recipe for {{recipeIdea}} in {{language}}. IMPORTANT: Generate EXACTLY the recipe requested, not a similar or related dish.\n\nFollow the template below without adding, removing, or changing the order of sections, headings, or emojis:\n1. Start with an emoji and title that exactly matches the requested dish\n2. A brief introduction (2-3 sentences)\n3. Ingredients section with emoji 🧂 and ingredients listed with bullet points\n4. Preparation section with emoji 🧑‍🍳 and numbered steps\n5. A cooking tip at the end\n\nBe detailed but concise, and ensure the recipe is practical and delicious. The ingredients and instructions MUST match exactly what would be included in a blog post for the same recipe.' %></textarea>
+              <div class="variables-hint">
+                <strong>Available variables:</strong> {{recipeIdea}}, {{language}}
+              </div>
+            </div>
+          </div>
+          <div class="mb-3 row">
+            <label for="mjTemplate" class="col-md-3 col-form-label">FB Midjourney Prompt</label>
+            <div class="col-md-9">
+              <textarea class="form-control" id="mjTemplate" name="mjTemplate" rows="4"><%= promptConfig.prompts ? promptConfig.prompts.mjTemplate : 'Professional food photography of {{title}}, ingredients include {{ingredients}}, photo taken with a Canon EOS R5, 85mm lens, f/2.8, natural lighting, food styling, shallow depth of field, mouth-watering, magazine quality, top view, soft shadows, textured wood or marble background, garnished beautifully' %></textarea>
+              <div class="variables-hint">
+                <strong>Available variables:</strong> {title}, {ingredients}
+              </div>
+            </div>
+          </div>
+          <div class="mb-3 row">
+            <label for="fbCaptionPrompt" class="col-md-3 col-form-label">FB Caption prompt</label>
+            <div class="col-md-9">
+              <textarea class="form-control" id="fbCaptionPrompt" name="fbCaptionPrompt" rows="4"><%= promptConfig.prompts ? promptConfig.prompts.fbCaptionPrompt : 'Role / Persona:\nYou are a viral food video creator and playful food blogger who writes short captions that drive massive engagement on Facebook.\n\nGoal / Objective:\nCreate an engaging, shareable Facebook caption for this {{recipeIdea}} recipe that drives comments, likes, and shares. The caption should be conversational, include 2-3 emojis, ask an engaging question, and invite comments. Keep it under 150 words and make sure it entices people to try the recipe.' %></textarea>
+              <div class="variables-hint">
+                <strong>Available variables:</strong> {{recipeIdea}}, {{recipe}}, {{language}}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+<!-- recipe-template-settings.ejs -->
+<!-- This partial template can be included in your WordPress recipe settings page -->
+<div class="card mt-4">
+  <div class="card-header">
+    <h5>Recipe Template Settings</h5>
+  </div>
+  <div class="card-body">
+    <div class="alert alert-info">
+      <p>Customize how your recipe descriptions and notes are generated when uploading to WordPress.</p>
+    </div>
+    
+    <h6>Description Templates</h6>
+    <p class="text-muted">Choose default description templates for different recipe types. These will be used when no specific description is provided.</p>
+    
+    <div class="mb-3">
+      <label for="defaultDescription" class="form-label">Default Description Template</label>
+      <textarea id="defaultDescription" name="defaultDescription" class="form-control" rows="3"><%= settings.defaultDescription || "This delicious {title} is a fantastic dish that's sure to impress. Made with {ingredients}, it combines great flavors and textures for a memorable meal." %></textarea>
+      <div class="form-text">Use {title} and {ingredients} as placeholders that will be replaced with the recipe title and main ingredients.</div>
+    </div>
+    
+    <div class="mb-3">
+      <label for="cakeDescription" class="form-label">Cake Description Template</label>
+      <textarea id="cakeDescription" name="cakeDescription" class="form-control" rows="2"><%= settings.cakeDescription || "This decadent {title} is perfect for special occasions or when you're craving something sweet. Made with {ingredients}, it's a treat that everyone will love." %></textarea>
+    </div>
+    
+    <div class="mb-3">
+      <label for="soupDescription" class="form-label">Soup Description Template</label>
+      <textarea id="soupDescription" name="soupDescription" class="form-control" rows="2"><%= settings.soupDescription || "This hearty {title} is comforting and full of flavor. Made with {ingredients}, it's perfect for a cozy meal any day of the week." %></textarea>
+    </div>
+    
+    <hr>
+    
+    <h6>Notes Templates</h6>
+    <p class="text-muted">Configure notes that can be automatically added to your recipes.</p>
+    
+    <div class="form-check form-switch mb-3">
+      <input class="form-check-input" type="checkbox" id="enableStorageNote" name="enableStorageNote" <%= settings.enableStorageNote ? 'checked' : '' %>>
+      <label class="form-check-label" for="enableStorageNote">Add Storage Note</label>
+    </div>
+    
+    <div class="mb-3">
+      <label for="storageNoteTemplate" class="form-label">Storage Note Template</label>
+      <textarea id="storageNoteTemplate" name="storageNoteTemplate" class="form-control" rows="2"><%= settings.storageNoteTemplate || "Storage: Store in an airtight container in the refrigerator for up to {days} days." %></textarea>
+    </div>
+    
+    <div class="mb-3">
+      <label for="storageDays" class="form-label">Default Storage Days</label>
+      <input type="number" id="storageDays" name="storageDays" class="form-control" min="1" max="30" value="<%= settings.storageDays || 3 %>">
+    </div>
+    
+    <div class="form-check form-switch mb-3">
+      <input class="form-check-input" type="checkbox" id="enableMakeAheadNote" name="enableMakeAheadNote" <%= settings.enableMakeAheadNote ? 'checked' : '' %>>
+      <label class="form-check-label" for="enableMakeAheadNote">Add Make Ahead Note</label>
+    </div>
+    
+    <div class="mb-3">
+      <label for="makeAheadTemplate" class="form-label">Make Ahead Note Template</label>
+      <textarea id="makeAheadTemplate" name="makeAheadTemplate" class="form-control" rows="2"><%= settings.makeAheadTemplate || "Make ahead: This {dishType} can be prepared up to {hours} hours in advance. {extraInstructions}" %></textarea>
+    </div>
+    
+    <button type="submit" class="btn btn-primary">Save Template Settings</button>
+  </div>
+</div>
+
+<script>
+  // Dynamically update template settings
+  document.addEventListener('DOMContentLoaded', function() {
+    // Show/hide settings based on checkboxes
+    function updateVisibility() {
+      const storageEnabled = document.getElementById('enableStorageNote').checked;
+      const makeAheadEnabled = document.getElementById('enableMakeAheadNote').checked;
+      
+      document.getElementById('storageNoteTemplate').parentNode.style.display = storageEnabled ? 'block' : 'none';
+      document.getElementById('storageDays').parentNode.style.display = storageEnabled ? 'block' : 'none';
+      document.getElementById('makeAheadTemplate').parentNode.style.display = makeAheadEnabled ? 'block' : 'none';
+    }
+    
+    // Set up event listeners
+    document.getElementById('enableStorageNote').addEventListener('change', updateVisibility);
+    document.getElementById('enableMakeAheadNote').addEventListener('change', updateVisibility);
+    
+    // Initial visibility
+    updateVisibility();
+  });
+</script>
+    <div class="col-12 mb-3">
+      <div class="card">
+        <div class="card-header bg-success text-white">
+          <h5 class="card-title mb-0">Model Settings</h5>
+        </div>
+        <div class="card-body">
+          <div class="mb-3 row">
+            <label for="model" class="col-md-3 col-form-label">OpenAI Model</label>
+            <div class="col-md-9">
+              <select class="form-select mb-2" id="modelSelect" onchange="toggleCustomModel()">
+                <option value="gpt-4-turbo-preview" <%= promptConfig.model === 'gpt-4-turbo-preview' ? 'selected' : '' %>>GPT-4 Turbo</option>
+                <option value="gpt-4" <%= promptConfig.model === 'gpt-4' ? 'selected' : '' %>>GPT-4</option>
+                <option value="gpt-4o" <%= promptConfig.model === 'gpt-4o' ? 'selected' : '' %>>GPT-4o</option>
+                <option value="gpt-3.5-turbo" <%= promptConfig.model === 'gpt-3.5-turbo' ? 'selected' : '' %>>GPT-3.5 Turbo</option>
+                <option value="gpt-3.5-turbo-16k" <%= promptConfig.model === 'gpt-3.5-turbo-16k' ? 'selected' : '' %>>GPT-3.5 Turbo 16k</option>
+                <option value="custom" <%= ['gpt-4-turbo-preview', 'gpt-4', 'gpt-4o', 'gpt-3.5-turbo', 'gpt-3.5-turbo-16k'].includes(promptConfig.model) ? '' : 'selected' %>>Custom Model</option>
+              </select>
+              <input type="text" class="form-control" id="customModel" name="model" 
+                value="<%= ['gpt-4-turbo-preview', 'gpt-4', 'gpt-4o', 'gpt-3.5-turbo', 'gpt-3.5-turbo-16k'].includes(promptConfig.model) ? '' : promptConfig.model %>" 
+                style="display: <%= ['gpt-4-turbo-preview', 'gpt-4', 'gpt-4o', 'gpt-3.5-turbo', 'gpt-3.5-turbo-16k'].includes(promptConfig.model) ? 'none' : 'block' %>;"
+                placeholder="Enter custom model name (e.g., gpt-4-0613)">
+              <div class="form-text">Enter any OpenAI model ID (e.g., gpt-4-1106-preview, gpt-4-0125-preview, gpt-3.5-turbo-0125)</div>
+              <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="testApiConnection()">Test API Connection</button>
+              <div id="apiTestResult" class="mt-2"></div>
+            </div>
+          </div>
+          <div class="mb-3 row">
+            <label for="temperature" class="col-md-3 col-form-label">Temperature</label>
+            <div class="col-md-9">
+              <input type="range" class="form-range" min="0" max="1" step="0.1" id="temperature" name="temperature" value="<%= promptConfig.temperature || 0.7 %>">
+              <div class="d-flex justify-content-between">
+                <span class="text-muted">More deterministic (0)</span>
+                <span id="temperatureValue" class="text-primary"><%= promptConfig.temperature || 0.7 %></span>
+                <span class="text-muted">More creative (1)</span>
+              </div>
+            </div>
+          </div>
+          <div class="mb-3 row">
+            <label for="language" class="col-md-3 col-form-label">Default Language</label>
+            <div class="col-md-9">
+              <select class="form-select" id="language" name="language">
+                <option value="English" <%= promptConfig.language === 'English' ? 'selected' : '' %>>English</option>
+                <option value="Spanish" <%= promptConfig.language === 'Spanish' ? 'selected' : '' %>>Spanish</option>
+                <option value="French" <%= promptConfig.language === 'French' ? 'selected' : '' %>>French</option>
+                <option value="German" <%= promptConfig.language === 'German' ? 'selected' : '' %>>German</option>
+                <option value="Italian" <%= promptConfig.language === 'Italian' ? 'selected' : '' %>>Italian</option>
+              </select>
+            </div>
+          </div>
+          <div class="mb-3 row">
+            <label for="pinCount" class="col-md-3 col-form-label">Pin Count</label>
+            <div class="col-md-9">
+              <input type="number" class="form-control" id="pinCount" name="pinCount" min="1" max="20" value="<%= promptConfig.pinCount || 10 %>">
+              <div class="form-text">Number of Pinterest titles, descriptions, and overlays to generate (1-20)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12">
+      <button type="submit" class="btn btn-primary">Save Settings</button>
+      <a href="/" class="btn btn-secondary">Cancel</a>
+    </div>
+  </div>
+</form>
+
+<style>
+  .variables-hint {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+    padding: 5px 10px;
+    background-color: rgba(255,255,255,0.05);
+    border-radius: 4px;
+    border-left: 3px solid var(--primary-blue);
+  }
+</style>
+
+<script>
+  // Update temperature value display as slider changes
+  const temperatureSlider = document.getElementById('temperature');
+  const temperatureValue = document.getElementById('temperatureValue');
+  
+  temperatureSlider.addEventListener('input', function() {
+    temperatureValue.textContent = this.value;
+  });
+  
+  // Toggle custom model input field
+  function toggleCustomModel() {
+    const modelSelect = document.getElementById('modelSelect');
+    const customModel = document.getElementById('customModel');
+    
+    if (modelSelect.value === 'custom') {
+      customModel.style.display = 'block';
+      customModel.focus();
+    } else {
+      customModel.style.display = 'none';
+      customModel.value = '';
+      // Set the custom model input value to the selected model
+      customModel.value = modelSelect.value;
+    }
+  }
+  
+  // Initialize the form on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    // Initial setup for custom model field
+    toggleCustomModel();
+  });
+
+  // Test API connection with selected model and API key
+  async function testApiConnection() {
+    const modelSelect = document.getElementById('modelSelect');
+    const customModel = document.getElementById('customModel');
+    const apiKeyInput = document.getElementById('openaiApiKey');
+    const apiTestResult = document.getElementById('apiTestResult');
+    
+    let modelValue = customModel.value;
+    if (modelSelect.value !== 'custom') {
+      modelValue = modelSelect.value;
+    }
+    
+    if (!modelValue) {
+      apiTestResult.innerHTML = '<div class="alert alert-danger">Please select or enter a model</div>';
+      return;
+    }
+    
+    // Get API key directly from the input field
+    const apiKey = apiKeyInput.value.trim();
+    
+    if (!apiKey) {
+      apiTestResult.innerHTML = '<div class="alert alert-danger">Please enter your API key</div>';
+      return;
+    }
+    
+    apiTestResult.innerHTML = '<div class="alert alert-info">Testing connection...</div>';
+    
+    try {
+      const response = await fetch('/api/test-connection', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: modelValue,
+          apiKey: apiKey
+        })
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        apiTestResult.innerHTML = `<div class="alert alert-success">Connection successful! Model: ${result.model}</div>`;
+      } else {
+        apiTestResult.innerHTML = `<div class="alert alert-danger">Connection failed: ${result.message}</div>`;
+      }
+    } catch (error) {
+      apiTestResult.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+    }
+  }
+// Replace the testDiscordConnection function in your settings.ejs file
+
+async function testDiscordConnection() {
+  const channelId = document.getElementById('discordChannelId').value.trim();
+  const userToken = document.getElementById('discordUserToken').value.trim();
+  const webhookUrl = document.getElementById('discordWebhookUrl').value.trim();
+  const resultDiv = document.getElementById('discordTestResult');
+  
+  console.log('Testing Discord connection with:', {
+    channelId: channelId ? 'provided' : 'empty',
+    userToken: userToken ? 'provided' : 'empty',
+    webhookUrl: webhookUrl ? 'provided' : 'empty'
+  });
+  
+  if (!channelId && !webhookUrl) {
+    resultDiv.innerHTML = '<div class="alert alert-danger">Please provide either Channel ID or Webhook URL</div>';
+    return;
+  }
+  
+  if (channelId && !userToken && !webhookUrl) {
+    resultDiv.innerHTML = '<div class="alert alert-warning">Channel ID provided but no User Token or Webhook URL. Please provide a User Token or Webhook URL.</div>';
+    return;
+  }
+  
+  resultDiv.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin"></i> Testing Discord connection...</div>';
+  
+  try {
+    const response = await fetch('/api/test-discord-connection', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        channelId: channelId,
+        userToken: userToken,
+        webhookUrl: webhookUrl,
+        testMessage: 'Test message from RecipeGen AI - Discord connection successful! 🎉'
+      })
+    });
+    
+    console.log('Response status:', response.status);
+    console.log('Response headers:', response.headers);
+    
+    // Check if the response is JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      throw new Error(`Server returned ${contentType} instead of JSON. Status: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    console.log('Discord test result:', result);
+    
+    if (result.success) {
+      resultDiv.innerHTML = `
+        <div class="alert alert-success">
+          <i class="fas fa-check-circle"></i> 
+          <strong>Success!</strong> ${result.message}
+          <br><small>Method used: ${result.method}</small>
+        </div>`;
+    } else {
+      resultDiv.innerHTML = `
+        <div class="alert alert-danger">
+          <i class="fas fa-exclamation-triangle"></i> 
+          <strong>Test Failed:</strong> ${result.message}
+        </div>`;
+    }
+  } catch (error) {
+    console.error('Discord test error:', error);
+    
+    let errorMessage = error.message;
+    
+    // Handle specific error cases
+    if (error.message.includes('404')) {
+      errorMessage = 'API endpoint not found. Please make sure the Discord test endpoint is properly configured in server.js';
+    } else if (error.message.includes('Failed to fetch')) {
+      errorMessage = 'Network error. Please check your internet connection and try again.';
+    }
+    
+    resultDiv.innerHTML = `
+      <div class="alert alert-danger">
+        <i class="fas fa-exclamation-circle"></i> 
+        <strong>Connection Error:</strong> ${errorMessage}
+      </div>`;
+  }
+}
+
+// Buffer Boards Management Functions
+let boardIndex = 0;
+
+// Initialize board index based on existing boards
+document.addEventListener('DOMContentLoaded', function() {
+  const existingBoards = document.querySelectorAll('.buffer-board-item');
+  boardIndex = existingBoards.length;
+});
+
+function addBoardItem() {
+  const container = document.getElementById('bufferBoardsContainer');
+  const boardItem = document.createElement('div');
+  boardItem.className = 'buffer-board-item card mb-2';
+  boardItem.setAttribute('data-index', boardIndex);
+  
+  boardItem.innerHTML = `
+    <div class="card-body">
+      <div class="row align-items-center">
+        <div class="col-md-5">
+          <input type="text" class="form-control board-name" name="bufferBoards[${boardIndex}][name]" 
+            placeholder="Board Name (e.g., Recipe Content)" required>
+        </div>
+        <div class="col-md-5">
+          <input type="text" class="form-control board-id" name="bufferBoards[${boardIndex}][id]" 
+            placeholder="Board ID (e.g., 688cbbf56cac34c8300f0378)" required>
+        </div>
+        <div class="col-md-2">
+          <button type="button" class="btn btn-outline-danger btn-sm remove-board-btn" onclick="removeBoardItem(this)">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  container.appendChild(boardItem);
+  boardIndex++;
+  
+  // Focus on the name field
+  boardItem.querySelector('.board-name').focus();
+  updateBoardIndexes();
+}
+
+function removeBoardItem(button) {
+  const boardItem = button.closest('.buffer-board-item');
+  const container = document.getElementById('bufferBoardsContainer');
+  
+  // Don't allow removing the last board
+  const remainingBoards = container.querySelectorAll('.buffer-board-item');
+  if (remainingBoards.length <= 1) {
+    alert('You must have at least one Buffer board configured.');
+    return;
+  }
+  
+  boardItem.remove();
+  updateBoardIndexes();
+}
+
+function updateBoardIndexes() {
+  const boards = document.querySelectorAll('.buffer-board-item');
+  boards.forEach((board, index) => {
+    board.setAttribute('data-index', index);
+    const nameInput = board.querySelector('.board-name');
+    const idInput = board.querySelector('.board-id');
+    
+    nameInput.name = `bufferBoards[${index}][name]`;
+    idInput.name = `bufferBoards[${index}][id]`;
+  });
+  boardIndex = boards.length;
+}
+
+// Form submission handler to clean up board IDs
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.querySelector('form[action="/settings"]');
+  if (form) {
+    form.addEventListener('submit', function(e) {
+      // Trim all board ID and name inputs before submission
+      const boardInputs = form.querySelectorAll('.board-id, .board-name');
+      boardInputs.forEach(input => {
+        input.value = input.value.trim();
+      });
+      
+      // Also trim other Buffer settings
+      const bufferProfileId = form.querySelector('input[name="bufferProfileId"]');
+      const bufferOrgId = form.querySelector('input[name="bufferOrgId"]');
+      const bufferCookiesText = form.querySelector('textarea[name="bufferCookiesText"]');
+      
+      if (bufferProfileId) bufferProfileId.value = bufferProfileId.value.trim();
+      if (bufferOrgId) bufferOrgId.value = bufferOrgId.value.trim();
+      if (bufferCookiesText) bufferCookiesText.value = bufferCookiesText.value.trim();
+    });
+  }
+});
+  
+</script>
+</script>
+

@@ -1,0 +1,1773 @@
+<!-- XLSX Browse Recipes - Separate from Keyword Manager recipes -->
+<style>
+  /* Force sidebar link colors */
+  .sidebar .nav-link { color: white !important; }
+  .sidebar .nav-link.active { color: #3cd5af !important; background-color: rgba(110, 71, 204, 0.15) !important; }
+  .sidebar .nav-link:hover:not(.active) { background-color: rgba(255, 255, 255, 0.1) !important; }
+
+  /* Page Header */
+  .page-header {
+    background: linear-gradient(135deg, #e65100 0%, #f57c00 100%);
+    color: white;
+    padding: 24px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+  }
+
+  .page-title {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 600;
+  }
+
+  .xlsx-badge {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    margin-left: 12px;
+  }
+
+  /* Search Section */
+  .search-section {
+    padding: 20px;
+    border-bottom: 1px solid rgba(60, 213, 175, 0.1);
+  }
+
+  .search-input-group .form-control {
+    border-radius: 25px 0 0 25px;
+    padding: 12px 20px;
+    border: 2px solid rgba(60, 213, 175, 0.3);
+    border-right: none;
+    background-color: #1a1e35;
+    color: white;
+  }
+
+  .search-input-group .btn {
+    border-radius: 0 25px 25px 0;
+    padding: 12px 20px;
+    border: 2px solid #e65100;
+    border-left: none;
+    background-color: #e65100;
+  }
+
+  /* Selection Toolbar */
+  .selection-toolbar {
+    padding: 15px 20px;
+    background: linear-gradient(135deg, #232a47 0%, #2d3654 100%);
+    border-bottom: 1px solid rgba(60, 213, 175, 0.1);
+  }
+
+  .selection-controls {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .select-all-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .selection-info {
+    color: #8892b0;
+    font-size: 0.9rem;
+  }
+
+  /* Bulk Actions */
+  .bulk-actions-redesigned {
+    background: linear-gradient(135deg, #232a47 0%, #2d3654 100%);
+    border-radius: 12px;
+    padding: 20px 0;
+    margin-bottom: 20px;
+    border: 1px solid rgba(230, 81, 0, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .selection-info-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .selection-count {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .count-number {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #e65100;
+    min-width: 30px;
+    text-align: center;
+  }
+
+  .count-label {
+    color: #8892b0;
+    font-size: 0.9rem;
+  }
+
+  .action-buttons-group {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .action-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Recipe Cards */
+  .recipe-card {
+    border: 1px solid rgba(230, 81, 0, 0.2);
+    border-radius: 12px;
+    margin-bottom: 16px;
+    transition: all 0.3s ease;
+    background-color: #232a47 !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+    position: relative;
+    overflow: visible;
+  }
+
+  .recipe-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    background-color: #2d3654;
+    border-color: rgba(230, 81, 0, 0.4);
+  }
+
+  .recipe-card.selected {
+    border-color: #e65100;
+    background-color: rgba(230, 81, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(230, 81, 0, 0.15);
+  }
+
+  .recipe-card.selected::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(135deg, #e65100, #f57c00);
+  }
+
+  .recipe-content {
+    padding: 20px;
+    cursor: pointer;
+  }
+
+  .recipe-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+
+  .recipe-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: white;
+    margin: 0;
+    flex: 1;
+  }
+
+  .recipe-time {
+    font-size: 0.875rem;
+    color: #6c757d;
+    white-space: nowrap;
+    margin-left: 12px;
+  }
+
+  .recipe-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 16px;
+  }
+
+  .recipe-category {
+    display: inline-block;
+    padding: 4px 12px;
+    background: rgba(230, 81, 0, 0.2);
+    color: #f57c00;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+
+  /* Content badges */
+  .content-badges {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+
+  .content-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  .content-badge.pin-data {
+    background: rgba(189, 8, 28, 0.2);
+    color: #e60023;
+  }
+
+  .content-badge.blog {
+    background: rgba(60, 213, 175, 0.2);
+    color: #3cd5af;
+  }
+
+  .content-badge.images {
+    background: rgba(88, 101, 242, 0.2);
+    color: #5865F2;
+  }
+
+  .content-badge.wordpress {
+    background: rgba(33, 117, 155, 0.2);
+    color: #21759b;
+  }
+
+  .content-badge.canva {
+    background: rgba(0, 196, 204, 0.2);
+    color: #00c4cc;
+  }
+
+  /* Recipe Actions */
+  .recipe-actions {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    display: flex;
+    gap: 8px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 100;
+  }
+
+  .recipe-card:hover .recipe-actions {
+    opacity: 1;
+  }
+
+  .recipe-actions .btn {
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(10px);
+  }
+
+  .action-btn-view {
+    background: rgba(230, 81, 0, 0.9);
+    color: white;
+  }
+
+  .action-btn-view:hover {
+    background: #e65100;
+    transform: scale(1.05);
+  }
+
+  .action-btn-delete {
+    background: rgba(220, 53, 69, 0.9);
+    color: white;
+  }
+
+  .action-btn-delete:hover {
+    background: #dc3545;
+    transform: scale(1.05);
+  }
+
+  /* Empty State */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6c757d;
+  }
+
+  .empty-state-icon {
+    font-size: 4rem;
+    margin-bottom: 24px;
+    opacity: 0.5;
+    color: #e65100;
+  }
+
+  .empty-state h3 {
+    margin-bottom: 12px;
+    color: #495057;
+  }
+
+  /* Pinterest Style Select */
+  .pinterest-style-select {
+    min-width: 200px;
+    background-color: #1a1e35;
+    border-color: rgba(230, 81, 0, 0.3);
+    color: white;
+  }
+
+  .pinterest-style-select:focus {
+    background-color: #1a1e35;
+    border-color: #e65100;
+    box-shadow: 0 0 0 0.2rem rgba(230, 81, 0, 0.25);
+    color: white;
+  }
+
+  /* Button Styles */
+  .btn-xlsx-primary {
+    background-color: #e65100;
+    border-color: #e65100;
+    color: white;
+  }
+
+  .btn-xlsx-primary:hover {
+    background-color: #f57c00;
+    border-color: #f57c00;
+  }
+
+  .btn-pinterest {
+    background-color: #e60023;
+    border-color: #e60023;
+    color: white;
+  }
+
+  .btn-pinterest:hover {
+    background-color: #bd081c;
+    border-color: #bd081c;
+  }
+
+  .filter-btn.active {
+    background-color: #e65100 !important;
+    border-color: #e65100 !important;
+    color: white !important;
+  }
+</style>
+
+<div class="page-header">
+  <div class="d-flex justify-content-between align-items-center">
+    <h1 class="page-title">
+      <i class="bi bi-file-earmark-spreadsheet me-2"></i>
+      XLSX Browse Recipes
+      <span class="xlsx-badge">GPT XLSX Module</span>
+    </h1>
+    <div class="header-actions">
+      <a href="/gpt-xlsx-manager" class="btn btn-light">
+        <i class="bi bi-upload"></i> Upload New XLSX
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+  <!-- Search Section -->
+  <div class="search-section">
+    <form method="GET" action="/xlsx-recipes" id="xlsxRecipeFilterForm">
+      <div class="search-input-group input-group mb-3">
+        <input type="text" class="form-control" placeholder="Search XLSX recipes by name..." name="search" value="<%= searchTerm %>">
+        <button type="submit" class="btn btn-xlsx-primary">
+          <i class="bi bi-search"></i> Search
+        </button>
+        <% if (searchTerm) { %>
+          <a href="/xlsx-recipes" class="btn btn-outline-secondary">
+            <i class="bi bi-x-circle"></i> Clear
+          </a>
+        <% } %>
+      </div>
+    </form>
+    <!-- Quick Filters -->
+    <div class="d-flex gap-2 flex-wrap">
+      <button type="button" class="btn btn-sm btn-outline-light filter-btn active" data-filter="all">
+        All
+      </button>
+      <button type="button" class="btn btn-sm btn-outline-success filter-btn" data-filter="has-image">
+        <i class="bi bi-image me-1"></i>Has Discord Image
+      </button>
+      <button type="button" class="btn btn-sm btn-outline-danger filter-btn" data-filter="no-image">
+        <i class="bi bi-x-circle me-1"></i>No Discord Image
+      </button>
+      <button type="button" class="btn btn-sm filter-btn" data-filter="wp-published" style="border-color: #21759b; color: #21759b;">
+        <i class="fab fa-wordpress me-1"></i>WP Published
+      </button>
+      <button type="button" class="btn btn-sm btn-outline-info filter-btn" data-filter="has-canva">
+        <i class="bi bi-palette me-1"></i>Has Canva
+      </button>
+    </div>
+  </div>
+
+  <% if (recipes && recipes.length > 0) { %>
+    <!-- Selection Toolbar -->
+    <div class="selection-toolbar">
+      <div class="selection-controls">
+        <div class="select-all-section">
+          <input type="checkbox" id="selectAllCheckbox" class="form-check-input">
+          <label for="selectAllCheckbox" class="form-check-label">Select All</label>
+          <span class="selection-info" id="selectionInfo">No recipes selected</span>
+        </div>
+      </div>
+
+      <!-- Bulk Actions -->
+      <div class="bulk-actions-redesigned mt-3">
+        <div class="container-fluid">
+          <div class="row g-3 align-items-center">
+
+            <!-- Left: Selection Info -->
+            <div class="col-md-3">
+              <div class="selection-info-card">
+                <div class="selection-count">
+                  <span id="selectedCount" class="count-number">0</span>
+                  <span class="count-label">Selected</span>
+                </div>
+                <button type="button" class="btn btn-link btn-sm p-0 text-muted" id="clearSelectionBtn">
+                  <i class="fas fa-times me-1"></i>Clear
+                </button>
+              </div>
+            </div>
+
+            <!-- Center: Publishing Actions -->
+            <div class="col-md-6">
+              <div class="action-buttons-group">
+                <div class="action-group publishing-group">
+                  <button type="button" class="btn btn-success btn-sm" id="publishSelectedBtn" disabled>
+                    <i class="fab fa-wordpress me-1"></i>WordPress (<span id="selectedCountWP">0</span>)
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: Export & Delete (Same as normal Browse Recipes) -->
+            <div class="col-md-3 text-end">
+              <div class="dropdown d-inline-block">
+                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                  <i class="fas fa-download me-1"></i>Export
+                </button>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="/api/export/recipes/excel" download>
+                    <i class="fas fa-file-excel me-2"></i>All Recipes (Excel)
+                  </a></li>
+                  <li><button class="dropdown-item" id="exportSelectedBtn" disabled>
+                    <i class="fas fa-download me-2"></i>Selected Recipes
+                  </button></li>
+                  <li><button class="dropdown-item" id="exportPinterestBtn" disabled>
+                    <i class="fab fa-pinterest me-2"></i>Pinterest CSV
+                  </button></li>
+                  <li><button class="dropdown-item" id="exportPinterestXlsxBtn" disabled>
+                    <i class="fab fa-pinterest me-2"></i>Pinterest XLSX (Bulk Upload)
+                  </button></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><button class="dropdown-item" id="uploadCanvaZipBtn">
+                    <i class="fas fa-upload me-2"></i>Upload Canva ZIP
+                  </button></li>
+                </ul>
+              </div>
+              <button type="button" class="btn btn-outline-warning btn-sm ms-2" id="removeCanvaBtn" disabled>
+                <i class="fas fa-eraser me-1"></i>Remove Canva
+              </button>
+              <button type="button" class="btn btn-outline-danger btn-sm ms-2" id="deleteSelectedBtn" disabled>
+                <i class="fas fa-trash me-1"></i>Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recipe Cards -->
+    <div class="card-body">
+      <% recipes.forEach(function(recipe) { %>
+        <div class="recipe-card" data-recipe-id="<%= recipe.id %>"
+             data-has-image="<%= recipe.discordImageStatus === 'completed' ? 'yes' : 'no' %>"
+             data-wp-published="<%= recipe.wordpressPublication ? 'yes' : 'no' %>"
+             data-has-canva="<%= recipe.hasCanvaImage ? 'yes' : 'no' %>">
+          <!-- Selection Checkbox -->
+          <div style="position: absolute; top: 20px; left: 20px; z-index: 5;">
+            <input type="checkbox" class="form-check-input recipe-checkbox"
+                   value="<%= recipe.id %>"
+                   data-recipe-name="<%= recipe.recipe_idea %>">
+          </div>
+
+          <!-- Recipe Actions -->
+          <div class="recipe-actions">
+            <a href="/xlsx-recipe/<%= recipe.id %>" class="btn action-btn-view" title="View Recipe">
+              <i class="fa fa-eye"></i>
+            </a>
+            <button type="button" class="btn action-btn-delete delete-recipe-btn"
+                    data-recipe-id="<%= recipe.id %>"
+                    data-recipe-name="<%= recipe.recipe_idea %>"
+                    title="Delete Recipe">
+              <i class="fa fa-trash"></i>
+            </button>
+          </div>
+
+          <div class="recipe-content" onclick="window.location.href='/xlsx-recipe/<%= recipe.id %>'">
+            <div class="recipe-header">
+              <h5 class="recipe-title"><%= recipe.recipe_idea %></h5>
+              <span class="recipe-time">
+                <%= new Date(recipe.created_at).toLocaleDateString() %>
+              </span>
+            </div>
+
+            <!-- Content Badges -->
+            <div class="content-badges">
+              <% if (recipe.pinterestCount > 0) { %>
+                <span class="content-badge pin-data">
+                  <i class="fab fa-pinterest me-1"></i><%= recipe.pinterestCount %> Pin(s)
+                </span>
+              <% } %>
+
+              <% if (recipe.blog) { %>
+                <span class="content-badge blog">
+                  <i class="bi bi-file-text me-1"></i>Blog
+                </span>
+              <% } %>
+
+              <% if (recipe.discordImageStatus === 'completed') { %>
+                <span class="content-badge images">
+                  <i class="bi bi-image me-1"></i>Discord Image
+                </span>
+              <% } else if (recipe.discordImageStatus === 'failed' || recipe.discordImageStatus === 'error') { %>
+                <span class="content-badge" style="background: rgba(220, 53, 69, 0.2); color: #dc3545;">
+                  <i class="bi bi-x-circle me-1"></i>Image Failed
+                </span>
+              <% } %>
+
+              <% if (recipe.hasCanvaImage) { %>
+                <span class="content-badge canva">
+                  <i class="bi bi-palette me-1"></i>Canva
+                </span>
+              <% } %>
+
+              <% if (recipe.wordpressPublication) { %>
+                <span class="content-badge wordpress">
+                  <i class="fab fa-wordpress me-1"></i>
+                  <%= recipe.wordpressPublication.wp_status === 'publish' ? 'Published' : (recipe.wordpressPublication.wp_status === 'future' ? 'Scheduled' : 'Draft') %>
+                </span>
+              <% } %>
+            </div>
+
+            <div class="recipe-footer">
+              <span class="recipe-category">
+                <i class="bi bi-tag me-1"></i><%= recipe.category || 'Uncategorized' %>
+              </span>
+              <span class="text-muted small">
+                <i class="bi bi-file-earmark-spreadsheet me-1"></i>From XLSX
+              </span>
+            </div>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+
+  <% } else { %>
+    <!-- Empty State -->
+    <div class="card-body">
+      <div class="empty-state">
+        <div class="empty-state-icon">
+          <i class="bi bi-file-earmark-spreadsheet"></i>
+        </div>
+        <h3>No XLSX Recipes Yet</h3>
+        <p class="text-muted">Upload an XLSX file with Pinterest data to get started.</p>
+        <a href="/gpt-xlsx-manager" class="btn btn-xlsx-primary mt-3">
+          <i class="bi bi-upload me-2"></i>Upload XLSX File
+        </a>
+      </div>
+    </div>
+  <% } %>
+</div>
+
+<!-- Pinterest Export Confirmation Modal -->
+<div class="modal fade" id="pinterestExportConfirmModal" tabindex="-1" aria-labelledby="pinterestExportConfirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content" style="background-color: #1a1e35; border: 1px solid rgba(230, 81, 0, 0.3);">
+      <div class="modal-header" style="background: linear-gradient(135deg, #e65100 0%, #f57c00 100%); border-bottom: none;">
+        <h5 class="modal-title text-white" id="pinterestExportConfirmModalLabel">Export Pinterest Data</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" style="color: #ccd6f6;">
+        <p>You are about to export Pinterest data for <strong style="color: #e65100;"><span id="pinterestExportCount"></span></strong> selected recipes.</p>
+
+        <!-- Export Format Options -->
+        <div class="mb-3">
+          <label for="pinterestExportFormat" class="form-label">Export Format:</label>
+          <select class="form-select" id="pinterestExportFormat" style="background-color: #232a47; border-color: rgba(230, 81, 0, 0.3); color: white;">
+            <option value="excel">Excel with Embedded Images (Recommended)</option>
+            <option value="csv">CSV with Image URLs</option>
+          </select>
+        </div>
+
+        <p><strong>Export includes:</strong></p>
+        <ul>
+          <li><strong style="color: #f57c00;">Column 1:</strong> Image 1 (Grid) - Embedded image or URL</li>
+          <li><strong style="color: #f57c00;">Column 2:</strong> Image 2 (Grid) - Embedded image or URL</li>
+          <li><strong style="color: #f57c00;">Column 3:</strong> Overlay Text from Pinterest variation</li>
+        </ul>
+
+        <div id="selectedRecipesPinterestList" class="mt-3"></div>
+
+        <div class="alert" style="background-color: rgba(60, 213, 175, 0.1); border: 1px solid rgba(60, 213, 175, 0.3); color: #3cd5af;">
+          <i class="fas fa-info-circle me-2"></i>
+          Only recipes with grid images will be included in the export.
+        </div>
+      </div>
+      <div class="modal-footer" style="border-top: 1px solid rgba(230, 81, 0, 0.2);">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn" id="confirmPinterestExportBtn" style="background: linear-gradient(135deg, #e65100 0%, #f57c00 100%); color: white;">
+          <i class="fab fa-pinterest me-2"></i> Export Pinterest Data
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bulk Image Selection Modal -->
+<div class="modal fade" id="bulkImageSelectionModal" tabindex="-1" aria-labelledby="bulkImageSelectionModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content" style="background-color: #1a1e35; border: 1px solid rgba(230, 81, 0, 0.3);">
+      <div class="modal-header" style="background: linear-gradient(135deg, #e65100 0%, #f57c00 100%); border-bottom: none;">
+        <h5 class="modal-title text-white" id="bulkImageSelectionModalLabel">
+          <i class="fas fa-images me-2"></i>Select Featured Images for Publishing
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" style="color: #ccd6f6;">
+        <div class="alert" style="background-color: rgba(60, 213, 175, 0.1); border: 1px solid rgba(60, 213, 175, 0.3); color: #3cd5af;">
+          <i class="fas fa-info-circle me-2"></i>
+          <strong>How it works:</strong> Each recipe shows 4 variations from the Midjourney 2x2 grid.
+          Click on the variation you like best to use as the WordPress featured image. Selected images will have an orange border and checkmark.
+        </div>
+
+        <!-- Quick Selection Tools -->
+        <div class="mb-3 d-flex gap-2 flex-wrap">
+          <button type="button" class="btn btn-sm btn-outline-warning" id="selectAllTopLeft">
+            <i class="fas fa-check-square me-1"></i> Select Top-Left for All
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-warning" id="selectAllTopRight">
+            <i class="fas fa-check-square me-1"></i> Select Top-Right for All
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-warning" id="selectAllBottomLeft">
+            <i class="fas fa-check-square me-1"></i> Select Bottom-Left for All
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-warning" id="selectAllBottomRight">
+            <i class="fas fa-check-square me-1"></i> Select Bottom-Right for All
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" id="selectFirstAvailable">
+            <i class="fas fa-magic me-1"></i> Auto-Select First Variation
+          </button>
+        </div>
+
+        <!-- Image Grid -->
+        <div id="bulkImageSelectionGrid" class="row g-3">
+          <!-- Will be populated dynamically -->
+        </div>
+
+        <div id="imageSelectionLoading" class="text-center py-5" style="display: none;">
+          <div class="spinner-border text-warning" role="status">
+            <span class="visually-hidden">Loading images...</span>
+          </div>
+          <p class="mt-2 text-muted">Loading recipe images...</p>
+        </div>
+      </div>
+      <div class="modal-footer" style="border-top: 1px solid rgba(230, 81, 0, 0.2);">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn" id="confirmImageSelection" style="background: linear-gradient(135deg, #e65100 0%, #f57c00 100%); color: white;">
+          <i class="fas fa-check me-2"></i> Continue to Publish Settings
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bulk Publish Confirmation Modal -->
+<div class="modal fade" id="bulkPublishConfirmModal" tabindex="-1" aria-labelledby="bulkPublishConfirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content" style="background-color: #1a1e35; border: 1px solid rgba(230, 81, 0, 0.3);">
+      <div class="modal-header" style="background: linear-gradient(135deg, #21759b 0%, #2196f3 100%); border-bottom: none;">
+        <h5 class="modal-title text-white" id="bulkPublishConfirmModalLabel">Bulk Publish to WordPress</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" style="color: #ccd6f6;">
+        <p>You are about to publish <strong style="color: #e65100;"><span id="bulkPublishCount"></span></strong> selected recipes to WordPress.</p>
+
+        <div class="mb-3">
+          <label for="publishStatus" class="form-label">Post Status:</label>
+          <select class="form-select" id="publishStatus" style="background-color: #232a47; border-color: rgba(230, 81, 0, 0.3); color: white;">
+            <option value="draft">Draft</option>
+            <option value="publish">Publish Now</option>
+            <option value="future">Schedule for Later</option>
+            <option value="private">Private</option>
+          </select>
+        </div>
+
+        <!-- WordPress Category Selection -->
+        <div class="mb-3">
+          <label for="wordpressCategorySelect" class="form-label">
+            <i class="fas fa-folder me-1"></i>WordPress Category:
+          </label>
+          <select class="form-select" id="wordpressCategorySelect" style="background-color: #232a47; border-color: rgba(230, 81, 0, 0.3); color: white;">
+            <option value="">Auto-detect from recipe category</option>
+          </select>
+          <div class="form-text" style="color: #8892b0;">
+            <i class="fas fa-info-circle me-1"></i>
+            Categories will be auto-matched based on recipe categories.
+          </div>
+        </div>
+
+        <!-- Schedule Date/Time Picker for Bulk Publish -->
+        <div class="mb-3" id="bulkScheduleDateTime" style="display: none;">
+          <label for="bulkScheduleDate" class="form-label">Start Schedule Date & Time (Optional)</label>
+          <input type="datetime-local" class="form-control" id="bulkScheduleDate" style="background-color: #232a47; border-color: rgba(230, 81, 0, 0.3); color: white;">
+          <div class="form-text" style="color: #8892b0;">
+            <i class="fas fa-magic me-1 text-success"></i>
+            <strong>Leave empty</strong> to automatically continue from last scheduled date.
+          </div>
+        </div>
+
+        <!-- Schedule Interval Options -->
+        <div class="mb-3" id="bulkScheduleInterval" style="display: none;">
+          <label class="form-label">Schedule Interval Between Posts</label>
+          <div class="row g-2">
+            <div class="col-md-6">
+              <input type="number" class="form-control" id="scheduleIntervalValue" min="0" value="2" style="background-color: #232a47; border-color: rgba(230, 81, 0, 0.3); color: white;">
+            </div>
+            <div class="col-md-6">
+              <select class="form-select" id="scheduleIntervalUnit" style="background-color: #232a47; border-color: rgba(230, 81, 0, 0.3); color: white;">
+                <option value="minutes">Minutes</option>
+                <option value="hours" selected>Hours</option>
+                <option value="days">Days</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-3 p-2" style="background: rgba(230, 81, 0, 0.1); border: 1px solid rgba(230, 81, 0, 0.3); border-radius: 6px;">
+          <i class="fas fa-image me-2" style="color: #e65100;"></i>
+          <strong style="color: #ccd6f6;">Your selected Midjourney images will be set as featured images</strong>
+        </div>
+
+        <div id="selectedRecipesPublishList" class="mt-3"></div>
+
+        <div class="alert" style="background-color: rgba(60, 213, 175, 0.1); border: 1px solid rgba(60, 213, 175, 0.3); color: #3cd5af;">
+          <i class="fas fa-info-circle me-2"></i>
+          This will create WordPress posts with full blog content and recipe data.
+        </div>
+      </div>
+      <div class="modal-footer" style="border-top: 1px solid rgba(230, 81, 0, 0.2);">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-success" id="confirmBulkPublishBtn">
+          <i class="fab fa-wordpress me-2"></i> Publish Selected
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bulk Publish Progress Modal -->
+<div class="modal fade" id="bulkPublishProgressModal" tabindex="-1" aria-labelledby="bulkPublishProgressModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content" style="background-color: #1a1e35; border: 1px solid rgba(230, 81, 0, 0.3);">
+      <div class="modal-header" style="background: linear-gradient(135deg, #21759b 0%, #2196f3 100%); border-bottom: none;">
+        <h5 class="modal-title text-white" id="bulkPublishProgressModalLabel">Publishing to WordPress...</h5>
+      </div>
+      <div class="modal-body" style="color: #ccd6f6;">
+        <div class="mb-3">
+          <div class="progress" style="height: 20px; background-color: #232a47;">
+            <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar"
+                 id="publishProgressBar" style="width: 0%"></div>
+          </div>
+          <small class="text-muted mt-1" id="publishProgressText">Starting...</small>
+        </div>
+
+        <div id="publishResults"></div>
+      </div>
+      <div class="modal-footer" style="border-top: 1px solid rgba(230, 81, 0, 0.2);">
+        <button type="button" class="btn btn-secondary" id="closeProgressBtn" style="display: none;" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Upload Canva ZIP Modal -->
+<div class="modal fade" id="uploadCanvaZipModal" tabindex="-1" aria-labelledby="uploadCanvaZipModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content" style="background-color: #1a1e35; border: 1px solid rgba(230, 81, 0, 0.3);">
+      <div class="modal-header" style="background: linear-gradient(135deg, #e65100 0%, #ff8f00 100%); border-bottom: none;">
+        <h5 class="modal-title text-white" id="uploadCanvaZipModalLabel">
+          <i class="fas fa-upload me-2"></i>Upload Canva Designs (ZIP)
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" style="color: #ccd6f6;">
+        <div class="alert" style="background-color: #232a47; border-color: rgba(230, 81, 0, 0.3); color: #ccd6f6;">
+          <i class="fas fa-info-circle me-2" style="color: #e65100;"></i>
+          <strong>How it works:</strong>
+          <ol class="mb-0 mt-2">
+            <li>Export Pinterest data using "Pinterest CSV" → "Excel with Embedded Images"</li>
+            <li>Upload the Excel file to Canva and use bulk create feature</li>
+            <li>Download all designs from Canva as a ZIP file</li>
+            <li>Upload the ZIP file here to automatically assign images to recipes</li>
+          </ol>
+        </div>
+
+        <!-- File Upload Input -->
+        <div class="mb-3">
+          <label for="canvaZipFile" class="form-label">
+            <strong>Select ZIP File from Canva:</strong>
+          </label>
+          <input type="file" class="form-control" id="canvaZipFile" accept=".zip" required
+                 style="background-color: #232a47; border-color: rgba(230, 81, 0, 0.3); color: #ccd6f6;">
+          <div class="form-text" style="color: #8892b0;">
+            <i class="fas fa-file-archive me-1"></i>
+            Only ZIP files are accepted. The images will be matched to recipes in the same order as the export.
+          </div>
+        </div>
+
+        <!-- Preview/Status Area -->
+        <div id="zipUploadStatus" class="mt-3" style="display: none;">
+          <div class="card" style="background-color: #232a47; border-color: rgba(230, 81, 0, 0.3);">
+            <div class="card-body">
+              <h6 class="card-title" style="color: #e65100;">
+                <i class="fas fa-spinner fa-spin me-2"></i>Processing ZIP file...
+              </h6>
+              <div class="progress mt-2" style="height: 20px; background-color: #1a1e35;">
+                <div class="progress-bar progress-bar-striped progress-bar-animated"
+                     id="zipUploadProgress"
+                     role="progressbar"
+                     style="width: 0%; background: linear-gradient(90deg, #e65100, #ff8f00);">0%</div>
+              </div>
+              <div id="zipUploadMessage" class="mt-2 small" style="color: #8892b0;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Results Area -->
+        <div id="zipUploadResults" class="mt-3" style="display: none;"></div>
+      </div>
+      <div class="modal-footer" style="border-top: 1px solid rgba(230, 81, 0, 0.2);">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn" id="confirmCanvaZipUploadBtn" style="background: linear-gradient(135deg, #e65100 0%, #ff8f00 100%); color: white;">
+          <i class="fas fa-cloud-upload-alt me-2"></i>Upload & Process ZIP
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Image Selection Styles - Matching normal Browse Recipes */
+  .recipe-image-selection-card {
+    background: #2d3654;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+  }
+  .recipe-image-selection-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+  .recipe-image-selection-header {
+    background: #232a47;
+    padding: 12px;
+    border-bottom: 1px solid rgba(230, 81, 0, 0.2);
+  }
+  .recipe-image-selection-header h6 {
+    color: #e65100;
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+  .image-options-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    padding: 12px;
+  }
+  .image-option {
+    position: relative;
+    cursor: pointer;
+    border: 3px solid transparent;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    aspect-ratio: 1;
+  }
+  .image-option:hover {
+    border-color: rgba(230, 81, 0, 0.5);
+    transform: scale(1.05);
+  }
+  .image-option.selected {
+    border-color: #e65100;
+    box-shadow: 0 0 20px rgba(230, 81, 0, 0.4);
+  }
+  .image-option img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .image-option-label {
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(230, 81, 0, 0.9);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+  .image-option-check {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: #e65100;
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+  .image-option.selected .image-option-check {
+    display: flex;
+  }
+  .no-image-available {
+    grid-column: span 2;
+    padding: 40px;
+    text-align: center;
+    color: #6c757d;
+  }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const checkboxes = document.querySelectorAll('.recipe-checkbox');
+  const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+  const selectionInfo = document.getElementById('selectionInfo');
+  const selectedCount = document.getElementById('selectedCount');
+  const selectedCountWP = document.getElementById('selectedCountWP');
+  const publishSelectedBtn = document.getElementById('publishSelectedBtn');
+  const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+  const exportSelectedBtn = document.getElementById('exportSelectedBtn');
+  const exportPinterestBtn = document.getElementById('exportPinterestBtn');
+  const exportPinterestXlsxBtn = document.getElementById('exportPinterestXlsxBtn');
+  const removeCanvaBtn = document.getElementById('removeCanvaBtn');
+  const clearSelectionBtn = document.getElementById('clearSelectionBtn');
+
+  function updateSelectionUI() {
+    const selected = document.querySelectorAll('.recipe-checkbox:checked');
+    const count = selected.length;
+
+    selectedCount.textContent = count;
+    if (selectedCountWP) selectedCountWP.textContent = count;
+
+    if (count === 0) {
+      selectionInfo.textContent = 'No recipes selected';
+    } else if (count === 1) {
+      selectionInfo.textContent = '1 recipe selected';
+    } else {
+      selectionInfo.textContent = count + ' recipes selected';
+    }
+
+    // Enable/disable buttons based on selection
+    if (publishSelectedBtn) publishSelectedBtn.disabled = count === 0;
+    if (deleteSelectedBtn) deleteSelectedBtn.disabled = count === 0;
+    if (exportSelectedBtn) exportSelectedBtn.disabled = count === 0;
+    if (exportPinterestBtn) exportPinterestBtn.disabled = count === 0;
+    if (exportPinterestXlsxBtn) exportPinterestXlsxBtn.disabled = count === 0;
+    if (removeCanvaBtn) removeCanvaBtn.disabled = count === 0;
+
+    // Update card selection state - query dynamically
+    document.querySelectorAll('.recipe-checkbox').forEach(checkbox => {
+      const card = checkbox.closest('.recipe-card');
+      if (checkbox.checked) {
+        card.classList.add('selected');
+      } else {
+        card.classList.remove('selected');
+      }
+    });
+  }
+
+  // Checkbox change handlers - use event delegation for dynamic content
+  document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('recipe-checkbox')) {
+      updateSelectionUI();
+    }
+  });
+
+  // Select all handler
+  if (selectAllCheckbox) {
+    selectAllCheckbox.addEventListener('change', function() {
+      const isChecked = this.checked;
+      document.querySelectorAll('.recipe-checkbox').forEach(checkbox => {
+        checkbox.checked = isChecked;
+      });
+      updateSelectionUI();
+    });
+  }
+
+  // Clear selection handler
+  if (clearSelectionBtn) {
+    clearSelectionBtn.addEventListener('click', function() {
+      document.querySelectorAll('.recipe-checkbox').forEach(checkbox => {
+        checkbox.checked = false;
+      });
+      selectAllCheckbox.checked = false;
+      updateSelectionUI();
+    });
+  }
+
+  // Delete selected recipes
+  if (deleteSelectedBtn) {
+    deleteSelectedBtn.addEventListener('click', async function() {
+    const selected = document.querySelectorAll('.recipe-checkbox:checked');
+    const ids = Array.from(selected).map(cb => cb.value);
+    const names = Array.from(selected).map(cb => cb.dataset.recipeName);
+
+    if (ids.length === 0) {
+      alert('Please select at least one recipe to delete');
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to delete ${ids.length} recipe(s)?\n\n${names.slice(0, 5).join('\n')}${names.length > 5 ? '\n... and ' + (names.length - 5) + ' more' : ''}`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/recipes/bulk-delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ recipeIds: ids })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        window.location.reload();
+      } else {
+        alert('Error deleting recipes: ' + result.message);
+      }
+    } catch (error) {
+      alert('Error deleting recipes: ' + error.message);
+    }
+    });
+  }
+
+  // Global variable to store image selections
+  window.selectedFeaturedImages = {};
+
+  // WordPress publish - with image selection workflow
+  if (publishSelectedBtn) {
+    publishSelectedBtn.addEventListener('click', async function() {
+      const selectedCheckboxes = document.querySelectorAll('.recipe-checkbox:checked');
+
+      if (selectedCheckboxes.length === 0) {
+        alert('Please select at least one recipe to publish.');
+        return;
+      }
+
+      // Disable button and show loading
+      this.disabled = true;
+      this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Checking WordPress...';
+
+      try {
+        // Check if WordPress is ready for bulk publishing
+        const wpCheckResponse = await fetch('/api/wordpress/bulk-ready');
+        const wpCheck = await wpCheckResponse.json();
+
+        if (!wpCheck.ready) {
+          alert('WordPress Not Ready: ' + wpCheck.message + '\n\nPlease configure your WordPress settings first.');
+          this.disabled = false;
+          this.innerHTML = '<i class="fab fa-wordpress me-1"></i>WordPress (<span id="selectedCountWP">' + selectedCheckboxes.length + '</span>)';
+          return;
+        }
+
+        // WordPress is ready, show the IMAGE SELECTION modal first
+        await showBulkImageSelectionModal(selectedCheckboxes);
+
+        // Reset button
+        this.disabled = false;
+        this.innerHTML = '<i class="fab fa-wordpress me-1"></i>WordPress (<span id="selectedCountWP">' + selectedCheckboxes.length + '</span>)';
+
+      } catch (error) {
+        console.error('Error checking WordPress:', error);
+        this.disabled = false;
+        this.innerHTML = '<i class="fab fa-wordpress me-1"></i>WordPress (<span id="selectedCountWP">' + selectedCheckboxes.length + '</span>)';
+      }
+    });
+  }
+
+  // Function to show bulk image selection modal
+  async function showBulkImageSelectionModal(selectedCheckboxes) {
+    const imageSelectionModal = new bootstrap.Modal(document.getElementById('bulkImageSelectionModal'));
+    const imageGrid = document.getElementById('bulkImageSelectionGrid');
+    const loadingDiv = document.getElementById('imageSelectionLoading');
+
+    // Clear previous selections
+    window.selectedFeaturedImages = {};
+
+    // Show loading
+    imageGrid.style.display = 'none';
+    loadingDiv.style.display = 'block';
+
+    // Show modal
+    imageSelectionModal.show();
+
+    // Fetch images for all selected recipes
+    const recipeIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+    const recipeImages = await fetchRecipeImages(recipeIds);
+
+    // Build the image selection grid
+    buildImageSelectionGrid(recipeImages, selectedCheckboxes);
+
+    // Hide loading
+    loadingDiv.style.display = 'none';
+    imageGrid.style.display = 'flex';
+    imageGrid.classList.add('row', 'g-3');
+  }
+
+  // Function to fetch recipe images
+  async function fetchRecipeImages(recipeIds) {
+    try {
+      const response = await fetch('/api/recipes/bulk-images', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ recipeIds })
+      });
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching recipe images:', error);
+      return [];
+    }
+  }
+
+  // Function to build image selection grid
+  function buildImageSelectionGrid(recipeImages, selectedCheckboxes) {
+    const imageGrid = document.getElementById('bulkImageSelectionGrid');
+    imageGrid.innerHTML = '';
+
+    selectedCheckboxes.forEach(checkbox => {
+      const recipeId = checkbox.value;
+      const recipeName = checkbox.getAttribute('data-recipe-name');
+      const recipeImageData = recipeImages.find(r => r.id == recipeId);
+
+      const colDiv = document.createElement('div');
+      colDiv.className = 'col-md-6 col-lg-4';
+
+      let imagesHTML = '';
+
+      if (recipeImageData && recipeImageData.images && recipeImageData.images.length > 0) {
+        recipeImageData.images.forEach((img, index) => {
+          const positionLabels = ['Top-Left', 'Top-Right', 'Bottom-Left', 'Bottom-Right'];
+          imagesHTML += `
+            <div class="image-option" data-recipe-id="${recipeId}" data-image-path="${img.path}" data-position="${index}">
+              <img src="${img.url}" alt="${positionLabels[index]}">
+              <span class="image-option-label">${positionLabels[index]}</span>
+              <span class="image-option-check"><i class="fas fa-check"></i></span>
+            </div>
+          `;
+        });
+      } else {
+        imagesHTML = '<div class="no-image-available"><i class="fas fa-image me-2" style="font-size: 2rem; opacity: 0.5;"></i><br>No images available</div>';
+      }
+
+      colDiv.innerHTML = `
+        <div class="recipe-image-selection-card">
+          <div class="recipe-image-selection-header">
+            <h6><i class="fas fa-utensils me-2"></i>${recipeName}</h6>
+          </div>
+          <div class="image-options-grid">
+            ${imagesHTML}
+          </div>
+        </div>
+      `;
+
+      imageGrid.appendChild(colDiv);
+    });
+
+    // Add click handlers to image options
+    document.querySelectorAll('.image-option').forEach(option => {
+      option.addEventListener('click', function() {
+        const recipeId = this.getAttribute('data-recipe-id');
+        const imagePath = this.getAttribute('data-image-path');
+
+        // Remove selection from other images in the same recipe
+        document.querySelectorAll(`.image-option[data-recipe-id="${recipeId}"]`).forEach(opt => {
+          opt.classList.remove('selected');
+        });
+
+        // Select this image
+        this.classList.add('selected');
+
+        // Store selection
+        window.selectedFeaturedImages[recipeId] = imagePath;
+      });
+    });
+  }
+
+  // Quick selection button handlers
+  function selectAllByPosition(position) {
+    document.querySelectorAll(`.image-option[data-position="${position}"]`).forEach(option => {
+      option.click();
+    });
+  }
+
+  document.getElementById('selectAllTopLeft')?.addEventListener('click', () => selectAllByPosition(0));
+  document.getElementById('selectAllTopRight')?.addEventListener('click', () => selectAllByPosition(1));
+  document.getElementById('selectAllBottomLeft')?.addEventListener('click', () => selectAllByPosition(2));
+  document.getElementById('selectAllBottomRight')?.addEventListener('click', () => selectAllByPosition(3));
+
+  document.getElementById('selectFirstAvailable')?.addEventListener('click', () => {
+    document.querySelectorAll('.recipe-image-selection-card').forEach(card => {
+      const firstImage = card.querySelector('.image-option');
+      if (firstImage) firstImage.click();
+    });
+  });
+
+  // Confirm image selection and proceed to publish settings
+  document.getElementById('confirmImageSelection')?.addEventListener('click', function() {
+    // Close image selection modal and wait for it to fully close before opening the next one
+    const imageSelectionModalEl = document.getElementById('bulkImageSelectionModal');
+    const imageSelectionModal = bootstrap.Modal.getInstance(imageSelectionModalEl);
+
+    // Wait for the modal to fully hide before showing the publish modal
+    imageSelectionModalEl.addEventListener('hidden.bs.modal', function onHidden() {
+      // Remove the listener so it only fires once
+      imageSelectionModalEl.removeEventListener('hidden.bs.modal', onHidden);
+
+      // Now show the publish confirmation modal
+      const selectedCheckboxes = document.querySelectorAll('.recipe-checkbox:checked');
+      const publishModal = new bootstrap.Modal(document.getElementById('bulkPublishConfirmModal'));
+      const bulkPublishCount = document.getElementById('bulkPublishCount');
+      const selectedRecipesPublishList = document.getElementById('selectedRecipesPublishList');
+
+      bulkPublishCount.textContent = selectedCheckboxes.length;
+
+      // Build list of selected recipes with image status
+      let recipeListHtml = '<ul class="list-unstyled">';
+      selectedCheckboxes.forEach(checkbox => {
+        const recipeId = checkbox.value;
+        const recipeName = checkbox.getAttribute('data-recipe-name');
+        const hasSelectedImage = window.selectedFeaturedImages[recipeId];
+
+        const statusIcon = hasSelectedImage
+          ? '<i class="fas fa-check-circle text-success me-2"></i>'
+          : '<i class="fas fa-minus-circle text-warning me-2"></i>';
+
+        recipeListHtml += `<li>${statusIcon}${recipeName}</li>`;
+      });
+      recipeListHtml += '</ul>';
+
+      selectedRecipesPublishList.innerHTML = recipeListHtml;
+      publishModal.show();
+    });
+
+    imageSelectionModal.hide();
+  });
+
+  // Show/hide schedule options based on post status
+  document.getElementById('publishStatus')?.addEventListener('change', function() {
+    const scheduleDateTime = document.getElementById('bulkScheduleDateTime');
+    const scheduleInterval = document.getElementById('bulkScheduleInterval');
+
+    if (this.value === 'future') {
+      scheduleDateTime.style.display = 'block';
+      scheduleInterval.style.display = 'block';
+    } else {
+      scheduleDateTime.style.display = 'none';
+      scheduleInterval.style.display = 'none';
+    }
+  });
+
+  // Confirm bulk publish
+  document.getElementById('confirmBulkPublishBtn')?.addEventListener('click', async function() {
+    const selectedCheckboxes = document.querySelectorAll('.recipe-checkbox:checked');
+    const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+
+    const publishStatus = document.getElementById('publishStatus').value;
+    const categoryId = document.getElementById('wordpressCategorySelect').value;
+    const includeFeaturedImage = true; // Always include featured images from selected Midjourney crops
+    const scheduleDate = document.getElementById('bulkScheduleDate')?.value || '';
+    const intervalValue = parseInt(document.getElementById('scheduleIntervalValue')?.value || '2');
+    const intervalUnit = document.getElementById('scheduleIntervalUnit')?.value || 'hours';
+
+    // Close confirmation modal
+    const confirmModal = bootstrap.Modal.getInstance(document.getElementById('bulkPublishConfirmModal'));
+    confirmModal.hide();
+
+    // Show progress modal
+    const progressModal = new bootstrap.Modal(document.getElementById('bulkPublishProgressModal'));
+    const progressBar = document.getElementById('publishProgressBar');
+    const progressText = document.getElementById('publishProgressText');
+    const publishResults = document.getElementById('publishResults');
+    const closeProgressBtn = document.getElementById('closeProgressBtn');
+
+    progressBar.style.width = '0%';
+    progressText.textContent = 'Starting...';
+    publishResults.innerHTML = '';
+    closeProgressBtn.style.display = 'none';
+    progressModal.show();
+
+    // Publish recipes
+    let published = 0;
+    let failed = 0;
+
+    for (let i = 0; i < selectedIds.length; i++) {
+      const recipeId = selectedIds[i];
+      const checkbox = document.querySelector(`.recipe-checkbox[value="${recipeId}"]`);
+      const recipeName = checkbox?.getAttribute('data-recipe-name') || `Recipe ${recipeId}`;
+
+      progressText.textContent = `Publishing: ${recipeName} (${i + 1}/${selectedIds.length})`;
+
+      try {
+        const response = await fetch('/api/wordpress/bulk-publish', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            recipeIds: [recipeId],
+            status: publishStatus,
+            categoryId: categoryId || null,
+            includeFeaturedImage: includeFeaturedImage,
+            selectedFeaturedImages: window.selectedFeaturedImages || {},
+            scheduleDate: scheduleDate,
+            intervalValue: intervalValue,
+            intervalUnit: intervalUnit
+          })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          published++;
+          publishResults.innerHTML += `<div class="text-success mb-1"><i class="fas fa-check me-2"></i>${recipeName}</div>`;
+        } else {
+          failed++;
+          publishResults.innerHTML += `<div class="text-danger mb-1"><i class="fas fa-times me-2"></i>${recipeName}: ${result.message}</div>`;
+        }
+      } catch (error) {
+        failed++;
+        publishResults.innerHTML += `<div class="text-danger mb-1"><i class="fas fa-times me-2"></i>${recipeName}: ${error.message}</div>`;
+      }
+
+      // Update progress
+      const progress = ((i + 1) / selectedIds.length) * 100;
+      progressBar.style.width = progress + '%';
+    }
+
+    // Done
+    progressText.textContent = `Completed! Published: ${published}, Failed: ${failed}`;
+    progressBar.classList.remove('progress-bar-animated');
+    closeProgressBtn.style.display = 'block';
+
+    // Reload on close
+    closeProgressBtn.addEventListener('click', () => {
+      window.location.reload();
+    }, { once: true });
+  });
+
+  // Export Selected Recipes to Excel
+  if (exportSelectedBtn) {
+    exportSelectedBtn.addEventListener('click', function() {
+      const selected = document.querySelectorAll('.recipe-checkbox:checked');
+      const ids = Array.from(selected).map(cb => cb.value);
+
+      if (ids.length === 0) {
+        alert('Please select at least one recipe to export.');
+        return;
+      }
+
+      // Create form to submit selected IDs
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = '/api/export/recipes/excel/selected';
+      form.style.display = 'none';
+
+      ids.forEach(id => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'recipeIds[]';
+        input.value = id;
+        form.appendChild(input);
+      });
+
+      document.body.appendChild(form);
+      form.submit();
+      document.body.removeChild(form);
+    });
+  }
+
+  // Export Pinterest CSV - Show modal
+  if (exportPinterestBtn) {
+    exportPinterestBtn.addEventListener('click', function() {
+      const selectedCheckboxes = document.querySelectorAll('.recipe-checkbox:checked');
+
+      if (selectedCheckboxes.length === 0) {
+        alert('Please select at least one recipe to export Pinterest data.');
+        return;
+      }
+
+      // Show Pinterest export confirmation modal
+      const pinterestModal = new bootstrap.Modal(document.getElementById('pinterestExportConfirmModal'));
+      const pinterestCount = document.getElementById('pinterestExportCount');
+      const selectedRecipesPinterestList = document.getElementById('selectedRecipesPinterestList');
+
+      pinterestCount.textContent = selectedCheckboxes.length;
+
+      // Build list of selected recipes
+      let recipeListHtml = '<ul class="list-unstyled">';
+      selectedCheckboxes.forEach(checkbox => {
+        const recipeName = checkbox.getAttribute('data-recipe-name');
+        recipeListHtml += `<li><i class="fab fa-pinterest me-2" style="color: #e60023;"></i>${recipeName}</li>`;
+      });
+      recipeListHtml += '</ul>';
+
+      selectedRecipesPinterestList.innerHTML = recipeListHtml;
+      pinterestModal.show();
+    });
+  }
+
+  // Confirm Pinterest export functionality
+  const confirmPinterestExportBtn = document.getElementById('confirmPinterestExportBtn');
+  if (confirmPinterestExportBtn) {
+    confirmPinterestExportBtn.addEventListener('click', function() {
+      const selectedCheckboxes = document.querySelectorAll('.recipe-checkbox:checked');
+      const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+      const exportFormat = document.getElementById('pinterestExportFormat').value;
+
+      // Create form to submit selected IDs
+      const form = document.createElement('form');
+      form.method = 'POST';
+
+      // Set the action based on selected format
+      if (exportFormat === 'excel') {
+        form.action = '/api/export/recipes/pinterest-excel/selected';
+      } else {
+        form.action = '/api/export/recipes/pinterest-csv/selected';
+      }
+
+      form.style.display = 'none';
+
+      // Add selected recipe IDs
+      selectedIds.forEach(id => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'recipeIds[]';
+        input.value = id;
+        form.appendChild(input);
+      });
+
+      document.body.appendChild(form);
+      form.submit();
+      document.body.removeChild(form);
+
+      // Close modal
+      bootstrap.Modal.getInstance(document.getElementById('pinterestExportConfirmModal')).hide();
+    });
+  }
+
+  // Export Pinterest XLSX (Bulk Upload)
+  if (exportPinterestXlsxBtn) {
+    exportPinterestXlsxBtn.addEventListener('click', function() {
+      const selected = document.querySelectorAll('.recipe-checkbox:checked');
+      const ids = Array.from(selected).map(cb => cb.value);
+
+      if (ids.length === 0) {
+        alert('Please select at least one recipe to export Pinterest XLSX.');
+        return;
+      }
+
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = '/api/export/recipes/pinterest-xlsx/selected';
+      form.style.display = 'none';
+
+      ids.forEach(id => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'recipeIds[]';
+        input.value = id;
+        form.appendChild(input);
+      });
+
+      document.body.appendChild(form);
+      form.submit();
+      document.body.removeChild(form);
+    });
+  }
+
+  // ==================== CANVA ZIP UPLOAD FUNCTIONALITY ====================
+
+  // Upload Canva ZIP button - Opens modal
+  const uploadCanvaZipBtn = document.getElementById('uploadCanvaZipBtn');
+  if (uploadCanvaZipBtn) {
+    uploadCanvaZipBtn.addEventListener('click', function() {
+      const uploadModal = new bootstrap.Modal(document.getElementById('uploadCanvaZipModal'));
+
+      // Reset modal state
+      document.getElementById('canvaZipFile').value = '';
+      document.getElementById('zipUploadStatus').style.display = 'none';
+      document.getElementById('zipUploadResults').style.display = 'none';
+      document.getElementById('zipUploadProgress').style.width = '0%';
+      document.getElementById('zipUploadProgress').textContent = '0%';
+      document.getElementById('confirmCanvaZipUploadBtn').disabled = false;
+      document.getElementById('confirmCanvaZipUploadBtn').innerHTML = '<i class="fas fa-cloud-upload-alt me-2"></i>Upload & Process ZIP';
+
+      uploadModal.show();
+    });
+  }
+
+  // Confirm Canva ZIP upload and process
+  const confirmCanvaZipUploadBtn = document.getElementById('confirmCanvaZipUploadBtn');
+  if (confirmCanvaZipUploadBtn) {
+    confirmCanvaZipUploadBtn.addEventListener('click', async function() {
+      const fileInput = document.getElementById('canvaZipFile');
+      const file = fileInput.files[0];
+
+      if (!file) {
+        alert('Please select a ZIP file to upload.');
+        return;
+      }
+
+      if (!file.name.endsWith('.zip')) {
+        alert('Please select a valid ZIP file.');
+        return;
+      }
+
+      // Disable upload button and show progress
+      confirmCanvaZipUploadBtn.disabled = true;
+      document.getElementById('zipUploadStatus').style.display = 'block';
+      document.getElementById('zipUploadResults').style.display = 'none';
+
+      // Update progress message
+      const progressBar = document.getElementById('zipUploadProgress');
+      const statusMessage = document.getElementById('zipUploadMessage');
+
+      statusMessage.textContent = 'Uploading ZIP file...';
+      progressBar.style.width = '10%';
+      progressBar.textContent = '10%';
+
+      try {
+        // Create FormData and upload
+        const formData = new FormData();
+        formData.append('canvaZip', file);
+
+        // CRITICAL: Include the recipe order from the export to ensure correct matching
+        const exportOrder = localStorage.getItem('pinterestExportOrder');
+        if (exportOrder) {
+          formData.append('recipeOrder', exportOrder);
+          console.log('📌 Including recipe export order with ZIP upload:', exportOrder);
+        } else {
+          console.warn('⚠️ No export order found in localStorage - images may not match correctly');
+        }
+
+        statusMessage.textContent = 'Extracting images from ZIP...';
+        progressBar.style.width = '30%';
+        progressBar.textContent = '30%';
+
+        const response = await fetch('/api/upload-canva-zip', {
+          method: 'POST',
+          body: formData,
+          credentials: 'include' // IMPORTANT: Include session cookies
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.message || 'Failed to upload ZIP file');
+        }
+
+        // Update progress
+        statusMessage.textContent = 'Processing images and matching to recipes...';
+        progressBar.style.width = '70%';
+        progressBar.textContent = '70%';
+
+        // Wait a moment for visual feedback
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // Complete
+        progressBar.style.width = '100%';
+        progressBar.textContent = '100%';
+        progressBar.classList.remove('progress-bar-animated');
+        progressBar.style.background = 'linear-gradient(90deg, #00897b, #26a69a)';
+        statusMessage.textContent = 'Upload complete!';
+
+        // Show results
+        document.getElementById('zipUploadStatus').style.display = 'none';
+        const resultsDiv = document.getElementById('zipUploadResults');
+        resultsDiv.style.display = 'block';
+
+        let resultsHtml = `
+          <div class="alert" style="background-color: rgba(0, 137, 123, 0.2); border-color: #00897b; color: #26a69a;">
+            <h6><i class="fas fa-check-circle me-2"></i>Successfully processed ${result.processed || result.matchedCount || 0} images!</h6>
+            <p class="mb-0 small">Images have been assigned to recipes in the export order.</p>
+          </div>
+          <div class="card" style="background-color: #232a47; border-color: rgba(230, 81, 0, 0.3);">
+            <div class="card-header" style="background-color: #1a1e35; color: #ccd6f6;">
+              <strong>Processing Summary</strong>
+            </div>
+            <div class="card-body" style="color: #ccd6f6;">
+              <ul class="list-unstyled mb-0">
+                <li><i class="fas fa-file-archive me-2" style="color: #e65100;"></i><strong>ZIP File:</strong> ${file.name}</li>
+                <li><i class="fas fa-images me-2" style="color: #26a69a;"></i><strong>Images Extracted:</strong> ${result.extracted || result.imagesFound || 0}</li>
+                <li><i class="fas fa-check-double me-2" style="color: #26a69a;"></i><strong>Recipes Updated:</strong> ${result.processed || result.matchedCount || 0}</li>
+              </ul>
+            </div>
+          </div>
+        `;
+
+        if (result.skipped && result.skipped.length > 0) {
+          resultsHtml += `
+            <div class="alert mt-3" style="background-color: rgba(255, 152, 0, 0.2); border-color: #ff9800; color: #ffc107;">
+              <strong><i class="fas fa-exclamation-triangle me-2"></i>Skipped ${result.skipped.length} files:</strong>
+              <ul class="mb-0 mt-2 small">
+                ${result.skipped.map(s => `<li>${s}</li>`).join('')}
+              </ul>
+            </div>
+          `;
+        }
+
+        resultsHtml += `
+          <div class="alert mt-3" style="background-color: rgba(33, 150, 243, 0.2); border-color: #2196f3; color: #64b5f6;">
+            <i class="fas fa-lightbulb me-2"></i>
+            <strong>Next step:</strong> You can now publish your recipes, and the Canva images will be automatically included at the bottom of each blog article!
+          </div>
+        `;
+
+        resultsDiv.innerHTML = resultsHtml;
+
+        // Enable close button
+        confirmCanvaZipUploadBtn.textContent = 'Close';
+        confirmCanvaZipUploadBtn.disabled = false;
+        confirmCanvaZipUploadBtn.onclick = function() {
+          bootstrap.Modal.getInstance(document.getElementById('uploadCanvaZipModal')).hide();
+          // Reload page to show updated images
+          setTimeout(() => location.reload(), 500);
+        };
+
+      } catch (error) {
+        console.error('Error uploading ZIP:', error);
+
+        // Show error
+        progressBar.classList.remove('progress-bar-animated');
+        progressBar.style.background = 'linear-gradient(90deg, #d32f2f, #f44336)';
+        statusMessage.innerHTML = `<span style="color: #f44336;"><i class="fas fa-times-circle me-2"></i>${error.message}</span>`;
+
+        document.getElementById('zipUploadResults').style.display = 'block';
+        document.getElementById('zipUploadResults').innerHTML = `
+          <div class="alert" style="background-color: rgba(211, 47, 47, 0.2); border-color: #d32f2f; color: #f44336;">
+            <h6><i class="fas fa-exclamation-circle me-2"></i>Upload Failed</h6>
+            <p class="mb-0">${error.message}</p>
+          </div>
+        `;
+
+        confirmCanvaZipUploadBtn.disabled = false;
+      }
+    });
+  }
+
+  // Remove Canva Images
+  if (removeCanvaBtn) {
+    removeCanvaBtn.addEventListener('click', async function() {
+      const selected = document.querySelectorAll('.recipe-checkbox:checked');
+      const ids = Array.from(selected).map(cb => cb.value);
+
+      if (ids.length === 0) {
+        alert('Please select at least one recipe to remove Canva images.');
+        return;
+      }
+
+      if (!confirm(`Remove Canva images from ${ids.length} recipe(s)?`)) {
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/blog/bulk-remove-canva-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ recipeIds: ids })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          alert('Canva images removed successfully!');
+          window.location.reload();
+        } else {
+          alert('Error: ' + result.message);
+        }
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    });
+  }
+
+  // Quick filter buttons
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      // Update active state
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+
+      const filter = this.dataset.filter;
+      const cards = document.querySelectorAll('.recipe-card');
+
+      cards.forEach(card => {
+        let show = true;
+        if (filter === 'has-image') show = card.dataset.hasImage === 'yes';
+        else if (filter === 'no-image') show = card.dataset.hasImage !== 'yes';
+        else if (filter === 'wp-published') show = card.dataset.wpPublished === 'yes';
+        else if (filter === 'has-canva') show = card.dataset.hasCanva === 'yes';
+        card.style.display = show ? '' : 'none';
+      });
+
+      // Update visible count
+      const visible = document.querySelectorAll('.recipe-card[style=""], .recipe-card:not([style])').length;
+      selectionInfo.textContent = `Showing ${visible} recipes`;
+    });
+  });
+
+  // Delete single recipe
+  document.querySelectorAll('.delete-recipe-btn').forEach(btn => {
+    btn.addEventListener('click', async function(e) {
+      e.stopPropagation();
+      const recipeId = this.dataset.recipeId;
+      const recipeName = this.dataset.recipeName;
+
+      if (!confirm(`Delete "${recipeName}"?`)) {
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/recipes/bulk-delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ recipeIds: [recipeId] })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          this.closest('.recipe-card').remove();
+        } else {
+          alert('Error deleting recipe: ' + result.message);
+        }
+      } catch (error) {
+        alert('Error deleting recipe: ' + error.message);
+      }
+    });
+  });
+});
+</script>

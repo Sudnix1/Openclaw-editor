@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl:*)",
+      "Bash(dir)",
+      "Bash(node:*)",
+      "Bash(rm:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "Bash(npm start)",
+      "Bash(sqlite3:*)",
+      "Bash(npm install:*)",
+      "Bash(dir:*)",
+      "Bash(taskkill:*)",
+      "Bash(powershell:*)",
+      "Bash(cp:*)",
+      "Bash(timeout:*)",
+      "Bash(Get-Process -Name node -ErrorAction SilentlyContinue)",
+      "Bash(Where-Object {$_ath -like \"*APP (2)*\"})",
+      "Bash(Stop-Process -Force)",
+      "Bash(python:*)",
+      "Bash(findstr:*)",
+      "Bash(ls:*)",
+      "Bash(node check-schema.js:*)",
+      "Bash(pkill:*)",
+      "Bash(tasklist:*)",
+      "Bash(cmd.exe /c \"netstat -ano | findstr :3000 | findstr LISTENING\")",
+      "Bash(cmd.exe /c \"netstat -ano | findstr 3000\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

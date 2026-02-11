@@ -1,0 +1,149 @@
+<div class="row">
+  <div class="col-md-8 offset-md-2">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="card-title mb-0">
+          <i class="fab fa-discord" style="color: var(--accent-teal);"></i> Update Discord Connection
+        </h4>
+      </div>
+      <div class="card-body">
+        
+        <% if (typeof successMessage !== 'undefined' && successMessage) { %>
+          <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> <%= successMessage %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        <% } %>
+
+        <% if (typeof errorMessage !== 'undefined' && errorMessage) { %>
+          <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle"></i> <%= errorMessage %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        <% } %>
+
+        <div class="alert alert-info">
+          <i class="fas fa-info-circle"></i> 
+          <strong>Discord Connection Issue?</strong> 
+          If your Discord connection is not working, you can update your Discord user token here.
+          <br><small><strong>Note:</strong> This will update the Discord token for ALL websites in your organization, so it will work across all websites.</small>
+        </div>
+
+        <% if (user && user.organizationId) { %>
+          <div class="alert" style="background-color: var(--dark-card); border: 1px solid var(--border-color);">
+            <i class="fas fa-building" style="color: var(--accent-teal);"></i> 
+            <strong style="color: var(--text-light);">Organization:</strong> 
+            <span style="color: var(--accent-amber);"><%= user.organizationId %></span>
+            <br><small style="color: var(--text-muted);">You are updating Discord settings for ALL websites in your organization.</small>
+          </div>
+        <% } %>
+
+        <form action="/employee-discord" method="POST">
+          <div class="mb-4">
+            <label for="discordUserToken" class="form-label" style="color: var(--text-label);">
+              <i class="fab fa-discord" style="color: var(--accent-teal);"></i> Discord User Token
+            </label>
+            <input 
+              type="password" 
+              class="form-control" 
+              style="background-color: var(--dark-card); color: var(--text-input); border: 1px solid var(--border-color);" 
+              id="discordUserToken" 
+              name="discordUserToken" 
+              value="<%= currentToken ? currentToken.substring(0, 10) + '...' : '' %>"
+              placeholder="Enter your Discord user token"
+              required>
+            <% if (currentToken) { %>
+            <small class="mt-1 d-block" style="color: var(--accent-teal);">
+              <i class="fas fa-check-circle"></i> Current token: <%= currentToken.substring(0, 10) %>...
+              <% if (successMessage) { %>
+                <span style="color: var(--accent-amber);">(Just updated!)</span>
+              <% } %>
+            </small>
+            <% } %>
+            <div class="form-text" style="color: var(--text-muted);">
+              <strong style="color: var(--text-light);">How to get your Discord token:</strong>
+              <ol class="mt-2 mb-0" style="color: var(--text-muted);">
+                <li>Open Discord in your web browser (not the app)</li>
+                <li>Press F12 to open developer tools</li>
+                <li>Go to the Network tab</li>
+                <li>Refresh the page (F5)</li>
+                <li>Type "library" in the filter box</li>
+                <li>Click on any "library" request</li>
+                <li>Look in the Headers tab for "authorization" field</li>
+                <li>Copy the long text after "authorization:" (this is your token)</li>
+              </ol>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <button type="button" class="btn" style="background-color: var(--info-blue); color: var(--text-light); border: 1px solid var(--info-blue);" onclick="testDiscordToken()">
+              <i class="fas fa-check"></i> Test Connection
+            </button>
+            <div id="discordTestResult" class="mt-2"></div>
+          </div>
+
+          <div class="d-flex justify-content-between">
+            <a href="/" class="btn" style="background-color: transparent; color: var(--text-muted); border: 1px solid var(--border-color);">
+              <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+            <button type="submit" class="btn" style="background-color: var(--accent-teal); color: var(--text-light); border: 1px solid var(--accent-teal);">
+              <i class="fas fa-save"></i> Update Discord Token
+            </button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+async function testDiscordToken() {
+  const userToken = document.getElementById('discordUserToken').value.trim();
+  const resultDiv = document.getElementById('discordTestResult');
+  
+  if (!userToken) {
+    resultDiv.innerHTML = '<div class="alert alert-warning">Please enter a Discord user token first</div>';
+    return;
+  }
+
+  resultDiv.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin"></i> Testing Discord connection...</div>';
+  
+  try {
+    const response = await fetch('/api/test-employee-discord', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        userToken: userToken,
+        testMessage: 'Discord connection test from Recipe Generator - Token updated successfully! 🎉'
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      resultDiv.innerHTML = `
+        <div class="alert alert-success">
+          <i class="fas fa-check-circle"></i> 
+          <strong>Success!</strong> ${result.message}
+        </div>`;
+    } else {
+      resultDiv.innerHTML = `
+        <div class="alert alert-danger">
+          <i class="fas fa-exclamation-triangle"></i> 
+          <strong>Test Failed:</strong> ${result.message}
+        </div>`;
+    }
+  } catch (error) {
+    console.error('Discord test error:', error);
+    resultDiv.innerHTML = `
+      <div class="alert alert-danger">
+        <i class="fas fa-exclamation-circle"></i> 
+        <strong>Connection Error:</strong> ${error.message}
+      </div>`;
+  }
+}
+</script>

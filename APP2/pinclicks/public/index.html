@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PinClicks Automation</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        .input-section label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        .input-section textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+
+        .input-section textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .help-text {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex: 1;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .log-section {
+            margin-top: 30px;
+            background: #1e1e1e;
+            border-radius: 10px;
+            padding: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .log-section h3 {
+            color: #fff;
+            margin-bottom: 15px;
+        }
+
+        .log-content {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #e0e0e0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .log-info { color: #4fc3f7; }
+        .log-success { color: #66bb6a; }
+        .log-warning { color: #ffa726; }
+        .log-error { color: #ef5350; }
+
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            margin-top: 15px;
+        }
+
+        .status-idle {
+            background: #e0e0e0;
+            color: #666;
+        }
+
+        .status-running {
+            background: #fff3cd;
+            color: #856404;
+            animation: pulse 2s infinite;
+        }
+
+        .status-complete {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .example-box {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📌 PinClicks Automation</h1>
+            <p>Automated Pinterest SEO Analysis Tool</p>
+        </div>
+
+        <div class="content">
+            <div class="input-section">
+                <label for="urlInput">Pinterest URLs or Keywords</label>
+                <textarea
+                    id="urlInput"
+                    placeholder="Paste your Pinterest URLs or keywords here (one per line)..."
+                ></textarea>
+                <div class="help-text">
+                    💡 Tip: You can paste Pinterest URLs, keywords, or mix both. Lines starting with # are ignored.
+                </div>
+                <div class="example-box">
+                    # Example:<br>
+                    https://pinterest.com/pin/123456789/<br>
+                    chicken pasta<br>
+                    https://fr.pinterest.com/pin/987654321/<br>
+                    healthy breakfast
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button id="startBtn" class="btn-primary" onclick="startAutomation()">
+                    🚀 Start Automation
+                </button>
+                <button id="clearBtn" class="btn-secondary" onclick="clearLogs()">
+                    🗑️ Clear Logs
+                </button>
+            </div>
+
+            <div id="statusBadge" class="status-badge status-idle">
+                ⏸️ Idle
+            </div>
+
+            <div class="stats hidden" id="stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalProcessed">0</div>
+                    <div class="stat-label">Processed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalSuccess">0</div>
+                    <div class="stat-label">Success</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalErrors">0</div>
+                    <div class="stat-label">Errors</div>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div id="resultsSection" class="hidden" style="margin-top: 30px;">
+                <h2 style="color: #333; margin-bottom: 20px;">📊 Results</h2>
+                <div id="resultsContainer"></div>
+            </div>
+
+            <div class="log-section">
+                <h3>📋 Activity Log</h3>
+                <div id="logContent" class="log-content">
+Waiting for input...\n\nPaste your Pinterest URLs or keywords above and click "Start Automation"
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .result-card {
+            background: #fff;
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .result-keyword {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .pin-item {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+        }
+
+        .pin-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
+
+        .pin-title {
+            font-weight: 600;
+            color: #333;
+            margin: 10px 0;
+            font-size: 1.1em;
+        }
+
+        .pin-description {
+            color: #666;
+            line-height: 1.6;
+            margin: 10px 0;
+        }
+
+        .pin-overlay {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            display: inline-block;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        .copy-btn {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+            font-size: 0.9em;
+        }
+
+        .copy-btn:hover {
+            background: #45a049;
+        }
+    </style>
+
+    <script>
+        const socket = io();
+        let isRunning = false;
+        let stats = { processed: 0, success: 0, errors: 0 };
+        let currentProgress = { current: 0, total: 0 };
+
+        socket.on('log', (data) => {
+            const logContent = document.getElementById('logContent');
+            const span = document.createElement('span');
+            span.className = `log-${data.type || 'info'}`;
+            span.textContent = data.message;
+            logContent.appendChild(span);
+            logContent.scrollTop = logContent.scrollHeight;
+        });
+
+        socket.on('progress', (progress) => {
+            currentProgress = progress;
+            const statusBadge = document.getElementById('statusBadge');
+            statusBadge.textContent = `⚙️ Processing ${progress.current}/${progress.total}: ${progress.keyword}`;
+        });
+
+        socket.on('result', (result) => {
+            displayResult(result);
+            if (!result.error) {
+                stats.success++;
+            } else {
+                stats.errors++;
+            }
+            stats.processed = currentProgress.current;
+            updateStats();
+        });
+
+        socket.on('complete', (data) => {
+            isRunning = false;
+            const statusBadge = document.getElementById('statusBadge');
+            const startBtn = document.getElementById('startBtn');
+
+            if (data.success) {
+                statusBadge.className = 'status-badge status-complete';
+                statusBadge.textContent = '✅ Complete';
+                stats.success++;
+            } else {
+                statusBadge.className = 'status-badge status-error';
+                statusBadge.textContent = '❌ Error';
+                stats.errors++;
+            }
+
+            startBtn.disabled = false;
+            updateStats();
+        });
+
+        function startAutomation() {
+            const urlInput = document.getElementById('urlInput');
+            const urls = urlInput.value
+                .split('\n')
+                .map(line => line.trim())
+                .filter(line => line && !line.startsWith('#'));
+
+            if (urls.length === 0) {
+                alert('Please enter at least one URL or keyword!');
+                return;
+            }
+
+            isRunning = true;
+            const startBtn = document.getElementById('startBtn');
+            const statusBadge = document.getElementById('statusBadge');
+
+            startBtn.disabled = true;
+            statusBadge.className = 'status-badge status-running';
+            statusBadge.textContent = '⚙️ Running...';
+
+            document.getElementById('stats').classList.remove('hidden');
+            document.getElementById('logContent').innerHTML = '';
+
+            stats.processed++;
+            updateStats();
+
+            socket.emit('start-automation', { urls });
+        }
+
+        function clearLogs() {
+            document.getElementById('logContent').innerHTML = 'Logs cleared.\n';
+            document.getElementById('urlInput').value = '';
+            document.getElementById('resultsContainer').innerHTML = '';
+            document.getElementById('resultsSection').classList.add('hidden');
+            stats = { processed: 0, success: 0, errors: 0 };
+            currentProgress = { current: 0, total: 0 };
+            updateStats();
+
+            const statusBadge = document.getElementById('statusBadge');
+            statusBadge.className = 'status-badge status-idle';
+            statusBadge.textContent = '⏸️ Idle';
+        }
+
+        function updateStats() {
+            document.getElementById('totalProcessed').textContent = stats.processed;
+            document.getElementById('totalSuccess').textContent = stats.success;
+            document.getElementById('totalErrors').textContent = stats.errors;
+        }
+
+        function displayResult(result) {
+            const resultsSection = document.getElementById('resultsSection');
+            const resultsContainer = document.getElementById('resultsContainer');
+
+            resultsSection.classList.remove('hidden');
+
+            if (result.error) {
+                resultsContainer.innerHTML += `
+                    <div class="result-card">
+                        <div class="result-keyword">❌ ${result.keyword}</div>
+                        <div style="color: #e74c3c;">Error: ${result.error}</div>
+                    </div>
+                `;
+                return;
+            }
+
+            const maxPins = Math.max(
+                result.titles?.length || 0,
+                result.descriptions?.length || 0,
+                result.overlays?.length || 0
+            );
+
+            let pinsHTML = '';
+            for (let i = 0; i < maxPins; i++) {
+                pinsHTML += `
+                    <div class="pin-item">
+                        <span class="pin-number">PIN #${i + 1}</span>
+                        <div class="pin-title">📌 ${result.titles[i] || 'N/A'}</div>
+                        <div class="pin-description">📝 ${result.descriptions[i] || 'N/A'}</div>
+                        <span class="pin-overlay">🎨 ${result.overlays[i] || 'N/A'}</span>
+                        <button class="copy-btn" onclick="copyPin(${i}, '${result.keyword}')">📋 Copy</button>
+                    </div>
+                `;
+            }
+
+            resultsContainer.innerHTML += `
+                <div class="result-card" data-keyword="${result.keyword}">
+                    <div class="result-keyword">✅ ${result.keyword}</div>
+                    ${pinsHTML}
+                </div>
+            `;
+        }
+
+        function copyPin(index, keyword) {
+            const resultCard = document.querySelector(`[data-keyword="${keyword}"]`);
+            const pinItem = resultCard.querySelectorAll('.pin-item')[index];
+            const title = pinItem.querySelector('.pin-title').textContent.replace('📌 ', '');
+            const description = pinItem.querySelector('.pin-description').textContent.replace('📝 ', '');
+            const overlay = pinItem.querySelector('.pin-overlay').textContent.replace('🎨 ', '');
+
+            const text = `Title: ${title}\n\nDescription: ${description}\n\nText Overlay: ${overlay}`;
+
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Copied to clipboard!');
+            });
+        }
+
+        // Example URLs button
+        function loadExample() {
+            document.getElementById('urlInput').value =
+                '# Example URLs\nhttps://pinterest.com/pin/123456789/\nchicken pasta\nhealthy breakfast';
+        }
+    </script>
+</body>
+</html>

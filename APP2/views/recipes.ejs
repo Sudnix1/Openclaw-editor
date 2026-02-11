@@ -1,0 +1,4604 @@
+<!-- Updated recipes.ejs with improved design, bulk delete, bulk WordPress publish, FIXED QUICK COPY functionality, and ENHANCED CHECKBOX -->
+<style>
+  /* Force sidebar link colors */
+  .sidebar .nav-link { color: white !important; }
+  .sidebar .nav-link.active { color: #3cd5af !important; background-color: rgba(110, 71, 204, 0.15) !important; }
+  .sidebar .nav-link:hover:not(.active) { background-color: rgba(255, 255, 255, 0.1) !important; }
+  
+  /* Reset any inherited styles from parent elements */
+  .sidebar a, .sidebar a:visited, .sidebar a:hover, .sidebar a:active {
+    text-decoration: none;
+  }
+  
+  /* Redesigned Bulk Actions */
+  .bulk-actions-redesigned {
+    background: linear-gradient(135deg, #232a47 0%, #2d3654 100%);
+    border-radius: 12px;
+    padding: 20px 0;
+    margin-bottom: 20px;
+    border: 1px solid rgba(60, 213, 175, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  .selection-info-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .selection-count {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  
+  .count-number {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #3cd5af;
+    min-width: 30px;
+    text-align: center;
+  }
+  
+  .count-label {
+    color: #8892b0;
+    font-size: 0.9rem;
+  }
+  
+  .action-buttons-group {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .action-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .pinterest-style-select {
+    min-width: 200px;
+    background-color: #1a1e35;
+    border-color: rgba(60, 213, 175, 0.3);
+    color: white;
+  }
+  
+  .pinterest-style-select:focus {
+    background-color: #1a1e35;
+    border-color: #3cd5af;
+    box-shadow: 0 0 0 0.2rem rgba(60, 213, 175, 0.25);
+    color: white;
+  }
+  
+  .btn-pinterest {
+    background-color: #bd081c;
+    border-color: #bd081c;
+    color: white;
+  }
+  
+  .btn-pinterest:hover {
+    background-color: #a0070f;
+    border-color: #a0070f;
+  }
+  
+  .btn-pinterest:disabled {
+    background-color: rgba(189, 8, 28, 0.5);
+    border-color: rgba(189, 8, 28, 0.5);
+  }
+
+  /* Bulk Image Selection Styles */
+  .recipe-image-selection-card {
+    background: #2d3654;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+  }
+
+  .recipe-image-selection-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+
+  .recipe-image-selection-header {
+    background: #232a47;
+    padding: 12px;
+    border-bottom: 1px solid rgba(60, 213, 175, 0.1);
+  }
+
+  .recipe-image-selection-header h6 {
+    color: #3cd5af;
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
+  .image-options-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    padding: 12px;
+  }
+
+  .image-option {
+    position: relative;
+    cursor: pointer;
+    border: 3px solid transparent;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    aspect-ratio: 1;
+  }
+
+  .image-option:hover {
+    border-color: rgba(60, 213, 175, 0.5);
+    transform: scale(1.05);
+  }
+
+  .image-option.selected {
+    border-color: #3cd5af;
+    box-shadow: 0 0 20px rgba(60, 213, 175, 0.4);
+  }
+
+  .image-option img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .image-option-label {
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(60, 213, 175, 0.9);
+    color: #1a1e35;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  .image-option-check {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: #3cd5af;
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+
+  .image-option.selected .image-option-check {
+    display: flex;
+  }
+
+  .no-image-available {
+    padding: 40px;
+    text-align: center;
+    color: #8892b0;
+    font-style: italic;
+    grid-column: 1 / -1;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 8px;
+  }
+
+  /* Recipe card improvements */
+  .recipe-card {
+    border: 1px solid #e3e6f0;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    transition: all 0.3s ease;
+    background-color: #232a47 !important;  /* Match your card background */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+    position: relative;
+    overflow: visible; /* Changed from hidden to visible to prevent dropdown cutoff */
+  }
+  
+  .recipe-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    background-color: #2d3654;
+  }
+  
+  .recipe-card.selected {
+     border-color: #3cd5af;
+    background-color: rgba(60, 213, 175, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
+  }
+  
+  .recipe-card.selected::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(135deg, #007bff, #0056b3);
+  }
+  
+  .recipe-checkbox {
+    transform: scale(1.2);
+    margin: 0;
+  }
+  
+  .recipe-content {
+    padding: 20px;
+    cursor: pointer;
+  }
+  
+  .recipe-header {
+    display: flex;
+    justify-content: between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+  
+  .recipe-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: white;
+    margin: 0;
+    flex: 1;
+  }
+  
+  .recipe-time {
+    font-size: 0.875rem;
+    color: #6c757d;
+    white-space: nowrap;
+    margin-left: 12px;
+  }
+  
+  .recipe-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 16px;
+  }
+  
+  .recipe-category {
+    display: inline-block;
+    padding: 4px 12px;
+    background: #f1f3f4;
+    color: #5a6c7d;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+  
+  .recipe-author {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #6c757d;
+    font-size: 0.875rem;
+  }
+  
+  .author-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .recipe-actions {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    display: flex;
+    gap: 8px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 100; /* Ensure actions are above card content */
+  }
+  
+  .recipe-card:hover .recipe-actions {
+    opacity: 1;
+  }
+  
+  .recipe-actions .btn {
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(10px);
+    position: relative; /* Add relative positioning for dropdown parent */
+  }
+  
+  /* Quick Copy Button Styles */
+  .action-btn-copy {
+    background: rgba(40, 167, 69, 0.9);
+    color: white;
+    position: relative;
+  }
+  
+  .action-btn-copy:hover {
+    background: #28a745;
+    transform: scale(1.05);
+  }
+  
+  .action-btn-copy.loading {
+    background: rgba(108, 117, 125, 0.9);
+    pointer-events: none;
+  }
+  
+  .action-btn-edit {
+    background: rgba(108, 117, 125, 0.9);
+    color: white;
+  }
+  
+  .action-btn-delete {
+    background: rgba(220, 53, 69, 0.9);
+    color: white;
+  }
+  
+  .action-btn-edit:hover {
+    background: #6c757d;
+    transform: scale(1.05);
+  }
+  
+  .action-btn-delete:hover {
+    background: #dc3545;
+    transform: scale(1.05);
+  }
+  
+  /* Copy Dropdown Styles - FIXED */
+  .copy-dropdown {
+    position: absolute;
+    top: calc(100% + 5px); /* Add small gap between button and dropdown */
+    right: 0;
+    background: #2c3e50; /* Dark background to match theme */
+    border: 1px solid #34495e;
+    border-radius: 8px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    z-index: 9999; /* Very high z-index to ensure visibility */
+    min-width: 240px; /* Increased width */
+    max-width: 300px;
+    display: none;
+    backdrop-filter: blur(10px);
+    overflow: hidden;
+  }
+  
+  .copy-dropdown.show {
+    display: block;
+    animation: fadeInDown 0.3s ease;
+  }
+  
+  @keyframes fadeInDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .copy-dropdown-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid #34495e;
+    background: #34495e; /* Darker header background */
+    border-radius: 8px 8px 0 0;
+  }
+  
+  .copy-dropdown-header h6 {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #ecf0f1; /* Light text color */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .copy-dropdown-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    color: #ecf0f1; /* Light text color */
+    text-decoration: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    font-size: 0.875rem;
+  }
+  
+  .copy-dropdown-item:hover {
+    background: #34495e; /* Darker hover background */
+    color: #3cd5af; /* Accent color on hover */
+  }
+  
+  .copy-dropdown-item i {
+    width: 18px;
+    margin-right: 12px;
+    font-size: 0.875rem;
+    text-align: center;
+  }
+  
+  .copy-dropdown-item.loading {
+    color: #95a5a6;
+    pointer-events: none;
+  }
+  
+  .copy-dropdown-item.success {
+    color: #27ae60;
+    background: rgba(39, 174, 96, 0.1);
+  }
+  
+  .copy-dropdown-divider {
+    height: 1px;
+    background: #34495e;
+    margin: 8px 0;
+  }
+  
+  .copy-status {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #28a745;
+    color: white;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    opacity: 0;
+    transform: scale(0);
+    transition: all 0.3s ease;
+    z-index: 10;
+  }
+  
+  .copy-status.show {
+    opacity: 1;
+    transform: scale(1);
+  }
+  
+  /* Ensure dropdown doesn't get cut off at viewport edges */
+  @media (max-width: 768px) {
+    .copy-dropdown {
+      right: -50px; /* Adjust position on mobile */
+      min-width: 220px;
+    }
+  }
+  
+  /* Selection controls */
+  .selection-toolbar {
+  background: #121930;
+    color: white;
+    padding: 16px 20px;
+    border-radius: 12px 12px 0 0;
+    margin-bottom: 0;
+  }
+  
+  .selection-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .select-all-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .select-all-section input[type="checkbox"] {
+    transform: scale(1.2);
+  }
+  
+  .select-all-section label {
+    margin: 0;
+    font-weight: 500;
+  }
+  
+  .selection-info {
+    font-size: 0.9rem;
+    opacity: 0.9;
+  }
+  
+  .bulk-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+  }
+  
+  .bulk-btn {
+    padding: 8px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+  }
+  
+  .bulk-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-1px);
+  }
+  
+  .bulk-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .bulk-btn.btn-danger {
+    background: rgba(220, 53, 69, 0.8);
+    border-color: rgba(220, 53, 69, 0.5);
+  }
+  
+  .bulk-btn.btn-danger:hover:not(:disabled) {
+    background: rgba(220, 53, 69, 1);
+    border-color: #dc3545;
+  }
+  
+  .bulk-btn.btn-info {
+    background: rgba(23, 162, 184, 0.8);
+    border-color: rgba(23, 162, 184, 0.5);
+  }
+  
+  .bulk-btn.btn-info:hover:not(:disabled) {
+    background: rgba(23, 162, 184, 1);
+    border-color: #17a2b8;
+  }
+  
+  .bulk-btn.btn-success {
+    background: rgba(40, 167, 69, 0.8);
+    border-color: rgba(40, 167, 69, 0.5);
+  }
+  
+  .bulk-btn.btn-success:hover:not(:disabled) {
+    background: rgba(40, 167, 69, 1);
+    border-color: #28a745;
+  }
+  
+  /* Modal styling improvements */
+  .modal-recipe-list {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    background: #f8f9fa;
+    padding: 15px;
+  }
+  
+  .recipe-list-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #e9ecef;
+  }
+  
+  .recipe-list-item:last-child {
+    border-bottom: none;
+  }
+  
+  .recipe-list-item .recipe-icon {
+    color: #28a745;
+    margin-right: 12px;
+    font-size: 16px;
+    width: 20px;
+    text-align: center;
+  }
+  
+  .recipe-list-item .recipe-name {
+    font-weight: 500;
+    color: #495057;
+    flex: 1;
+  }
+  
+  /* Checkbox styling improvements */
+  .form-check-input:checked {
+    background-color: #28a745;
+    border-color: #28a745;
+  }
+  
+  .form-check-input:checked::before {
+    content: "✓";
+    display: block;
+    text-align: center;
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    line-height: 14px;
+  }
+  
+  .form-check-input {
+    cursor: pointer;
+    width: 1em;
+    height: 1em;
+  }
+  
+  /* ENHANCED CHECKBOX STYLING for Featured Image */
+  .featured-image-checkbox-container {
+    background: #f8f9fa;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 15px 0;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+  }
+  
+  .featured-image-checkbox-container:hover {
+    background: #e9ecef;
+    border-color: #6c757d;
+  }
+  
+  .featured-image-checkbox-container.checked {
+    background: #e8f5e8;
+    border-color: #28a745;
+  }
+  
+  .featured-image-checkbox-container.unchecked {
+    background: #fff5f5;
+    border-color: #dc3545;
+  }
+  
+  .featured-image-checkbox {
+    width: 20px !important;
+    height: 20px !important;
+    margin-right: 12px !important;
+    cursor: pointer !important;
+    flex-shrink: 0;
+  }
+  
+  .featured-image-label {
+    cursor: pointer !important;
+    margin: 0 !important;
+    font-weight: 500 !important;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    width: 100%;
+  }
+  
+  .featured-image-label strong {
+    color: #495057;
+    font-size: 1rem;
+  }
+  
+  .featured-image-label small {
+    font-size: 0.875rem;
+    margin-top: 4px;
+    display: block;
+  }
+  
+  .checkbox-status {
+    margin-top: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  
+  .checkbox-status.checked {
+    color: #28a745;
+  }
+  
+  .checkbox-status.unchecked {
+    color: #dc3545;
+  }
+  
+  /* Prevent text selection on the container */
+  .featured-image-checkbox-container {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  
+  /* Enhanced focus states */
+  .featured-image-checkbox:focus {
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25) !important;
+    border-color: #28a745 !important;
+  }
+  
+  /* Custom checkbox styling for better visibility */
+  .featured-image-checkbox {
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: #fff;
+    border: 2px solid #ced4da;
+    border-radius: 4px;
+    display: inline-block;
+    position: relative;
+  }
+  
+  .featured-image-checkbox:checked {
+    background-color: #28a745;
+    border-color: #28a745;
+  }
+  
+  .featured-image-checkbox:checked::after {
+    content: '✓';
+    display: block;
+    text-align: center;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 16px;
+  }
+  
+  /* Site info styling */
+  .wp-site-info {
+    background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+    border: 1px solid #b39ddb;
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 15px;
+  }
+  
+  .wp-site-info .fa-wordpress {
+    color: #21759b;
+    margin-right: 8px;
+  }
+  
+  .wp-site-url {
+    font-weight: 600;
+    color: #21759b;
+  }
+  
+  /* Modal improvements */
+  .modal-lg .modal-body {
+    padding: 1.5rem;
+  }
+  
+  .modal-header.bg-success {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+  }
+  
+  .form-select {
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    padding: 10px 15px;
+  }
+  
+  .form-select:focus {
+    border-color: #28a745;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+  }
+  
+  .form-check-label {
+    font-weight: 500;
+    color: #495057;
+    cursor: pointer;
+  }
+  
+  .alert.mb-0 {
+    margin-bottom: 0 !important;
+  }
+  
+  /* WordPress publication status indicators */
+  .wp-status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    margin-left: 8px;
+  }
+  
+  .wp-status-published {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+    border: 1px solid rgba(40, 167, 69, 0.3);
+  }
+  
+  .wp-status-published:hover {
+    background: rgba(40, 167, 69, 0.2);
+    color: #28a745;
+    text-decoration: none;
+    transform: translateY(-1px);
+  }
+  
+  .wp-status-draft {
+    background: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+    border: 1px solid rgba(255, 193, 7, 0.3);
+  }
+  
+  .wp-status-draft:hover {
+    background: rgba(255, 193, 7, 0.2);
+    color: #ffc107;
+    text-decoration: none;
+    transform: translateY(-1px);
+  }
+  
+  .wp-status-private {
+    background: rgba(108, 117, 125, 0.1);
+    color: #6c757d;
+    border: 1px solid rgba(108, 117, 125, 0.3);
+  }
+  
+  .wp-status-private:hover {
+    background: rgba(108, 117, 125, 0.2);
+    color: #6c757d;
+    text-decoration: none;
+    transform: translateY(-1px);
+  }
+  
+  .wp-status-icon {
+    font-size: 0.7rem;
+  }
+  
+  .wp-publish-date {
+    font-size: 0.65rem;
+    opacity: 0.8;
+    font-weight: 400;
+  }
+  
+  /* WordPress publication summary in toolbar */
+  .wp-publication-summary {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: 20px;
+    font-size: 0.85rem;
+    opacity: 0.9;
+  }
+  
+  .wp-summary-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  
+  .wp-summary-count {
+    font-weight: 600;
+  }
+  
+  /* Search improvements */
+  .search-section {
+    background: #232a47;;
+    padding: 20px;
+    border-radius: 0 0 12px 12px;
+    margin-bottom: 24px;
+  }
+  
+  .search-input-group {
+    max-width: 500px;
+    margin: 0 auto;
+  }
+  
+  .search-input-group .form-control {
+    border-radius: 25px 0 0 25px;
+    border: 2px solid #e9ecef;
+    padding: 12px 20px;
+  }
+  
+  .search-input-group .form-control:focus {
+    border-color: #4e73df;
+    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+  }
+  
+  .search-input-group .btn {
+    border-radius: 0 25px 25px 0;
+    padding: 12px 20px;
+    border: 2px solid #4e73df;
+    border-left: none;
+  }
+  
+  /* Header improvements */
+  .page-header {
+  background: linear-gradient(135deg, #6e47cc 0%, #5a3ab3 100%);  /* Match your purple theme */
+    color: white;
+    padding: 24px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+  }
+  
+  .page-title {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 600;
+  }
+  
+  .header-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  
+  .header-actions .btn {
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-weight: 500;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(10px);
+  }
+  
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6c757d;
+  }
+  
+  .empty-state-icon {
+    font-size: 4rem;
+    margin-bottom: 24px;
+    opacity: 0.5;
+  }
+  
+  .empty-state h3 {
+    margin-bottom: 12px;
+    color: #495057;
+  }
+  
+  /* Responsive improvements */
+  @media (max-width: 768px) {
+    .selection-controls {
+      flex-direction: column;
+      gap: 16px;
+      align-items: stretch;
+    }
+    
+    .bulk-actions {
+      justify-content: center;
+      margin-top: 12px;
+    }
+    
+    .recipe-actions {
+      position: static;
+      opacity: 1;
+      margin-top: 12px;
+      justify-content: flex-end;
+    }
+    
+    .recipe-header {
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .recipe-time {
+      margin-left: 0;
+    }
+    
+    .copy-dropdown {
+      right: -100px;
+      min-width: 200px;
+    }
+    
+    .wp-status-indicator {
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      margin-left: 4px;
+    }
+    
+    .wp-publication-summary {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+      margin-left: 0;
+      margin-top: 8px;
+    }
+  }
+  
+  /* Additional fixes for dropdown positioning */
+  .recipe-actions .position-relative {
+    position: relative !important;
+  }
+  
+  /* Ensure proper stacking context */
+  .card-body {
+    position: relative;
+    z-index: 1;
+  }
+  
+  .recipe-card {
+    z-index: 2;
+  }
+  
+  .recipe-card:hover {
+    z-index: 10;
+  }
+
+  .bulk-btn.btn-pinterest {
+  background: rgba(230, 0, 35, 0.8);
+  border-color: rgba(230, 0, 35, 0.5);
+}
+
+.bulk-btn.btn-pinterest:hover:not(:disabled) {
+  background: rgba(230, 0, 35, 1);
+  border-color: #e60023;
+}
+</style>
+
+<div class="page-header">
+  <div class="d-flex justify-content-between align-items-center">
+    <h1 class="page-title">All Recipes</h1>
+    <div class="header-actions">
+      <a href="/generate/all" class="btn btn-light">
+        <i class="fa fa-plus"></i> Generate New Recipe
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+  <!-- Search Section -->
+  <div class="search-section">
+    <form method="GET" action="/recipes" id="recipeFilterForm">
+      <div class="search-input-group input-group mb-3">
+        <input type="text" class="form-control" placeholder="Search recipes by name, category, or author..." name="search" value="<%= searchTerm %>">
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-search"></i> Search
+        </button>
+        <% if (searchTerm || hasDiscordImage) { %>
+          <a href="/recipes" class="btn btn-outline-secondary">
+            <i class="bi bi-x-circle"></i> Clear All
+          </a>
+        <% } %>
+      </div>
+
+      <!-- Discord Image Filter -->
+      <div class="form-check mb-2">
+        <input class="form-check-input" type="checkbox" id="hasDiscordImageFilter" name="hasDiscordImage" value="true" <%= hasDiscordImage ? 'checked' : '' %> onchange="document.getElementById('recipeFilterForm').submit()">
+        <label class="form-check-label" for="hasDiscordImageFilter">
+          <i class="fab fa-discord" style="color: #5865F2;"></i> Show only recipes with Discord images generated
+        </label>
+      </div>
+    </form>
+  </div>
+  
+  <% if (recipes && recipes.length > 0) { %>
+    <!-- Selection Toolbar -->
+    <div class="selection-toolbar">
+      <div class="selection-controls">
+        <div class="select-all-section">
+          <input type="checkbox" id="selectAllCheckbox" class="form-check-input">
+          <label for="selectAllCheckbox" class="form-check-label">Select All</label>
+          <span class="selection-info" id="selectionInfo">No recipes selected</span>
+          
+          <!-- WordPress Publication Summary -->
+          <% 
+          let publishedCount = 0;
+          let draftCount = 0;
+          let unpublishedCount = 0;
+          
+          recipes.forEach(recipe => {
+            if (recipe.wordpressPublication) {
+              if (recipe.wordpressPublication.isPublished) {
+                publishedCount++;
+              } else {
+                draftCount++;
+              }
+            } else {
+              unpublishedCount++;
+            }
+          });
+          %>
+          
+          <div class="wp-publication-summary">
+            <div class="wp-summary-item">
+              <i class="fab fa-wordpress text-success"></i>
+              <span class="wp-summary-count text-success"><%= publishedCount %></span>
+              <span>Published</span>
+            </div>
+            
+            <% if (draftCount > 0) { %>
+            <div class="wp-summary-item">
+              <i class="fab fa-wordpress text-warning"></i>
+              <span class="wp-summary-count text-warning"><%= draftCount %></span>
+              <span>Drafts</span>
+            </div>
+            <% } %>
+            
+            <div class="wp-summary-item">
+              <i class="far fa-circle text-muted"></i>
+              <span class="wp-summary-count text-muted"><%= unpublishedCount %></span>
+              <span>Unpublished</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Redesigned Bulk Actions Section -->
+      <div class="bulk-actions-redesigned">
+        <div class="container-fluid">
+          <div class="row g-3 align-items-center">
+            
+            <!-- Left: Selection Info -->
+            <div class="col-md-3">
+              <div class="selection-info-card">
+                <div class="selection-count">
+                  <span id="selectedCount" class="count-number">0</span>
+                  <span class="count-label">Selected</span>
+                </div>
+                <button type="button" class="btn btn-link btn-sm p-0 text-muted" id="clearSelectionBtn">
+                  <i class="fas fa-times me-1"></i>Clear
+                </button>
+              </div>
+            </div>
+            
+            <!-- Center: Main Actions -->
+            <div class="col-md-6">
+              <div class="action-buttons-group">
+                <!-- Pinterest Generation -->
+                <div class="action-group pinterest-group">
+                  <div class="d-flex align-items-center gap-2">
+                    <select id="batchVariationSelect" class="form-select form-select-sm pinterest-style-select">
+                      <!-- 🎲 RANDOM SELECTION -->
+                      <option value="random">🎲 Random Style</option>
+                      <!-- ⭐ RECOMMENDED STYLES -->
+                      <option value="2">Style 2 - Geometric Border ⭐</option>
+                      <option value="3">Style 3 - Modern Badge ⭐</option>
+                      <option value="4">Style 4 - Clean Ribbon ⭐</option>
+                      <option value="5">Style 5 - Decorative Frame ⭐</option>
+                      <option value="20">Style 20 - Bakery "FRESH BAKED" ⭐</option>
+                      <!-- ✨ ALL AVAILABLE STYLES -->
+                      <option disabled>────────────────────</option>
+                      <option value="1">Style 1 - Simple Layout</option>
+                      <option value="6">Style 6 - Elegant Overlay</option>
+                      <option value="7">Style 7 - Decorative Border</option>
+                      <option value="8">Style 8 - Electric Lightning</option>
+                      <option value="9">Style 9 - Crystal Gem</option>
+                      <option value="21">Style 21 - Circle Dots</option>
+                      <option value="22">Style 22 - Diamond Sparkles</option>
+                    </select>
+                    <button type="button" class="btn btn-pinterest btn-sm" id="generatePinterestImagesBtn" disabled>
+                      <i class="fas fa-image me-1"></i>Generate (<span id="selectedCountImages">0</span>)
+                    </button>
+                  </div>
+                </div>
+                
+                <!-- Publishing Actions -->
+                <div class="action-group publishing-group">
+                  <button type="button" class="btn btn-warning btn-sm" id="publishBufferBtn" disabled>
+                    <i class="bi bi-send me-1"></i>Buffer (<span id="selectedCountBuffer">0</span>)
+                  </button>
+                  <button type="button" class="btn btn-success btn-sm" id="publishSelectedBtn" disabled>
+                    <i class="fab fa-wordpress me-1"></i>WordPress (<span id="selectedCountWP">0</span>)
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Right: Export & Danger Actions -->
+            <div class="col-md-3 text-end">
+              <div class="dropdown">
+                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                  <i class="fas fa-download me-1"></i>Export
+                </button>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="/api/export/recipes/excel" download>
+                    <i class="fas fa-file-excel me-2"></i>All Recipes (Excel)
+                  </a></li>
+                  <li><button class="dropdown-item" id="exportSelectedBtn" disabled>
+                    <i class="fas fa-download me-2"></i>Selected Recipes
+                  </button></li>
+                  <li><button class="dropdown-item" id="exportPinterestBtn" disabled>
+                    <i class="fab fa-pinterest me-2"></i>Pinterest CSV
+                  </button></li>
+                  <li><button class="dropdown-item" id="exportPinterestXlsxBtn" disabled>
+                    <i class="fab fa-pinterest me-2"></i>Pinterest XLSX (Bulk Upload)
+                  </button></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><button class="dropdown-item" id="uploadCanvaZipBtn">
+                    <i class="fas fa-upload me-2"></i>Upload Canva ZIP
+                  </button></li>
+                </ul>
+              </div>
+              <button type="button" class="btn btn-outline-warning btn-sm ms-2" id="removeCanvaBtn" disabled>
+                <i class="fas fa-eraser me-1"></i>Remove Canva
+              </button>
+              <button type="button" class="btn btn-outline-danger btn-sm ms-2" id="deleteSelectedBtn" disabled>
+                <i class="fas fa-trash me-1"></i>Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Recipe Cards -->
+    <div class="card-body">
+      <% recipes.forEach(function(recipe) { %>
+        <div class="recipe-card" data-recipe-id="<%= recipe.id %>">
+          <!-- Selection Checkbox -->
+          <div style="position: absolute; top: 20px; left: 20px; z-index: 5;">
+            <input type="checkbox" class="form-check-input recipe-checkbox" 
+                   value="<%= recipe.id %>" 
+                   data-recipe-name="<%= recipe.recipe_idea %>">
+          </div>
+          
+          <!-- Recipe Actions -->
+          <div class="recipe-actions">
+            <!-- FIXED: Quick Copy Button with Dropdown -->
+            <div class="position-relative">
+              <button type="button" class="btn action-btn-copy quick-copy-btn" 
+                      data-recipe-id="<%= recipe.id %>" 
+                      data-recipe-name="<%= recipe.recipe_idea %>"
+                      title="Quick Copy Content">
+                <i class="fa fa-copy"></i>
+              </button>
+              
+              <!-- Copy Status Indicator -->
+              <div class="copy-status">
+                <i class="fa fa-check"></i>
+              </div>
+              
+              <!-- FIXED: Copy Dropdown Menu -->
+              <div class="copy-dropdown" data-recipe-id="<%= recipe.id %>">
+                <div class="copy-dropdown-header">
+                  <h6 title="<%= recipe.recipe_idea %>"><%= recipe.recipe_idea %></h6>
+                </div>
+                
+                <button class="copy-dropdown-item" data-copy-type="facebook">
+                  <i class="fab fa-facebook"></i>
+                  Facebook Content
+                </button>
+                
+                <button class="copy-dropdown-item" data-copy-type="midjourney">
+                  <i class="fa fa-magic"></i>
+                  Midjourney Prompt
+                </button>
+                
+                <div class="copy-dropdown-divider"></div>
+                
+                <button class="copy-dropdown-item" data-copy-type="pinterest-title">
+                  <i class="fab fa-pinterest"></i>
+                  Pinterest Title
+                </button>
+                
+                <button class="copy-dropdown-item" data-copy-type="pinterest-description">
+                  <i class="fa fa-align-left"></i>
+                  Pinterest Description
+                </button>
+                
+                <button class="copy-dropdown-item" data-copy-type="text-overlay">
+                  <i class="fa fa-font"></i>
+                  Text Overlay
+                </button>
+                
+                <div class="copy-dropdown-divider"></div>
+                
+                <button class="copy-dropdown-item" data-copy-type="all">
+                  <i class="fa fa-clipboard"></i>
+                  Copy All (Formatted)
+                </button>
+              </div>
+            </div>
+            
+            <button type="button" class="btn action-btn-delete delete-recipe" 
+                    data-recipe-id="<%= recipe.id %>" 
+                    data-recipe-name="<%= recipe.recipe_idea %>"
+                    title="Delete Recipe">
+              <i class="fa fa-trash"></i>
+            </button>
+          </div>
+          
+          <!-- Recipe Content -->
+          <div class="recipe-content" onclick="window.location.href='/recipe/<%= recipe.id %>'">
+            <div class="recipe-header">
+              <h3 class="recipe-title">
+                <%= recipe.recipe_idea %>
+                
+                <!-- WordPress Publication Status Indicator -->
+                <% if (recipe.wordpressPublication) { %>
+                  <% if (recipe.wordpressPublication.isPublished) { %>
+                    <a href="<%= recipe.wordpressPublication.wp_post_url %>" 
+                       target="_blank" 
+                       class="wp-status-indicator wp-status-published"
+                       title="Published to WordPress on <%= recipe.wordpressPublication.publishedDate %>">
+                      <i class="fab fa-wordpress wp-status-icon"></i>
+                      Published
+                      <i class="fas fa-external-link-alt" style="font-size: 0.6rem;"></i>
+                    </a>
+                  <% } else if (recipe.wordpressPublication.isDraft) { %>
+                    <a href="<%= recipe.wordpressPublication.wp_post_url %>" 
+                       target="_blank" 
+                       class="wp-status-indicator wp-status-draft"
+                       title="Draft in WordPress - <%= recipe.wordpressPublication.publishedDate %>">
+                      <i class="fab fa-wordpress wp-status-icon"></i>
+                      Draft
+                      <i class="fas fa-external-link-alt" style="font-size: 0.6rem;"></i>
+                    </a>
+                  <% } else if (recipe.wordpressPublication.isPrivate) { %>
+                    <a href="<%= recipe.wordpressPublication.wp_post_url %>" 
+                       target="_blank" 
+                       class="wp-status-indicator wp-status-private"
+                       title="Private post in WordPress - <%= recipe.wordpressPublication.publishedDate %>">
+                      <i class="fab fa-wordpress wp-status-icon"></i>
+                      Private
+                      <i class="fas fa-external-link-alt" style="font-size: 0.6rem;"></i>
+                    </a>
+                  <% } else { %>
+                    <span class="wp-status-indicator wp-status-draft"
+                          title="Status: <%= recipe.wordpressPublication.wp_status %>">
+                      <i class="fab fa-wordpress wp-status-icon"></i>
+                      <%= recipe.wordpressPublication.wp_status %>
+                    </span>
+                  <% } %>
+                <% } %>
+
+                <!-- Canva Image Indicator -->
+                <% if (recipe.hasCanvaImage) { %>
+                  <span class="canva-status-indicator"
+                        title="Canva image uploaded and ready for WordPress publishing"
+                        style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: linear-gradient(135deg, #00c4cc, #7b2cbf); color: white; border-radius: 12px; font-size: 0.7rem; font-weight: 600; margin-left: 8px;">
+                    <i class="fas fa-image"></i>
+                    Canva
+                  </span>
+                <% } %>
+              </h3>
+              <span class="recipe-time"><%= moment(recipe.created_at).fromNow() %></span>
+            </div>
+            
+            <div class="recipe-footer">
+              <div>
+                <% if (recipe.category) { %>
+                  <span class="recipe-category"><%= recipe.category %></span>
+                <% } %>
+                
+                <!-- WordPress Publication Date -->
+                <% if (recipe.wordpressPublication && recipe.wordpressPublication.publishedDate) { %>
+                  <div class="wp-publish-date mt-1">
+                    <i class="fab fa-wordpress"></i>
+                    Published <%= recipe.wordpressPublication.publishedFromNow %>
+                  </div>
+                <% } %>
+              </div>
+              
+              <div class="recipe-author">
+                <span>by</span>
+                <div class="author-avatar" style="background-color: <%= recipe.owner_role === 'admin' ? '#1cc88a' : '#4e73df' %>;">
+                  <%= recipe.owner_name ? recipe.owner_name.charAt(0).toUpperCase() : 'U' %>
+                </div>
+                <span><%= recipe.owner_name || 'Unknown' %></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% }); %>
+      
+      <!-- Pagination -->
+      <nav aria-label="Recipe pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
+          <% if (currentPage > 1) { %>
+            <li class="page-item">
+              <a class="page-link" href="/recipes?page=<%= currentPage - 1 %><%= searchTerm ? '&search=' + searchTerm : '' %>">Previous</a>
+            </li>
+          <% } else { %>
+            <li class="page-item disabled">
+              <span class="page-link">Previous</span>
+            </li>
+          <% } %>
+          
+          <li class="page-item active">
+            <span class="page-link"><%= currentPage %></span>
+          </li>
+          
+          <% if (recipes.length >= limit) { %>
+            <li class="page-item">
+              <a class="page-link" href="/recipes?page=<%= currentPage + 1 %><%= searchTerm ? '&search=' + searchTerm : '' %>">Next</a>
+            </li>
+          <% } else { %>
+            <li class="page-item disabled">
+              <span class="page-link">Next</span>
+            </li>
+          <% } %>
+        </ul>
+      </nav>
+    </div>
+  <% } else { %>
+    <div class="empty-state">
+      <div class="empty-state-icon">
+        <i class="fa fa-utensils"></i>
+      </div>
+      <h3>No Recipes Found</h3>
+      <% if (searchTerm) { %>
+        <p>No recipes found matching "<%= searchTerm %>". <a href="/recipes">View all recipes</a> or <a href="/generate/all">generate a new one</a>.</p>
+      <% } else { %>
+        <p>No recipes have been generated yet. <a href="/generate/all">Generate your first recipe</a>.</p>
+      <% } %>
+    </div>
+  <% } %>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="deleteConfirmModalLabel">Confirm Deletion</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to delete the recipe "<span id="recipeNameToDelete"></span>"? This action cannot be undone.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bulk Delete Confirmation Modal -->
+<div class="modal fade" id="bulkDeleteConfirmModal" tabindex="-1" aria-labelledby="bulkDeleteConfirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="bulkDeleteConfirmModalLabel">Confirm Bulk Deletion</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete <strong><span id="bulkDeleteCount"></span></strong> selected recipes? This action cannot be undone.</p>
+        <div id="selectedRecipesDeleteList" class="mt-3"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmBulkDeleteBtn">
+          <i class="fa fa-trash"></i> Delete Selected
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Export Confirmation Modal -->
+<div class="modal fade" id="exportConfirmModal" tabindex="-1" aria-labelledby="exportConfirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-info text-white">
+        <h5 class="modal-title" id="exportConfirmModalLabel">Export Selected Recipes</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>You are about to export <strong><span id="exportCount"></span></strong> selected recipes to Excel format with embedded images.</p>
+        <div id="selectedRecipesList" class="mt-3"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-info" id="confirmExportBtn">
+          <i class="fa fa-download"></i> Export to Excel
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bulk Image Selection Modal -->
+<div class="modal fade" id="bulkImageSelectionModal" tabindex="-1" aria-labelledby="bulkImageSelectionModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="bulkImageSelectionModalLabel">
+          <i class="fas fa-images me-2"></i>Select Featured Images for Publishing
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-info">
+          <i class="fas fa-info-circle me-2"></i>
+          <strong>How it works:</strong> Each recipe shows 4 variations from the Midjourney 2x2 grid below.
+          Click on the variation you like best to use as the WordPress featured image. Selected images will have a green border and checkmark.
+        </div>
+
+        <!-- Quick Selection Tools -->
+        <div class="mb-3 d-flex gap-2 flex-wrap">
+          <button type="button" class="btn btn-sm btn-outline-primary" id="selectAllTopLeft">
+            <i class="fas fa-check-square me-1"></i> Select Top-Left for All
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-primary" id="selectAllTopRight">
+            <i class="fas fa-check-square me-1"></i> Select Top-Right for All
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-primary" id="selectAllBottomLeft">
+            <i class="fas fa-check-square me-1"></i> Select Bottom-Left for All
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-primary" id="selectAllBottomRight">
+            <i class="fas fa-check-square me-1"></i> Select Bottom-Right for All
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" id="selectFirstAvailable">
+            <i class="fas fa-magic me-1"></i> Auto-Select First Variation
+          </button>
+        </div>
+
+        <!-- Image Grid -->
+        <div id="bulkImageSelectionGrid" class="row g-3">
+          <!-- Will be populated dynamically -->
+        </div>
+
+        <div id="imageSelectionLoading" class="text-center py-5" style="display: none;">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading images...</span>
+          </div>
+          <p class="mt-2 text-muted">Loading recipe images...</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-success" id="confirmImageSelection">
+          <i class="fas fa-check me-2"></i> Continue to Publish Settings
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bulk Publish Confirmation Modal -->
+<div class="modal fade" id="bulkPublishConfirmModal" tabindex="-1" aria-labelledby="bulkPublishConfirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title" id="bulkPublishConfirmModalLabel">Bulk Publish to WordPress</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>You are about to publish <strong><span id="bulkPublishCount"></span></strong> selected recipes to WordPress.</p>
+        
+        <div class="mb-3">
+          <label for="publishStatus" class="form-label">Post Status:</label>
+          <select class="form-select" id="publishStatus">
+            <option value="draft">Draft</option>
+            <option value="publish">Publish Now</option>
+            <option value="future">Schedule for Later</option>
+            <option value="private">Private</option>
+          </select>
+        </div>
+
+        <!-- WordPress Category Selection -->
+        <div class="mb-3">
+          <label for="wordpressCategorySelect" class="form-label">
+            <i class="fas fa-folder me-1"></i>WordPress Category:
+          </label>
+          <select class="form-select" id="wordpressCategorySelect">
+            <option value="">Auto-detect from recipe category</option>
+          </select>
+          <div class="form-text">
+            <i class="fas fa-info-circle me-1"></i>
+            Categories will be auto-matched based on recipe categories. Or select a category to apply to all posts.
+            <br><small class="text-warning" id="categoriesFetchHint">
+              <i class="fas fa-exclamation-triangle me-1"></i>
+              To see categories, go to WordPress Settings and click "Fetch Categories"
+            </small>
+          </div>
+        </div>
+
+        <!-- Schedule Date/Time Picker for Bulk Publish -->
+        <div class="mb-3" id="bulkScheduleDateTime" style="display: none;">
+          <label for="bulkScheduleDate" class="form-label">Start Schedule Date & Time (Optional)</label>
+          <input type="datetime-local" class="form-control" id="bulkScheduleDate">
+          <div class="form-text">
+            <i class="fas fa-magic me-1 text-success"></i>
+            <strong>Leave empty</strong> to automatically continue from last scheduled date.
+            Or select a date to manually set the start time.
+          </div>
+        </div>
+
+        <!-- Schedule Interval Options -->
+        <div class="mb-3" id="bulkScheduleInterval" style="display: none;">
+          <label class="form-label">Schedule Interval Between Posts</label>
+          <div class="row g-2">
+            <div class="col-md-6">
+              <input type="number" class="form-control" id="scheduleIntervalValue" min="0" value="2" placeholder="Enter interval">
+            </div>
+            <div class="col-md-6">
+              <select class="form-select" id="scheduleIntervalUnit">
+                <option value="minutes">Minutes</option>
+                <option value="hours" selected>Hours</option>
+                <option value="days">Days</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-text">
+            <i class="fas fa-info-circle me-1"></i>
+            Each post will be scheduled with this interval from the previous one. Set to 0 for all posts at the same time.
+          </div>
+          <div id="schedulePreview" class="alert alert-info mt-2" style="display: none;">
+            <strong>Schedule Preview:</strong>
+            <div id="schedulePreviewContent"></div>
+          </div>
+        </div>
+        
+        <!-- ENHANCED: Replace the checkbox section with the improved version -->
+        <div class="form-check mb-3 featured-image-checkbox-container">
+          <input 
+            class="form-check-input featured-image-checkbox" 
+            type="checkbox" 
+            id="includeFeaturedImage" 
+            name="includeFeaturedImage"
+            checked 
+            value="1"
+            data-original-checked="true">
+          <label class="form-check-label featured-image-label" for="includeFeaturedImage">
+            <i class="fas fa-image me-2 text-primary"></i>
+            <strong>Include Midjourney images as featured images</strong>
+            <br>
+            <small class="text-muted">Featured images will be automatically uploaded to WordPress when available</small>
+          </label>
+          <div class="checkbox-status" id="checkboxStatus">
+            <i class="fas fa-check-circle text-success"></i> Images will be included
+          </div>
+        </div>
+        
+        <div id="selectedRecipesPublishList" class="mt-3"></div>
+        
+        <div class="alert alert-info mb-0">
+          <i class="fas fa-info-circle me-2"></i> 
+          This will create WordPress posts with full blog content and recipe data. Publishing may take a few moments per recipe.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-success" id="confirmBulkPublishBtn">
+          <i class="fab fa-wordpress me-2"></i> Publish Selected
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bulk Publish Progress Modal -->
+<div class="modal fade" id="bulkPublishProgressModal" tabindex="-1" aria-labelledby="bulkPublishProgressModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="bulkPublishProgressModalLabel">Publishing to WordPress...</h5>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <div class="progress">
+            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" 
+                 id="publishProgressBar" style="width: 0%"></div>
+          </div>
+          <small class="text-muted mt-1" id="publishProgressText">Starting...</small>
+        </div>
+        
+        <div id="publishResults"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="closeProgressBtn" style="display: none;" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Pinterest Export Confirmation Modal -->
+<div class="modal fade" id="pinterestExportConfirmModal" tabindex="-1" aria-labelledby="pinterestExportConfirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="pinterestExportConfirmModalLabel">Export Pinterest Data</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>You are about to export Pinterest data for <strong><span id="pinterestExportCount"></span></strong> selected recipes.</p>
+        
+        <!-- Export Format Options -->
+        <div class="mb-3">
+          <label for="pinterestExportFormat" class="form-label">Export Format:</label>
+          <select class="form-select" id="pinterestExportFormat">
+            <option value="excel">Excel with Embedded Images (Recommended)</option>
+            <option value="csv">CSV with Image URLs</option>
+          </select>
+        </div>
+        
+        <p><strong>Export includes:</strong></p>
+        <ul>
+          <li><strong>Column 1:</strong> Image 1 (Grid) - Embedded image or URL</li>
+          <li><strong>Column 2:</strong> Image 2 (Grid) - Embedded image or URL</li>
+          <li><strong>Column 3:</strong> Overlay Text from Pinterest variation</li>
+        </ul>
+        
+        <div id="selectedRecipesPinterestList" class="mt-3"></div>
+        
+        <div class="alert alert-info mt-3">
+          <i class="fas fa-info-circle me-2"></i>
+          Only recipes with grid images will be included in the export.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmPinterestExportBtn">
+          <i class="fab fa-pinterest me-2"></i> Export Pinterest Data
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Upload Canva ZIP Modal -->
+<div class="modal fade" id="uploadCanvaZipModal" tabindex="-1" aria-labelledby="uploadCanvaZipModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="uploadCanvaZipModalLabel">
+          <i class="fas fa-upload me-2"></i>Upload Canva Designs (ZIP)
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-info">
+          <i class="fas fa-info-circle me-2"></i>
+          <strong>How it works:</strong>
+          <ol class="mb-0 mt-2">
+            <li>Export Pinterest data using "Pinterest CSV" → "Excel with Embedded Images"</li>
+            <li>Upload the Excel file to Canva and use bulk create feature</li>
+            <li>Download all designs from Canva as a ZIP file</li>
+            <li>Upload the ZIP file here to automatically assign images to recipes</li>
+          </ol>
+        </div>
+
+        <!-- File Upload Input -->
+        <div class="mb-3">
+          <label for="canvaZipFile" class="form-label">
+            <strong>Select ZIP File from Canva:</strong>
+          </label>
+          <input type="file" class="form-control" id="canvaZipFile" accept=".zip" required>
+          <div class="form-text">
+            <i class="fas fa-file-archive me-1"></i>
+            Only ZIP files are accepted. The images will be matched to recipes in the same order as the export.
+          </div>
+        </div>
+
+        <!-- Preview/Status Area -->
+        <div id="zipUploadStatus" class="mt-3" style="display: none;">
+          <div class="card">
+            <div class="card-body">
+              <h6 class="card-title">
+                <i class="fas fa-spinner fa-spin me-2"></i>Processing ZIP file...
+              </h6>
+              <div class="progress mt-2">
+                <div class="progress-bar progress-bar-striped progress-bar-animated"
+                     id="zipUploadProgress"
+                     role="progressbar"
+                     style="width: 0%">0%</div>
+              </div>
+              <div id="zipUploadMessage" class="mt-2 small text-muted"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Results Area -->
+        <div id="zipUploadResults" class="mt-3" style="display: none;"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="confirmCanvaZipUploadBtn">
+          <i class="fas fa-cloud-upload-alt me-2"></i>Upload & Process ZIP
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bulk Buffer Publishing Modal -->
+<div class="modal fade" id="bulkBufferPublishModal" tabindex="-1" aria-labelledby="bulkBufferPublishModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="bulkBufferPublishModalLabel">Bulk Publish to Buffer</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="bufferPublishStatus"></div>
+        
+        <div class="mb-3">
+          <label class="form-label"><strong>Selected Recipes:</strong></label>
+          <div id="selectedRecipesBufferList" class="selected-recipes-list"></div>
+        </div>
+        
+        <!-- Buffer Board Selection -->
+        <div class="mb-3">
+          <label for="bulkBufferBoardSelect" class="form-label">Buffer Board</label>
+          <select class="form-select" id="bulkBufferBoardSelect" required>
+            <option value="">Loading boards...</option>
+          </select>
+          <div class="form-text">Select which Buffer board to publish all recipes to</div>
+        </div>
+        
+        <div class="alert alert-info">
+          <i class="fas fa-info-circle me-2"></i>
+          All selected recipes will be published immediately to the selected Buffer board with their Pinterest images and descriptions.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-warning" id="confirmBulkBufferPublishBtn">
+          <i class="bi bi-send me-2"></i> Publish to Buffer
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // ====== EXISTING FUNCTIONALITY ======
+    // Selection management
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    const recipeCheckboxes = document.querySelectorAll('.recipe-checkbox');
+    const exportSelectedBtn = document.getElementById('exportSelectedBtn');
+    const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+    const removeCanvaBtn = document.getElementById('removeCanvaBtn');
+    const publishSelectedBtn = document.getElementById('publishSelectedBtn');
+    const selectedCountSpan = document.getElementById('selectedCount');
+    const selectionInfo = document.getElementById('selectionInfo');
+    const clearSelectionBtn = document.getElementById('clearSelectionBtn');
+    const exportPinterestBtn = document.getElementById('exportPinterestBtn');
+    const exportPinterestXlsxBtn = document.getElementById('exportPinterestXlsxBtn');
+    const generatePinterestImagesBtn = document.getElementById('generatePinterestImagesBtn');
+    const batchVariationSelect = document.getElementById('batchVariationSelect');
+
+    // ✅ SYNC WITH GLOBAL PINTEREST STYLE PREFERENCE
+    if (batchVariationSelect) {
+      // Load saved style preference on page load
+      const savedStyle = localStorage.getItem('pinterestDesignStyle');
+      if (savedStyle) {
+        batchVariationSelect.value = savedStyle;
+        console.log('✅ Loaded saved Pinterest style for batch generation:', savedStyle);
+      } else {
+        // Default to random if no preference saved
+        batchVariationSelect.value = 'random';
+        console.log('🎲 Using default Random style for batch generation');
+      }
+      
+      // Update global preference when user changes batch selection
+      batchVariationSelect.addEventListener('change', function() {
+        const selectedStyle = this.value;
+        localStorage.setItem('pinterestDesignStyle', selectedStyle);
+        console.log('💾 Updated global Pinterest style preference from batch selector:', selectedStyle);
+      });
+    }
+    const selectedCountPinterest = document.getElementById('selectedCountPinterest');
+    const selectedCountImages = document.getElementById('selectedCountImages');
+    
+    // ====== ENHANCED CHECKBOX FUNCTIONALITY ======
+    // Enhanced checkbox functionality for featured image option
+    const checkbox = document.getElementById('includeFeaturedImage');
+    const container = document.querySelector('.featured-image-checkbox-container');
+    const status = document.getElementById('checkboxStatus');
+    const label = document.querySelector('.featured-image-label');
+    
+    if (!checkbox || !container || !status) {
+      console.error('❌ Required checkbox elements not found');
+    } else {
+      // Function to update visual state
+      function updateCheckboxVisuals() {
+        const isChecked = checkbox.checked;
+        
+        // Update container classes
+        container.classList.toggle('checked', isChecked);
+        container.classList.toggle('unchecked', !isChecked);
+        
+        // Update status text and icon
+        if (isChecked) {
+          status.innerHTML = '<i class="fas fa-check-circle text-success"></i> Images will be included';
+          status.className = 'checkbox-status checked';
+        } else {
+          status.innerHTML = '<i class="fas fa-times-circle text-danger"></i> Images will NOT be included';
+          status.className = 'checkbox-status unchecked';
+        }
+        
+        // Update checkbox value for form submission
+        checkbox.value = isChecked ? '1' : '0';
+        
+        console.log('🔄 Checkbox state updated:', {
+          checked: isChecked,
+          value: checkbox.value,
+          timestamp: new Date().toISOString()
+        });
+      }
+      
+      // Initialize visual state
+      updateCheckboxVisuals();
+      
+      // Handle checkbox change events
+      checkbox.addEventListener('change', function(e) {
+        e.stopPropagation();
+        console.log('✅ Checkbox changed via direct interaction:', this.checked);
+        updateCheckboxVisuals();
+      });
+      
+      // Handle clicks on the container (but not the checkbox itself)
+      container.addEventListener('click', function(e) {
+        // Only toggle if we didn't click directly on the checkbox
+        if (e.target !== checkbox) {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          // Toggle the checkbox state
+          checkbox.checked = !checkbox.checked;
+          
+          // Trigger change event
+          checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+          
+          console.log('🖱️ Checkbox toggled via container click:', checkbox.checked);
+        }
+      });
+      
+      // Handle label clicks specifically
+      if (label) {
+        label.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          // Toggle the checkbox
+          checkbox.checked = !checkbox.checked;
+          
+          // Trigger change event
+          checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+          
+          console.log('🏷️ Checkbox toggled via label click:', checkbox.checked);
+        });
+      }
+      
+      // Prevent modal events from interfering with checkbox
+      const modal = document.getElementById('bulkPublishConfirmModal');
+      if (modal) {
+        modal.addEventListener('click', function(e) {
+          // Don't let modal clicks affect the checkbox
+          if (e.target === modal) {
+            e.stopPropagation();
+          }
+        });
+      }
+      
+      // Add keyboard support
+      container.addEventListener('keydown', function(e) {
+        if (e.key === 'Space' || e.key === 'Enter') {
+          e.preventDefault();
+          checkbox.checked = !checkbox.checked;
+          checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+          console.log('⌨️ Checkbox toggled via keyboard:', checkbox.checked);
+        }
+      });
+      
+      // Make container focusable for accessibility
+      container.setAttribute('tabindex', '0');
+      container.setAttribute('role', 'checkbox');
+      container.setAttribute('aria-checked', checkbox.checked);
+      
+      // Update ARIA attributes when state changes
+      checkbox.addEventListener('change', function() {
+        container.setAttribute('aria-checked', this.checked);
+      });
+      
+      // Debug function to manually check state
+      window.debugCheckbox = function() {
+        console.log('🐛 Checkbox Debug Info:', {
+          element: checkbox,
+          checked: checkbox.checked,
+          value: checkbox.value,
+          id: checkbox.id,
+          name: checkbox.name,
+          type: checkbox.type,
+          containerClasses: container.className,
+          statusText: status.textContent
+        });
+        return checkbox.checked;
+      };
+      
+      // Monitor for any external changes to the checkbox
+      const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+          if (mutation.type === 'attributes' && mutation.attributeName === 'checked') {
+            console.log('🔍 External checkbox change detected');
+            updateCheckboxVisuals();
+          }
+        });
+      });
+      
+      observer.observe(checkbox, {
+        attributes: true,
+        attributeFilter: ['checked']
+      });
+      
+      console.log('✅ Enhanced checkbox functionality initialized');
+    }
+    
+    // Update selection display
+    function updateSelectionDisplay() {
+      const selectedCheckboxes = document.querySelectorAll('.recipe-checkbox:checked');
+      const selectedCount = selectedCheckboxes.length;
+      const totalCount = recipeCheckboxes.length;
+      
+      // Update counter
+      selectedCountSpan.textContent = selectedCount;
+      
+      // Update selection info
+      if (selectedCount === 0) {
+        selectionInfo.textContent = 'No recipes selected';
+      } else if (selectedCount === 1) {
+        selectionInfo.textContent = '1 recipe selected';
+      } else {
+        selectionInfo.textContent = `${selectedCount} recipes selected`;
+      }
+      
+      // Update button states
+const hasSelection = selectedCount > 0;
+exportSelectedBtn.disabled = !hasSelection;
+deleteSelectedBtn.disabled = !hasSelection;
+removeCanvaBtn.disabled = !hasSelection;
+publishSelectedBtn.disabled = !hasSelection;
+
+// Update Pinterest export buttons
+if (exportPinterestBtn) exportPinterestBtn.disabled = !hasSelection;
+if (exportPinterestXlsxBtn) exportPinterestXlsxBtn.disabled = !hasSelection;
+if (selectedCountPinterest) selectedCountPinterest.textContent = selectedCount;
+
+// Update Pinterest images generation button
+if (generatePinterestImagesBtn) generatePinterestImagesBtn.disabled = !hasSelection;
+if (selectedCountImages) selectedCountImages.textContent = selectedCount;
+
+// Update Buffer publishing button
+const publishBufferBtn = document.getElementById('publishBufferBtn');
+const selectedCountBuffer = document.getElementById('selectedCountBuffer');
+if (publishBufferBtn) publishBufferBtn.disabled = !hasSelection;
+if (selectedCountBuffer) selectedCountBuffer.textContent = selectedCount;
+
+// Update WordPress publishing button counter
+const selectedCountWP = document.getElementById('selectedCountWP');
+if (selectedCountWP) selectedCountWP.textContent = selectedCount;
+      
+      // Update select all checkbox
+      if (selectedCount === 0) {
+        selectAllCheckbox.indeterminate = false;
+        selectAllCheckbox.checked = false;
+      } else if (selectedCount === totalCount) {
+        selectAllCheckbox.indeterminate = false;
+        selectAllCheckbox.checked = true;
+      } else {
+        selectAllCheckbox.indeterminate = true;
+      }
+      
+      // Update recipe card styling
+      recipeCheckboxes.forEach(checkbox => {
+        const recipeCard = checkbox.closest('.recipe-card');
+        if (checkbox.checked) {
+          recipeCard.classList.add('selected');
+        } else {
+          recipeCard.classList.remove('selected');
+        }
+      });
+      
+      // Update WordPress counters
+      updateWordPressCounters();
+    }
+    
+    // Function to update WordPress publication counters when selection changes
+    function updateWordPressCounters() {
+      const selectedCheckboxes = document.querySelectorAll('.recipe-checkbox:checked');
+      
+      let selectedPublished = 0;
+      let selectedDrafts = 0;
+      let selectedUnpublished = 0;
+      
+      selectedCheckboxes.forEach(checkbox => {
+        const recipeCard = checkbox.closest('.recipe-card');
+        const wpIndicator = recipeCard.querySelector('.wp-status-indicator');
+        
+        if (wpIndicator) {
+          if (wpIndicator.classList.contains('wp-status-published')) {
+            selectedPublished++;
+          } else {
+            selectedDrafts++;
+          }
+        } else {
+          selectedUnpublished++;
+        }
+      });
+      
+      // Update the publish button text to show what will be published
+      if (selectedCheckboxes.length > 0) {
+        const publishBtn = document.getElementById('publishSelectedBtn');
+        if (publishBtn) {
+          const newRecipes = selectedUnpublished;
+          const updates = selectedPublished + selectedDrafts;
+          
+          if (newRecipes > 0 && updates > 0) {
+            publishBtn.innerHTML = `<i class="fab fa-wordpress me-2"></i>Publish ${newRecipes} + Update ${updates}`;
+          } else if (newRecipes > 0) {
+            publishBtn.innerHTML = `<i class="fab fa-wordpress me-2"></i>Publish ${newRecipes} New`;
+          } else if (updates > 0) {
+            publishBtn.innerHTML = `<i class="fab fa-wordpress me-2"></i>Update ${updates} Published`;
+          } else {
+            publishBtn.innerHTML = `<i class="fab fa-wordpress me-2"></i>Publish to WordPress`;
+          }
+        }
+      } else {
+        const publishBtn = document.getElementById('publishSelectedBtn');
+        if (publishBtn) {
+          publishBtn.innerHTML = `<i class="fab fa-wordpress me-2"></i>Publish to WordPress`;
+        }
+      }
+    }
+    
+    // Function to refresh WordPress publication status for specific recipes
+    async function refreshWordPressStatus(recipeIds) {
+      try {
+        console.log('Refreshing WordPress status for recipes:', recipeIds);
+        
+        // Make API call to get updated publication status
+        const response = await fetch('/api/recipes/wordpress-status', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ recipeIds: recipeIds })
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch updated status');
+        }
+        
+        const data = await response.json();
+        
+        if (data.success && data.publications) {
+          // Update each recipe card with new publication status
+          data.publications.forEach(publication => {
+            updateRecipeCardWordPressStatus(publication.recipeId, publication);
+          });
+          
+          // Update the publication summary counters
+          updatePublicationSummary();
+        }
+        
+      } catch (error) {
+        console.error('Error refreshing WordPress status:', error);
+      }
+    }
+    
+    // Function to update a single recipe card's WordPress status
+    function updateRecipeCardWordPressStatus(recipeId, publication) {
+      const recipeCard = document.querySelector(`[data-recipe-id="${recipeId}"]`);
+      if (!recipeCard) return;
+      
+      const recipeTitle = recipeCard.querySelector('.recipe-title');
+      if (!recipeTitle) return;
+      
+      // Remove existing WordPress indicator
+      const existingIndicator = recipeTitle.querySelector('.wp-status-indicator');
+      if (existingIndicator) {
+        existingIndicator.remove();
+      }
+      
+      // Remove existing publish date
+      const recipeFooter = recipeCard.querySelector('.recipe-footer');
+      const existingDate = recipeFooter ? recipeFooter.querySelector('.wp-publish-date') : null;
+      if (existingDate) {
+        existingDate.remove();
+      }
+      
+      if (publication) {
+        // Add new WordPress indicator
+        const indicator = document.createElement('a');
+        indicator.href = publication.wp_post_url;
+        indicator.target = '_blank';
+        indicator.className = 'wp-status-indicator';
+        
+        let statusClass = 'wp-status-draft';
+        let statusText = publication.wp_status;
+        let statusIcon = 'fab fa-wordpress';
+        
+        if (publication.wp_status === 'publish') {
+          statusClass = 'wp-status-published';
+          statusText = 'Published';
+        } else if (publication.wp_status === 'draft') {
+          statusClass = 'wp-status-draft';
+          statusText = 'Draft';
+        } else if (publication.wp_status === 'private') {
+          statusClass = 'wp-status-private';
+          statusText = 'Private';
+        }
+        
+        indicator.className += ` ${statusClass}`;
+        indicator.title = `${statusText} to WordPress on ${new Date(publication.created_at).toLocaleDateString()}`;
+        
+        indicator.innerHTML = `
+          <i class="${statusIcon} wp-status-icon"></i>
+          ${statusText}
+          <i class="fas fa-external-link-alt" style="font-size: 0.6rem;"></i>
+        `;
+        
+        recipeTitle.appendChild(indicator);
+        
+        // Add publication date to footer
+        if (recipeFooter) {
+          const categoryDiv = recipeFooter.querySelector('div:first-child');
+          if (categoryDiv) {
+            const publishDate = document.createElement('div');
+            publishDate.className = 'wp-publish-date mt-1';
+            publishDate.innerHTML = `
+              <i class="fab fa-wordpress"></i>
+              Published ${moment(publication.created_at).fromNow()}
+            `;
+            categoryDiv.appendChild(publishDate);
+          }
+        }
+      }
+    }
+    
+    // Function to update publication summary counters
+    function updatePublicationSummary() {
+      const allCards = document.querySelectorAll('.recipe-card');
+      let publishedCount = 0;
+      let draftCount = 0;
+      let unpublishedCount = 0;
+      
+      allCards.forEach(card => {
+        const wpIndicator = card.querySelector('.wp-status-indicator');
+        if (wpIndicator) {
+          if (wpIndicator.classList.contains('wp-status-published')) {
+            publishedCount++;
+          } else {
+            draftCount++;
+          }
+        } else {
+          unpublishedCount++;
+        }
+      });
+      
+      // Update summary display
+      const publishedCountEl = document.querySelector('.wp-publication-summary .text-success');
+      const draftCountEl = document.querySelector('.wp-publication-summary .text-warning');
+      const unpublishedCountEl = document.querySelector('.wp-publication-summary .text-muted');
+      
+      if (publishedCountEl) publishedCountEl.textContent = publishedCount;
+      if (draftCountEl) draftCountEl.textContent = draftCount;
+      if (unpublishedCountEl) unpublishedCountEl.textContent = unpublishedCount;
+    }
+    
+    // Select all functionality
+    selectAllCheckbox.addEventListener('change', function() {
+      const isChecked = this.checked;
+      recipeCheckboxes.forEach(checkbox => {
+        checkbox.checked = isChecked;
+      });
+      updateSelectionDisplay();
+    });
+    
+    // Individual checkbox functionality
+    recipeCheckboxes.forEach(checkbox => {
+      checkbox.addEventListener('change', updateSelectionDisplay);
+      
+      // Prevent event bubbling
+      checkbox.addEventListener('click', function(e) {
+        e.stopPropagation();
+      });
+    });
+    
+    // Clear selection functionality
+    clearSelectionBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      recipeCheckboxes.forEach(checkbox => {
+        checkbox.checked = false;
+      });
+      updateSelectionDisplay();
+    });
+    
+    // Bulk delete functionality (existing code continues...)
+    deleteSelectedBtn.addEventListener('click', function() {
+      const selectedCheckboxes = document.querySelectorAll('.recipe-checkbox:checked');
+      
+      if (selectedCheckboxes.length === 0) {
+        alert('Please select at least one recipe to delete.');
+        return;
+      }
+      
+      // Show bulk delete confirmation modal
+      const deleteModal = new bootstrap.Modal(document.getElementById('bulkDeleteConfirmModal'));
+      const bulkDeleteCount = document.getElementById('bulkDeleteCount');
+      const selectedRecipesDeleteList = document.getElementById('selectedRecipesDeleteList');
+      
+      bulkDeleteCount.textContent = selectedCheckboxes.length;
+      
+      // Build list of selected recipes
+      let recipeListHtml = '<ul class="list-unstyled">';
+      selectedCheckboxes.forEach(checkbox => {
+        const recipeName = checkbox.getAttribute('data-recipe-name');
+        recipeListHtml += `<li><i class="fa fa-times-circle text-danger me-2"></i>${recipeName}</li>`;
+      });
+      recipeListHtml += '</ul>';
+      
+      selectedRecipesDeleteList.innerHTML = recipeListHtml;
+      deleteModal.show();
+    });
+    
+    // Confirm bulk delete
+    document.getElementById('confirmBulkDeleteBtn').addEventListener('click', function() {
+      const selectedCheckboxes = document.querySelectorAll('.recipe-checkbox:checked');
+      const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+      
+      // Disable button and show spinner
+      const btn = this;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting...';
+      
+      // Send bulk delete request
+      fetch('/api/recipes/bulk-delete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ recipeIds: selectedIds })
+      })
+      .then(response => {
+        if (!response.ok) {
+          return response.text().then(text => {
+            throw new Error(`Server returned status ${response.status}: ${text}`);
+          });
+        }
+        return response.json();
+      })
+      .then(data => {
+        // Hide modal
+        bootstrap.Modal.getInstance(document.getElementById('bulkDeleteConfirmModal')).hide();
+        
+        // Show success message
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-success alert-dismissible fade show';
+        alertDiv.innerHTML = `
+          ${selectedIds.length} recipes deleted successfully!
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        
+        document.querySelector('.card-body').prepend(alertDiv);
+        
+        // Reload page after short delay
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      })
+      .catch(error => {
+        console.error('Error deleting recipes:', error);
+        
+        // Show error message
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+        alertDiv.innerHTML = `
+          Error: ${error.message}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        
+        document.querySelector('.card-body').prepend(alertDiv);
+        
+        // Reset button
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-trash"></i> Delete Selected';
+        
+        // Hide modal
+        bootstrap.Modal.getInstance(document.getElementById('bulkDeleteConfirmModal')).hide();
+      });
+    });
+
+    // Bulk remove Canva images functionality
+    removeCanvaBtn.addEventListener('click', function() {
+      const selectedCheckboxes = document.querySelectorAll('.recipe-checkbox:checked');
+
+      if (selectedCheckboxes.length === 0) {
+        alert('Please select at least one recipe to remove Canva images.');
+        return;
+      }
+
+      if (!confirm(`Are you sure you want to remove Canva images from ${selectedCheckboxes.length} selected recipes?`)) {
+        return;
+      }
+
+      const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+
+      // Disable button and show spinner
+      const btn = this;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Removing...';
+
+      // Send bulk remove Canva request
+      fetch('/api/blog/bulk-remove-canva-image', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ recipeIds: selectedIds })
+      })
+      .then(response => {
+        if (!response.ok) {
+          return response.text().then(text => {
+            throw new Error(`Server returned status ${response.status}: ${text}`);
+          });
+        }
+        return response.json();
+      })
+      .then(data => {
+        // Show success message
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-success alert-dismissible fade show';
+        alertDiv.innerHTML = `
+          Canva images removed from ${data.removed || selectedIds.length} recipes successfully!
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+
+        document.querySelector('.card-body').prepend(alertDiv);
+
+        // Reload page after short delay
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      })
+      .catch(error => {
+        console.error('Error removing Canva images:', error);
+
+        // Show error message
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+        alertDiv.innerHTML = `
+          Error: ${error.message}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+
+        document.querySelector('.card-body').prepend(alertDiv);
+
+        // Reset button
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-eraser me-1"></i>Remove Canva';
+      });
+    });
+
+    // Export selected functionality (existing code continues...)
+    exportSelectedBtn.addEventListener('click', function() {
+      const selectedCheckboxes = document.querySelectorAll('.recipe-checkbox:checked');
+      
+      if (selectedCheckboxes.length === 0) {
+        alert('Please select at least one recipe to export.');
+        return;
+      }
+      
+      // Show export confirmation modal
+      const exportModal = new bootstrap.Modal(document.getElementById('exportConfirmModal'));
+      const exportCount = document.getElementById('exportCount');
+      const selectedRecipesList = document.getElementById('selectedRecipesList');
+      
+      exportCount.textContent = selectedCheckboxes.length;
+      
+      // Build list of selected recipes
+      let recipeListHtml = '<ul class="list-unstyled">';
+      selectedCheckboxes.forEach(checkbox => {
+        const recipeName = checkbox.getAttribute('data-recipe-name');
+        recipeListHtml += `<li><i class="fa fa-check-circle text-success me-2"></i>${recipeName}</li>`;
+      });
+      recipeListHtml += '</ul>';
+      
+      selectedRecipesList.innerHTML = recipeListHtml;
+      exportModal.show();
+    });
+    
+    // Confirm export functionality
+    document.getElementById('confirmExportBtn').addEventListener('click', function() {
+      const selectedCheckboxes = document.querySelectorAll('.recipe-checkbox:checked');
+      const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+      
+      // Create form to submit selected IDs
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = '/api/export/recipes/excel/selected';
+      form.style.display = 'none';
+      
+      // Add selected recipe IDs
+      selectedIds.forEach(id => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'recipeIds[]';
+        input.value = id;
+        form.appendChild(input);
+      });
+      
+      document.body.appendChild(form);
+      form.submit();
+      document.body.removeChild(form);
+      
+      // Close modal
+      bootstrap.Modal.getInstance(document.getElementById('exportConfirmModal')).hide();
+    });
+    
+    // Global variable to store image selections
+    window.selectedFeaturedImages = {};
+
+    // Enhanced bulk publish functionality with WordPress connection check and image selection
+    publishSelectedBtn.addEventListener('click', async function() {
+      const selectedCheckboxes = document.querySelectorAll('.recipe-checkbox:checked');
+
+      if (selectedCheckboxes.length === 0) {
+        alert('Please select at least one recipe to publish.');
+        return;
+      }
+
+      // Disable button and show loading
+      this.disabled = true;
+      this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Checking WordPress...';
+
+      try {
+        // Check if WordPress is ready for bulk publishing
+        const wpCheckResponse = await fetch('/api/wordpress/bulk-ready');
+        const wpCheck = await wpCheckResponse.json();
+
+        if (!wpCheck.ready) {
+          // Show error message
+          const alertDiv = document.createElement('div');
+          alertDiv.className = 'alert alert-warning alert-dismissible fade show';
+          alertDiv.innerHTML = `
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>WordPress Not Ready:</strong> ${wpCheck.message}
+            <br><small>Please configure your WordPress settings first.</small>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          `;
+
+          document.querySelector('.card-body').prepend(alertDiv);
+
+          // Reset button
+          this.disabled = false;
+          this.innerHTML = '<i class="fab fa-wordpress me-2"></i>Publish to WordPress';
+          return;
+        }
+
+        // WordPress is ready, show the IMAGE SELECTION modal first
+        await showBulkImageSelectionModal(selectedCheckboxes);
+
+        // Reset button
+        this.disabled = false;
+        this.innerHTML = '<i class="fab fa-wordpress me-2"></i>Publish to WordPress';
+
+      } catch (error) {
+        console.error('Error checking WordPress:', error);
+        this.disabled = false;
+        this.innerHTML = '<i class="fab fa-wordpress me-2"></i>Publish to WordPress';
+      }
+    });
+
+    // Function to show bulk image selection modal
+    async function showBulkImageSelectionModal(selectedCheckboxes) {
+      const imageSelectionModal = new bootstrap.Modal(document.getElementById('bulkImageSelectionModal'));
+      const imageGrid = document.getElementById('bulkImageSelectionGrid');
+      const loadingDiv = document.getElementById('imageSelectionLoading');
+
+      // Clear previous selections
+      window.selectedFeaturedImages = {};
+
+      // Show loading
+      imageGrid.style.display = 'none';
+      loadingDiv.style.display = 'block';
+
+      // Show modal
+      imageSelectionModal.show();
+
+      // Fetch images for all selected recipes
+      const recipeIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+      const recipeImages = await fetchRecipeImages(recipeIds);
+
+      // Build the image selection grid
+      buildImageSelectionGrid(recipeImages, selectedCheckboxes);
+
+      // Hide loading
+      loadingDiv.style.display = 'none';
+      imageGrid.style.display = 'block';
+    }
+
+    // Function to fetch recipe images
+    async function fetchRecipeImages(recipeIds) {
+      try {
+        const response = await fetch('/api/recipes/bulk-images', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ recipeIds })
+        });
+        return await response.json();
+      } catch (error) {
+        console.error('Error fetching recipe images:', error);
+        return [];
+      }
+    }
+
+    // Function to build image selection grid
+    function buildImageSelectionGrid(recipeImages, selectedCheckboxes) {
+      const imageGrid = document.getElementById('bulkImageSelectionGrid');
+      imageGrid.innerHTML = '';
+
+      selectedCheckboxes.forEach(checkbox => {
+        const recipeId = checkbox.value;
+        const recipeName = checkbox.getAttribute('data-recipe-name');
+        const recipeImageData = recipeImages.find(r => r.id == recipeId);
+
+        const colDiv = document.createElement('div');
+        colDiv.className = 'col-md-6 col-lg-4';
+
+        let imagesHTML = '';
+
+        if (recipeImageData && recipeImageData.images && recipeImageData.images.length > 0) {
+          recipeImageData.images.forEach((img, index) => {
+            const positionLabels = ['Top-Left', 'Top-Right', 'Bottom-Left', 'Bottom-Right'];
+            imagesHTML += `
+              <div class="image-option" data-recipe-id="${recipeId}" data-image-path="${img.path}" data-position="${index}">
+                <img src="${img.url}" alt="${positionLabels[index]}">
+                <span class="image-option-label">${positionLabels[index]}</span>
+                <span class="image-option-check"><i class="fas fa-check"></i></span>
+              </div>
+            `;
+          });
+        } else {
+          imagesHTML = '<div class="no-image-available"><i class="fas fa-image-slash mb-2" style="font-size: 2rem;"></i><br>No images available</div>';
+        }
+
+        colDiv.innerHTML = `
+          <div class="recipe-image-selection-card">
+            <div class="recipe-image-selection-header">
+              <h6><i class="fas fa-utensils me-2"></i>${recipeName}</h6>
+            </div>
+            <div class="image-options-grid">
+              ${imagesHTML}
+            </div>
+          </div>
+        `;
+
+        imageGrid.appendChild(colDiv);
+      });
+
+      // Add click handlers to image options
+      document.querySelectorAll('.image-option').forEach(option => {
+        option.addEventListener('click', function() {
+          const recipeId = this.getAttribute('data-recipe-id');
+          const imagePath = this.getAttribute('data-image-path');
+
+          // Remove selection from other images in the same recipe
+          document.querySelectorAll(`.image-option[data-recipe-id="${recipeId}"]`).forEach(opt => {
+            opt.classList.remove('selected');
+          });
+
+          // Select this image
+          this.classList.add('selected');
+
+          // Store selection
+          window.selectedFeaturedImages[recipeId] = imagePath;
+        });
+      });
+    }
+
+    // Quick selection button handlers
+    function selectAllByPosition(position) {
+      document.querySelectorAll(`.image-option[data-position="${position}"]`).forEach(option => {
+        option.click();
+      });
+    }
+
+    document.getElementById('selectAllTopLeft')?.addEventListener('click', () => selectAllByPosition(0));
+    document.getElementById('selectAllTopRight')?.addEventListener('click', () => selectAllByPosition(1));
+    document.getElementById('selectAllBottomLeft')?.addEventListener('click', () => selectAllByPosition(2));
+    document.getElementById('selectAllBottomRight')?.addEventListener('click', () => selectAllByPosition(3));
+
+    document.getElementById('selectFirstAvailable')?.addEventListener('click', () => {
+      document.querySelectorAll('.recipe-image-selection-card').forEach(card => {
+        const firstImage = card.querySelector('.image-option');
+        if (firstImage) firstImage.click();
+      });
+    });
+
+    // Confirm image selection and proceed to publish settings
+    document.getElementById('confirmImageSelection')?.addEventListener('click', function() {
+      // Close image selection modal
+      const imageSelectionModal = bootstrap.Modal.getInstance(document.getElementById('bulkImageSelectionModal'));
+      imageSelectionModal.hide();
+
+      // Now show the publish confirmation modal
+      const selectedCheckboxes = document.querySelectorAll('.recipe-checkbox:checked');
+      const publishModal = new bootstrap.Modal(document.getElementById('bulkPublishConfirmModal'));
+      const bulkPublishCount = document.getElementById('bulkPublishCount');
+      const selectedRecipesPublishList = document.getElementById('selectedRecipesPublishList');
+
+      bulkPublishCount.textContent = selectedCheckboxes.length;
+
+      // Build list of selected recipes
+      let recipeListHtml = '<ul class="list-unstyled">';
+      selectedCheckboxes.forEach(checkbox => {
+        const recipeName = checkbox.getAttribute('data-recipe-name');
+        const recipeId = checkbox.value;
+        const hasSelectedImage = window.selectedFeaturedImages[recipeId];
+        const imageIcon = hasSelectedImage
+          ? '<i class="fa fa-check-circle text-success me-2"></i>'
+          : '<i class="fa fa-image text-muted me-2"></i>';
+        recipeListHtml += `<li>${imageIcon}${recipeName}</li>`;
+      });
+      recipeListHtml += '</ul>';
+
+      selectedRecipesPublishList.innerHTML = recipeListHtml;
+
+      // Populate WordPress categories dropdown from localStorage
+      const categoriesSelect = document.getElementById('wordpressCategorySelect');
+      const categoriesFetchHint = document.getElementById('categoriesFetchHint');
+      const storedCategories = localStorage.getItem('wordpressCategories');
+
+      // Clear existing options except the first one
+      categoriesSelect.innerHTML = '<option value="">Auto-detect from recipe category</option>';
+
+      if (storedCategories) {
+        try {
+          const categories = JSON.parse(storedCategories);
+          if (categories && categories.length > 0) {
+            categories.forEach(cat => {
+              const option = document.createElement('option');
+              option.value = cat.id;
+              option.textContent = cat.name;
+              categoriesSelect.appendChild(option);
+            });
+            categoriesFetchHint.style.display = 'none'; // Hide the warning
+          }
+        } catch (e) {
+          console.error('Error parsing WordPress categories:', e);
+        }
+      }
+
+      publishModal.show();
+    });
+
+    // Show/hide bulk schedule date picker based on status selection
+    const bulkStatusSelect = document.getElementById('publishStatus');
+    const bulkScheduleDateTimeDiv = document.getElementById('bulkScheduleDateTime');
+    const bulkScheduleDateInput = document.getElementById('bulkScheduleDate');
+    const bulkScheduleIntervalDiv = document.getElementById('bulkScheduleInterval');
+    const scheduleIntervalValue = document.getElementById('scheduleIntervalValue');
+    const scheduleIntervalUnit = document.getElementById('scheduleIntervalUnit');
+    const schedulePreview = document.getElementById('schedulePreview');
+    const schedulePreviewContent = document.getElementById('schedulePreviewContent');
+
+    // Function to update schedule preview
+    function updateSchedulePreview() {
+      const selectedCheckboxes = document.querySelectorAll('.recipe-checkbox:checked');
+      const count = selectedCheckboxes.length;
+      const startDate = bulkScheduleDateInput.value;
+      const interval = parseInt(scheduleIntervalValue.value) || 0;
+      const unit = scheduleIntervalUnit.value;
+
+      if (count === 0) {
+        schedulePreview.style.display = 'none';
+        return;
+      }
+
+      // ✅ SCHEDULING CONTINUATION: Show auto-continuation message if no date selected
+      if (!startDate) {
+        schedulePreviewContent.innerHTML = `
+          <small class="text-success">
+            <i class="fas fa-magic me-1"></i>
+            <strong>Automatic Scheduling:</strong> Posts will automatically continue from the last scheduled date for this website.
+            ${count} post${count > 1 ? 's' : ''} will be scheduled with ${interval} ${unit} intervals.
+          </small>
+        `;
+        schedulePreview.style.display = 'block';
+        return;
+      }
+
+      // Calculate interval in milliseconds
+      let intervalMs = 0;
+      switch (unit) {
+        case 'minutes':
+          intervalMs = interval * 60 * 1000;
+          break;
+        case 'hours':
+          intervalMs = interval * 60 * 60 * 1000;
+          break;
+        case 'days':
+          intervalMs = interval * 24 * 60 * 60 * 1000;
+          break;
+      }
+
+      const baseDate = new Date(startDate);
+      let previewHtml = '<small class="d-block">';
+
+      // Show first 3 and last post schedules
+      const showCount = Math.min(count, 3);
+      for (let i = 0; i < showCount; i++) {
+        const postDate = new Date(baseDate.getTime() + (i * intervalMs));
+        previewHtml += `Post ${i + 1}: ${postDate.toLocaleString()}<br>`;
+      }
+
+      if (count > 3) {
+        previewHtml += '...<br>';
+        const lastDate = new Date(baseDate.getTime() + ((count - 1) * intervalMs));
+        previewHtml += `Post ${count}: ${lastDate.toLocaleString()}<br>`;
+      }
+
+      previewHtml += '</small>';
+      schedulePreviewContent.innerHTML = previewHtml;
+      schedulePreview.style.display = 'block';
+    }
+
+    if (bulkStatusSelect) {
+      bulkStatusSelect.addEventListener('change', function() {
+        if (this.value === 'future') {
+          bulkScheduleDateTimeDiv.style.display = 'block';
+          bulkScheduleIntervalDiv.style.display = 'block';
+          // Set minimum date to current date/time
+          const now = new Date();
+          now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+          bulkScheduleDateInput.min = now.toISOString().slice(0, 16);
+          // ✅ SCHEDULING CONTINUATION: Don't set a default date - leave empty for auto-continuation
+          // Clear the date field so automatic scheduling continuation can work
+          bulkScheduleDateInput.value = '';
+          updateSchedulePreview();
+        } else {
+          bulkScheduleDateTimeDiv.style.display = 'none';
+          bulkScheduleIntervalDiv.style.display = 'none';
+          schedulePreview.style.display = 'none';
+        }
+      });
+
+      // Update preview when date or interval changes
+      bulkScheduleDateInput.addEventListener('change', updateSchedulePreview);
+      scheduleIntervalValue.addEventListener('input', updateSchedulePreview);
+      scheduleIntervalUnit.addEventListener('change', updateSchedulePreview);
+    }
+
+    // ENHANCED: Bulk publish button handler with robust checkbox handling
+    document.getElementById('confirmBulkPublishBtn').addEventListener('click', function() {
+      const selectedCheckboxes = document.querySelectorAll('.recipe-checkbox:checked');
+      const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+      const publishStatus = document.getElementById('publishStatus').value;
+      const bulkScheduleDate = document.getElementById('bulkScheduleDate').value;
+      const scheduleInterval = parseInt(document.getElementById('scheduleIntervalValue').value) || 0;
+      const scheduleIntervalUnit = document.getElementById('scheduleIntervalUnit').value;
+      const wordpressCategoryId = document.getElementById('wordpressCategorySelect')?.value || '';
+
+      // ROBUST checkbox value detection
+      const checkbox = document.getElementById('includeFeaturedImage');
+
+      if (!checkbox) {
+        console.error('❌ Featured image checkbox not found!');
+        alert('Error: Featured image checkbox not found. Please refresh the page and try again.');
+        return;
+      }
+
+      // Get the checkbox state immediately
+      const includeFeaturedImage = checkbox.checked === true;
+
+      // Enhanced logging
+      console.log('🚀 [BULK PUBLISH] Starting with enhanced parameters:', {
+        selectedCount: selectedIds.length,
+        publishStatus: publishStatus,
+        includeFeaturedImage: includeFeaturedImage,
+        scheduleInterval: scheduleInterval,
+        scheduleIntervalUnit: scheduleIntervalUnit,
+        checkboxValue: checkbox.value,
+        checkboxChecked: checkbox.checked,
+        checkboxType: typeof checkbox.checked
+      });
+
+      // Validation
+      if (selectedIds.length === 0) {
+        alert('Please select at least one recipe to publish.');
+        return;
+      }
+
+      // Store the state before closing modals
+      const finalIncludeFeaturedImage = includeFeaturedImage;
+
+      // Close confirmation modal
+      const confirmModal = bootstrap.Modal.getInstance(document.getElementById('bulkPublishConfirmModal'));
+      if (confirmModal) {
+        confirmModal.hide();
+      }
+
+      // Show progress modal
+      const progressModal = new bootstrap.Modal(document.getElementById('bulkPublishProgressModal'));
+      progressModal.show();
+
+      // Start bulk publishing with guaranteed boolean value, schedule interval, and category ID
+      startBulkPublish(selectedIds, publishStatus, finalIncludeFeaturedImage, bulkScheduleDate, scheduleInterval, scheduleIntervalUnit, wordpressCategoryId);
+    });
+
+   async function startBulkPublish(recipeIds, status, includeFeaturedImage, scheduleDate, scheduleInterval, scheduleIntervalUnit, wordpressCategoryId) {
+  const progressBar = document.getElementById('publishProgressBar');
+  const progressText = document.getElementById('publishProgressText');
+  const resultsDiv = document.getElementById('publishResults');
+  const closeBtn = document.getElementById('closeProgressBtn');
+
+  resultsDiv.innerHTML = '';
+
+  let published = 0;
+  let failed = 0;
+  let total = recipeIds.length;
+  const publishedRecipeIds = [];
+
+  // DEBUGGING: Log the parameters being sent
+  console.log('🚀 Starting bulk publish with parameters:', {
+    recipeIds: recipeIds,
+    status: status,
+    includeFeaturedImage: includeFeaturedImage,
+    scheduleInterval: scheduleInterval,
+    scheduleIntervalUnit: scheduleIntervalUnit,
+    selectedFeaturedImages: window.selectedFeaturedImages,
+    total: total
+  });
+
+  progressText.textContent = `Publishing ${total} recipes with${includeFeaturedImage ? '' : 'out'} featured images...`;
+
+  try {
+    // Send bulk publish request with explicit debugging
+    const requestBody = {
+      recipeIds: recipeIds,
+      status: status,
+      includeFeaturedImage: includeFeaturedImage,
+      selectedFeaturedImages: window.selectedFeaturedImages || {},
+      wordpressCategoryId: wordpressCategoryId || '' // Add category ID (empty string means auto-detect)
+    };
+
+    // Add schedule date and interval if status is 'future'
+    if (status === 'future') {
+      // Add date if manually selected (otherwise auto-continuation will be used)
+      if (scheduleDate) {
+        requestBody.scheduleDate = scheduleDate;
+      }
+      // ALWAYS send interval when scheduling, regardless of auto-continuation vs manual date
+      requestBody.scheduleInterval = scheduleInterval || 0;
+      requestBody.scheduleIntervalUnit = scheduleIntervalUnit || 'hours';
+    }
+
+    console.log('📤 Sending bulk publish request with body:', requestBody);
+    
+    const response = await fetch('/api/wordpress/bulk-publish', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestBody)
+    });
+    
+    const result = await response.json();
+    console.log('📥 Received bulk publish response:', result);
+    
+    if (result.success && result.results) {
+      // Process results with enhanced debugging
+      result.results.details.forEach((detail, index) => {
+        const progress = ((index + 1) / total) * 100;
+        progressBar.style.width = progress + '%';
+        
+        console.log(`📋 Processing result ${index + 1}/${total}:`, detail);
+        
+        if (detail.success) {
+          published++;
+          publishedRecipeIds.push(detail.recipeId);
+          
+          // Enhanced result display with image status
+          const imageStatus = detail.hasFeaturedImage ? 
+            '<span class="text-success"><i class="fas fa-image"></i> Image included</span>' : 
+            '<span class="text-muted"><i class="far fa-image"></i> No image</span>';
+          
+          resultsDiv.innerHTML += `
+            <div class="alert alert-success alert-sm">
+              <i class="fa fa-check-circle"></i> 
+              <strong>${detail.recipeName}</strong> published successfully
+              <br><small>${imageStatus}</small>
+              <a href="${detail.postUrl}" target="_blank" class="ms-2">
+                <i class="fa fa-external-link-alt"></i> View Post
+              </a>
+            </div>
+          `;
+        } else {
+          failed++;
+          resultsDiv.innerHTML += `
+            <div class="alert alert-danger alert-sm">
+              <i class="fa fa-exclamation-circle"></i> 
+              <strong>${detail.recipeName}</strong> failed: ${detail.message}
+            </div>
+          `;
+        }
+        
+        // Scroll to bottom of results
+        resultsDiv.scrollTop = resultsDiv.scrollHeight;
+      });
+      
+      // Update final progress
+      progressBar.style.width = '100%';
+      progressText.innerHTML = `
+        <strong>Complete!</strong> ${published} published, ${failed} failed
+      `;
+      
+      // Refresh WordPress status for successfully published recipes
+      if (publishedRecipeIds.length > 0) {
+        progressText.innerHTML += ' - Updating status indicators...';
+        await refreshWordPressStatus(publishedRecipeIds);
+        progressText.innerHTML = `
+          <strong>Complete!</strong> ${published} published, ${failed} failed - Status updated!
+        `;
+      }
+      
+      // Show close button
+      closeBtn.style.display = 'inline-block';
+      
+      // Enhanced summary with image information
+      const imageInfo = includeFeaturedImage ? 
+        'Featured images were included where available.' : 
+        'Featured images were not included.';
+      
+      resultsDiv.innerHTML += `
+        <div class="alert alert-info mt-3">
+          <h6><i class="fa fa-info-circle"></i> Publishing Summary</h6>
+          <p class="mb-1">
+            <strong>Total:</strong> ${total} recipes<br>
+            <strong>Published:</strong> ${published} recipes<br>
+            <strong>Failed:</strong> ${failed} recipes
+          </p>
+          <small class="text-muted">${imageInfo}</small>
+        </div>
+      `;
+      
+    } else {
+      throw new Error(result.message || 'Bulk publish failed');
+    }
+    
+  } catch (error) {
+    console.error('❌ Bulk publish error:', error);
+    
+    // Fallback to individual publishing if bulk endpoint doesn't exist
+    if (error.message.includes('404') || error.message.includes('Not Found')) {
+      console.log('🔄 Falling back to individual publishing...');
+      await startIndividualPublish(recipeIds, status, includeFeaturedImage);
+    } else {
+      progressBar.style.width = '100%';
+      progressBar.classList.add('bg-danger');
+      progressText.innerHTML = '<strong>Error:</strong> ' + error.message;
+      
+      resultsDiv.innerHTML += `
+        <div class="alert alert-danger">
+          <i class="fa fa-exclamation-circle"></i> 
+          <strong>Bulk publish failed:</strong> ${error.message}
+        </div>
+      `;
+      
+      closeBtn.style.display = 'inline-block';
+    }
+  }
+}
+    // Fallback function for individual publishing (original method)
+    async function startIndividualPublish(recipeIds, status, includeFeaturedImage) {
+      const progressBar = document.getElementById('publishProgressBar');
+      const progressText = document.getElementById('publishProgressText');
+      const resultsDiv = document.getElementById('publishResults');
+      const closeBtn = document.getElementById('closeProgressBtn');
+      
+      let published = 0;
+      let failed = 0;
+      let total = recipeIds.length;
+      const publishedRecipeIds = [];
+      
+      progressText.textContent = `Publishing ${total} recipes...`;
+      
+      for (let i = 0; i < recipeIds.length; i++) {
+        const recipeId = recipeIds[i];
+        const recipeName = document.querySelector(`input[value="${recipeId}"]`).getAttribute('data-recipe-name');
+        
+        try {
+          // Update progress
+          const progress = ((i + 1) / total) * 100;
+          progressBar.style.width = progress + '%';
+          progressText.textContent = `Publishing "${recipeName}" (${i + 1}/${total})...`;
+          
+          // Publish individual recipe
+          const response = await fetch('/api/wordpress/publish-with-recipe', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              recipeId: recipeId,
+              status: status,
+              includeFeaturedImage: includeFeaturedImage
+            })
+          });
+          
+          const result = await response.json();
+          
+          if (result.success) {
+            published++;
+            publishedRecipeIds.push(recipeId);
+            resultsDiv.innerHTML += `
+              <div class="alert alert-success alert-sm">
+                <i class="fa fa-check-circle"></i> 
+                <strong>${recipeName}</strong> published successfully
+                <a href="${result.post.url}" target="_blank" class="ms-2">
+                  <i class="fa fa-external-link-alt"></i> View Post
+                </a>
+              </div>
+            `;
+          } else {
+            failed++;
+            resultsDiv.innerHTML += `
+              <div class="alert alert-danger alert-sm">
+                <i class="fa fa-exclamation-circle"></i> 
+                <strong>${recipeName}</strong> failed: ${result.message}
+              </div>
+            `;
+          }
+          
+          // Scroll to bottom of results
+          resultsDiv.scrollTop = resultsDiv.scrollHeight;
+          
+          // Small delay between publishes to avoid overwhelming WordPress
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+        } catch (error) {
+          failed++;
+          console.error(`Error publishing recipe ${recipeId}:`, error);
+          
+          resultsDiv.innerHTML += `
+            <div class="alert alert-danger alert-sm">
+              <i class="fa fa-exclamation-circle"></i> 
+              <strong>${recipeName}</strong> failed: ${error.message}
+            </div>
+          `;
+        }
+      }
+      
+      // Update final progress
+      progressBar.style.width = '100%';
+      progressText.innerHTML = `
+        <strong>Complete!</strong> ${published} published, ${failed} failed
+      `;
+      
+      // Refresh WordPress status for successfully published recipes
+      if (publishedRecipeIds.length > 0) {
+        progressText.innerHTML += ' - Updating status indicators...';
+        await refreshWordPressStatus(publishedRecipeIds);
+        progressText.innerHTML = `
+          <strong>Complete!</strong> ${published} published, ${failed} failed - Status updated!
+        `;
+      }
+      
+      // Show close button
+      closeBtn.style.display = 'inline-block';
+      
+      // Add summary
+      resultsDiv.innerHTML += `
+        <div class="alert alert-info mt-3">
+          <h6><i class="fa fa-info-circle"></i> Publishing Summary</h6>
+          <p class="mb-0">
+            <strong>Total:</strong> ${total} recipes<br>
+            <strong>Published:</strong> ${published} recipes<br>
+            <strong>Failed:</strong> ${failed} recipes
+          </p>
+        </div>
+      `;
+    }
+    
+    // Initialize display
+    updateSelectionDisplay();
+    
+    // Individual delete functionality (existing code...)
+    const deleteButtons = document.querySelectorAll('.delete-recipe');
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+    const recipeNameToDelete = document.getElementById('recipeNameToDelete');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    
+    deleteButtons.forEach(button => {
+      button.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const recipeId = this.getAttribute('data-recipe-id');
+        const recipeName = this.getAttribute('data-recipe-name');
+        
+        recipeNameToDelete.textContent = recipeName;
+        confirmDeleteBtn.setAttribute('data-recipe-id', recipeId);
+        
+        deleteModal.show();
+      });
+    });
+    
+    // Confirm individual delete
+    confirmDeleteBtn.addEventListener('click', function() {
+      const recipeId = this.getAttribute('data-recipe-id');
+      
+      // Disable button and show spinner
+      const btn = this;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting...';
+      
+      // Send delete request
+      fetch(`/api/recipes/delete/${recipeId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => {
+        if (!response.ok) {
+          return response.text().then(text => {
+            throw new Error(`Server returned status ${response.status}: ${text}`);
+          });
+        }
+        return response.json();
+      })
+      .then(data => {
+        // Hide modal
+        deleteModal.hide();
+        
+        // Show success message
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-success alert-dismissible fade show';
+        alertDiv.innerHTML = `
+          Recipe deleted successfully!
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        
+        document.querySelector('.card-body').prepend(alertDiv);
+        
+        // Reload page after short delay
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      })
+      .catch(error => {
+        console.error('Error deleting recipe:', error);
+        
+        // Show error message
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+        alertDiv.innerHTML = `
+          Error: ${error.message}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        
+        document.querySelector('.card-body').prepend(alertDiv);
+        
+        // Reset button
+        btn.disabled = false;
+        btn.innerHTML = 'Delete';
+        
+        // Hide modal
+        deleteModal.hide();
+      });
+    });
+    
+    // ====== FIXED QUICK COPY FUNCTIONALITY ======
+    
+    // Cache for recipe data to avoid repeated API calls
+    const recipeDataCache = new Map();
+    
+    // Quick copy button functionality
+    const quickCopyButtons = document.querySelectorAll('.quick-copy-btn');
+    const copyDropdowns = document.querySelectorAll('.copy-dropdown');
+    
+    // Show/hide copy dropdown
+    quickCopyButtons.forEach(button => {
+      button.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const recipeId = this.getAttribute('data-recipe-id');
+        const dropdown = document.querySelector(`.copy-dropdown[data-recipe-id="${recipeId}"]`);
+        
+        if (!dropdown) {
+          console.error('Copy dropdown not found for recipe:', recipeId);
+          return;
+        }
+        
+        // Hide all other dropdowns with error handling
+        copyDropdowns.forEach(d => {
+          if (d !== dropdown && d.classList) {
+            try {
+              d.classList.remove('show');
+            } catch (error) {
+              console.warn('Error hiding dropdown:', error);
+            }
+          }
+        });
+        
+        // Toggle current dropdown with error handling
+        if (dropdown.classList) {
+          try {
+            dropdown.classList.toggle('show');
+            
+            // Add body class to prevent dropdown from being cut off
+            if (dropdown.classList.contains('show')) {
+              if (document.body && document.body.style) {
+                document.body.style.overflow = 'visible';
+              }
+            }
+          } catch (error) {
+            console.error('Error toggling dropdown:', error);
+          }
+        }
+      });
+    });
+    
+    // Hide dropdowns when clicking outside
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.quick-copy-btn') && !e.target.closest('.copy-dropdown')) {
+        copyDropdowns.forEach(dropdown => {
+          if (dropdown && dropdown.classList) {
+            try {
+              dropdown.classList.remove('show');
+            } catch (error) {
+              console.warn('Error hiding dropdown on outside click:', error);
+            }
+          }
+        });
+        
+        if (document.body && document.body.style) {
+          try {
+            document.body.style.overflow = '';
+          } catch (error) {
+            console.warn('Error resetting body overflow:', error);
+          }
+        }
+      }
+    });
+    
+    // Prevent dropdown from closing when clicking inside
+    copyDropdowns.forEach(dropdown => {
+      dropdown.addEventListener('click', function(e) {
+        e.stopPropagation();
+      });
+    });
+    
+    // Copy functionality for dropdown items
+    document.querySelectorAll('.copy-dropdown-item').forEach(item => {
+      item.addEventListener('click', async function(e) {
+        e.preventDefault();
+        
+        const dropdownElement = this.closest('.copy-dropdown');
+        if (!dropdownElement) {
+          console.error('Copy dropdown parent not found');
+          return;
+        }
+        
+        const recipeId = dropdownElement.getAttribute('data-recipe-id');
+        const copyType = this.getAttribute('data-copy-type');
+        const originalContent = this.innerHTML;
+        
+        // Show loading state with null check
+        if (this.classList) {
+          this.classList.add('loading');
+        }
+        this.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Loading...';
+        
+        try {
+          // Get recipe data (with caching)  
+          const recipeData = await getRecipeData(recipeId);
+          
+          if (!recipeData.success) {
+            throw new Error(recipeData.message || 'Failed to load recipe data');
+          }
+          
+          // Get content to copy based on type
+          const contentToCopy = getContentToCopy(recipeData.data, copyType);
+          
+          if (!contentToCopy) {
+            throw new Error(`No ${copyType.replace('-', ' ')} content available for this recipe`);
+          }
+          
+          // Copy to clipboard
+          await navigator.clipboard.writeText(contentToCopy);
+          
+          // Show success state with null checks
+          if (this.classList) {
+            this.classList.remove('loading');
+            this.classList.add('success');
+          }
+          this.innerHTML = '<i class="fa fa-check"></i> Copied!';
+          
+          // Show copy status indicator with enhanced error handling
+          const copyBtn = document.querySelector(`.quick-copy-btn[data-recipe-id="${recipeId}"]`);
+          let statusIndicator = null;
+          
+          if (copyBtn && copyBtn.querySelector) {
+            statusIndicator = copyBtn.querySelector('.copy-status');
+          }
+          
+          if (!copyBtn) {
+            console.warn('Copy button not found for recipe:', recipeId);
+          }
+          if (!statusIndicator) {
+            console.warn('Status indicator not found for recipe:', recipeId);
+          }
+          
+          if (statusIndicator && statusIndicator.classList) {
+            try {
+              statusIndicator.classList.add('show');
+            } catch (classError) {
+              console.warn('Error adding class to status indicator:', classError);
+            }
+          }
+          
+          // Hide dropdown after short delay with enhanced error handling
+          const timeoutId = setTimeout(() => {
+            try {
+              if (dropdownElement && dropdownElement.classList) {
+                dropdownElement.classList.remove('show');
+              }
+              
+              if (document.body && document.body.style) {
+                document.body.style.overflow = '';
+              }
+              
+              // Reset item state with null checks
+              if (this && this.classList) {
+                this.classList.remove('success');
+              }
+              if (this && this.innerHTML !== undefined) {
+                this.innerHTML = originalContent;
+              }
+              
+              // Hide status indicator with enhanced error handling
+              const statusTimeoutId = setTimeout(() => {
+                try {
+                  if (statusIndicator && statusIndicator.classList) {
+                    statusIndicator.classList.remove('show');
+                  }
+                } catch (statusError) {
+                  console.warn('Error removing class from status indicator:', statusError);
+                }
+              }, 1000);
+              
+              // Store timeout ID for potential cleanup
+              if (statusIndicator) {
+                statusIndicator.timeoutId = statusTimeoutId;
+              }
+              
+            } catch (timeoutError) {
+              console.warn('Error in copy success timeout:', timeoutError);
+            }
+          }, 1500);
+          
+          // Store timeout ID for potential cleanup
+          if (this) {
+            this.timeoutId = timeoutId;
+          }
+          
+        } catch (error) {
+          console.error('Copy error:', error);
+          
+          // Show error state with null checks
+          if (this.classList) {
+            this.classList.remove('loading');
+          }
+          this.innerHTML = '<i class="fa fa-exclamation-triangle"></i> Error';
+          
+          // Show error notification
+          showNotification(`Failed to copy ${copyType.replace('-', ' ')}: ${error.message}`, 'error');
+          
+          // Reset after delay with null checks
+          const errorTimeoutId = setTimeout(() => {
+            try {
+              if (this && this.innerHTML !== undefined) {
+                this.innerHTML = originalContent;
+              }
+            } catch (resetError) {
+              console.warn('Error resetting content:', resetError);
+            }
+          }, 2000);
+          
+          // Store timeout ID for potential cleanup
+          if (this) {
+            this.errorTimeoutId = errorTimeoutId;
+          }
+        }
+      });
+    });
+    
+    // Function to get recipe data with caching
+    async function getRecipeData(recipeId) {
+      // Check cache first
+      if (recipeDataCache.has(recipeId)) {
+        return recipeDataCache.get(recipeId);
+      }
+      
+      try {
+        const response = await fetch(`/api/recipe/${recipeId}/copy-data`);
+        const data = await response.json();
+        
+        // Cache the result
+        recipeDataCache.set(recipeId, data);
+        
+        return data;
+      } catch (error) {
+        console.error('Error fetching recipe data:', error);
+        return { success: false, message: error.message };
+      }
+    }
+    
+    // Function to extract content based on copy type
+    function getContentToCopy(recipeData, copyType) {
+      switch (copyType) {
+        case 'facebook':
+          return recipeData.facebook?.recipe_text || null;
+          
+        case 'midjourney':
+          return recipeData.facebook?.mj_prompt || null;
+          
+        case 'pinterest-title':
+          return recipeData.pinterest?.[0]?.pin_title || null;
+          
+        case 'pinterest-description':
+          return recipeData.pinterest?.[0]?.pin_description || null;
+          
+        case 'text-overlay':
+          return recipeData.pinterest?.[0]?.overlay_text || null;
+          
+        case 'all':
+          return formatAllContent(recipeData);
+          
+        default:
+          return null;
+      }
+    }
+    
+    // Function to format all content into a single copyable text
+    function formatAllContent(recipeData) {
+      let content = [];
+      
+      // Recipe title
+      if (recipeData.recipe?.recipe_idea) {
+        content.push(`=== ${recipeData.recipe.recipe_idea.toUpperCase()} ===\n`);
+      }
+      
+      // Facebook content
+      if (recipeData.facebook?.recipe_text) {
+        content.push('📱 FACEBOOK CONTENT:');
+        content.push(recipeData.facebook.recipe_text);
+        content.push('');
+      }
+      
+      if (recipeData.facebook?.fb_caption) {
+        content.push('📝 FACEBOOK CAPTION:');
+        content.push(recipeData.facebook.fb_caption);
+        content.push('');
+      }
+      
+      // Midjourney prompt
+      if (recipeData.facebook?.mj_prompt) {
+        content.push('🎨 MIDJOURNEY PROMPT:');
+        content.push(recipeData.facebook.mj_prompt);
+        content.push('');
+      }
+      
+      // Pinterest content (first variation)
+      if (recipeData.pinterest?.[0]) {
+        const pin = recipeData.pinterest[0];
+        content.push('📌 PINTEREST CONTENT:');
+        
+        if (pin.pin_title) {
+          content.push(`Title: ${pin.pin_title}`);
+        }
+        
+        if (pin.pin_description) {
+          content.push(`Description: ${pin.pin_description}`);
+        }
+        
+        if (pin.overlay_text) {
+          content.push(`Overlay: ${pin.overlay_text}`);
+        }
+        
+        content.push('');
+      }
+      
+      // Blog content (if available)
+      if (recipeData.blog?.html_content) {
+        content.push('📄 BLOG POST:');
+        content.push(recipeData.blog.html_content);
+        content.push('');
+      }
+      
+      content.push(`Generated: ${new Date().toLocaleString()}`);
+      
+      return content.join('\n');
+    }
+    
+    // Utility function to show notifications
+    function showNotification(message, type = 'info') {
+      const alertClass = type === 'error' ? 'alert-danger' : 'alert-success';
+      const iconClass = type === 'error' ? 'fa-exclamation-triangle' : 'fa-check-circle';
+      
+      const alertDiv = document.createElement('div');
+      alertDiv.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+      alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+      alertDiv.innerHTML = `
+        <i class="fa ${iconClass} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      `;
+      
+      document.body.appendChild(alertDiv);
+      
+      // Auto-remove after 5 seconds
+      setTimeout(() => {
+        if (alertDiv && alertDiv.parentNode) {
+          try {
+            alertDiv.remove();
+          } catch (error) {
+            console.warn('Error removing notification:', error);
+          }
+        }
+      }, 5000);
+    }
+    
+    // Cleanup function to prevent memory leaks and handle any lingering timeouts
+    function cleanupCopyFunctionality() {
+      // Clear any existing timeouts
+      document.querySelectorAll('.copy-dropdown-item').forEach(item => {
+        if (item.timeoutId) {
+          clearTimeout(item.timeoutId);
+        }
+        if (item.errorTimeoutId) {
+          clearTimeout(item.errorTimeoutId);
+        }
+      });
+      
+      // Clear status indicator timeouts
+      document.querySelectorAll('.copy-status').forEach(indicator => {
+        if (indicator.timeoutId) {
+          clearTimeout(indicator.timeoutId);
+        }
+      });
+      
+      // Reset any modified styles
+      if (document.body && document.body.style) {
+        try {
+          document.body.style.overflow = '';
+        } catch (error) {
+          console.warn('Error resetting body overflow in cleanup:', error);
+        }
+      }
+      
+      // Hide all dropdowns
+      copyDropdowns.forEach(dropdown => {
+        if (dropdown && dropdown.classList) {
+          try {
+            dropdown.classList.remove('show');
+          } catch (error) {
+            console.warn('Error hiding dropdown in cleanup:', error);
+          }
+        }
+      });
+    }
+    
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', cleanupCopyFunctionality);
+    
+    // Also cleanup on visibility change (tab switching)
+    document.addEventListener('visibilitychange', function() {
+      if (document.hidden) {
+        cleanupCopyFunctionality();
+      }
+    });
+    
+    // Initialize WordPress counter updates
+    recipeCheckboxes.forEach(checkbox => {
+      checkbox.addEventListener('change', updateWordPressCounters);
+    });
+    
+    selectAllCheckbox.addEventListener('change', updateWordPressCounters);
+    
+    // Initial counter update
+    updateWordPressCounters();
+
+    // Pinterest export functionality
+if (exportPinterestBtn) {
+  exportPinterestBtn.addEventListener('click', function() {
+    const selectedCheckboxes = document.querySelectorAll('.recipe-checkbox:checked');
+    
+    if (selectedCheckboxes.length === 0) {
+      alert('Please select at least one recipe to export Pinterest data.');
+      return;
+    }
+    
+    // Show Pinterest export confirmation modal
+    const pinterestModal = new bootstrap.Modal(document.getElementById('pinterestExportConfirmModal'));
+    const pinterestCount = document.getElementById('pinterestExportCount');
+    const selectedRecipesPinterestList = document.getElementById('selectedRecipesPinterestList');
+    
+    pinterestCount.textContent = selectedCheckboxes.length;
+    
+    // Build list of selected recipes
+    let recipeListHtml = '<ul class="list-unstyled">';
+    selectedCheckboxes.forEach(checkbox => {
+      const recipeName = checkbox.getAttribute('data-recipe-name');
+      recipeListHtml += `<li><i class="fab fa-pinterest text-danger me-2"></i>${recipeName}</li>`;
+    });
+    recipeListHtml += '</ul>';
+    
+    selectedRecipesPinterestList.innerHTML = recipeListHtml;
+    pinterestModal.show();
+  });
+}
+
+// Confirm Pinterest export functionality
+const confirmPinterestExportBtn = document.getElementById('confirmPinterestExportBtn');
+if (confirmPinterestExportBtn) {
+  confirmPinterestExportBtn.addEventListener('click', function() {
+    const selectedCheckboxes = document.querySelectorAll('.recipe-checkbox:checked');
+    const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+    const exportFormat = document.getElementById('pinterestExportFormat').value;
+    
+    // Create form to submit selected IDs
+    const form = document.createElement('form');
+    form.method = 'POST';
+    
+    // Set the action based on selected format
+    if (exportFormat === 'excel') {
+      form.action = '/api/export/recipes/pinterest-excel/selected';
+    } else {
+      form.action = '/api/export/recipes/pinterest-csv/selected';
+    }
+    
+    form.style.display = 'none';
+    
+    // Add selected recipe IDs
+    selectedIds.forEach(id => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'recipeIds[]';
+      input.value = id;
+      form.appendChild(input);
+    });
+    
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+    
+    // Close modal
+    bootstrap.Modal.getInstance(document.getElementById('pinterestExportConfirmModal')).hide();
+  });
+}
+
+// Pinterest XLSX export functionality (for bulk upload to Pinterest)
+if (exportPinterestXlsxBtn) {
+  exportPinterestXlsxBtn.addEventListener('click', function() {
+    console.log('📌 Pinterest XLSX export button clicked');
+
+    const selectedCheckboxes = document.querySelectorAll('.recipe-checkbox:checked');
+    console.log(`📌 Found ${selectedCheckboxes.length} selected recipes`);
+
+    if (selectedCheckboxes.length === 0) {
+      alert('Please select at least one recipe to export Pinterest XLSX data.');
+      return;
+    }
+
+    const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+    console.log('📌 Selected recipe IDs:', selectedIds);
+
+    // IMPORTANT: Store the recipe IDs order in localStorage for later ZIP upload matching
+    localStorage.setItem('pinterestExportOrder', JSON.stringify(selectedIds));
+    console.log('📌 Stored export order in localStorage for ZIP upload matching');
+
+    // Create form to submit selected IDs
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/api/export/recipes/pinterest-xlsx/selected';
+    form.style.display = 'none';
+
+    // Add selected recipe IDs
+    selectedIds.forEach(id => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'recipeIds[]';
+      input.value = id;
+      form.appendChild(input);
+    });
+
+    console.log('📌 Submitting form to:', form.action);
+    document.body.appendChild(form);
+    form.submit();
+
+    // Don't remove form immediately to allow submission
+    setTimeout(() => {
+      if (form.parentNode) {
+        document.body.removeChild(form);
+      }
+    }, 1000);
+  });
+} else {
+  console.error('❌ exportPinterestXlsxBtn not found in DOM');
+}
+
+// ==================== CANVA ZIP UPLOAD FUNCTIONALITY ====================
+
+// Upload Canva ZIP button - Opens modal
+const uploadCanvaZipBtn = document.getElementById('uploadCanvaZipBtn');
+if (uploadCanvaZipBtn) {
+  uploadCanvaZipBtn.addEventListener('click', function() {
+    const uploadModal = new bootstrap.Modal(document.getElementById('uploadCanvaZipModal'));
+
+    // Reset modal state
+    document.getElementById('canvaZipFile').value = '';
+    document.getElementById('zipUploadStatus').style.display = 'none';
+    document.getElementById('zipUploadResults').style.display = 'none';
+    document.getElementById('zipUploadProgress').style.width = '0%';
+    document.getElementById('zipUploadProgress').textContent = '0%';
+    document.getElementById('confirmCanvaZipUploadBtn').disabled = false;
+
+    uploadModal.show();
+  });
+}
+
+// Confirm Canva ZIP upload and process
+const confirmCanvaZipUploadBtn = document.getElementById('confirmCanvaZipUploadBtn');
+if (confirmCanvaZipUploadBtn) {
+  confirmCanvaZipUploadBtn.addEventListener('click', async function() {
+    const fileInput = document.getElementById('canvaZipFile');
+    const file = fileInput.files[0];
+
+    if (!file) {
+      alert('Please select a ZIP file to upload.');
+      return;
+    }
+
+    if (!file.name.endsWith('.zip')) {
+      alert('Please select a valid ZIP file.');
+      return;
+    }
+
+    // Disable upload button and show progress
+    confirmCanvaZipUploadBtn.disabled = true;
+    document.getElementById('zipUploadStatus').style.display = 'block';
+    document.getElementById('zipUploadResults').style.display = 'none';
+
+    // Update progress message
+    const progressBar = document.getElementById('zipUploadProgress');
+    const statusMessage = document.getElementById('zipUploadMessage');
+
+    statusMessage.textContent = 'Uploading ZIP file...';
+    progressBar.style.width = '10%';
+    progressBar.textContent = '10%';
+
+    try {
+      // Create FormData and upload
+      const formData = new FormData();
+      formData.append('canvaZip', file);
+
+      // CRITICAL: Include the recipe order from the export to ensure correct matching
+      const exportOrder = localStorage.getItem('pinterestExportOrder');
+      if (exportOrder) {
+        formData.append('recipeOrder', exportOrder);
+        console.log('📌 Including recipe export order with ZIP upload:', exportOrder);
+      } else {
+        console.warn('⚠️ No export order found in localStorage - images may not match correctly');
+      }
+
+      statusMessage.textContent = 'Extracting images from ZIP...';
+      progressBar.style.width = '30%';
+      progressBar.textContent = '30%';
+
+      const response = await fetch('/api/upload-canva-zip', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include' // IMPORTANT: Include session cookies
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to upload ZIP file');
+      }
+
+      // Update progress
+      statusMessage.textContent = 'Processing images and matching to recipes...';
+      progressBar.style.width = '70%';
+      progressBar.textContent = '70%';
+
+      // Wait a moment for visual feedback
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Complete
+      progressBar.style.width = '100%';
+      progressBar.textContent = '100%';
+      progressBar.classList.remove('progress-bar-animated');
+      progressBar.classList.add('bg-success');
+      statusMessage.textContent = 'Upload complete!';
+
+      // Show results
+      document.getElementById('zipUploadStatus').style.display = 'none';
+      const resultsDiv = document.getElementById('zipUploadResults');
+      resultsDiv.style.display = 'block';
+
+      let resultsHtml = `
+        <div class="alert alert-success">
+          <h6><i class="fas fa-check-circle me-2"></i>Successfully processed ${result.processed} images!</h6>
+          <p class="mb-0 small">Images have been assigned to recipes in the export order.</p>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <strong>Processing Summary</strong>
+          </div>
+          <div class="card-body">
+            <ul class="list-unstyled mb-0">
+              <li><i class="fas fa-file-archive text-primary me-2"></i><strong>ZIP File:</strong> ${file.name}</li>
+              <li><i class="fas fa-images text-success me-2"></i><strong>Images Extracted:</strong> ${result.extracted}</li>
+              <li><i class="fas fa-check-double text-success me-2"></i><strong>Recipes Updated:</strong> ${result.processed}</li>
+            </ul>
+          </div>
+        </div>
+      `;
+
+      if (result.skipped && result.skipped.length > 0) {
+        resultsHtml += `
+          <div class="alert alert-warning mt-3">
+            <strong><i class="fas fa-exclamation-triangle me-2"></i>Skipped ${result.skipped.length} files:</strong>
+            <ul class="mb-0 mt-2 small">
+              ${result.skipped.map(s => `<li>${s}</li>`).join('')}
+            </ul>
+          </div>
+        `;
+      }
+
+      resultsHtml += `
+        <div class="alert alert-info mt-3">
+          <i class="fas fa-lightbulb me-2"></i>
+          <strong>Next step:</strong> You can now publish your recipes, and the Canva images will be automatically included at the bottom of each blog article!
+        </div>
+      `;
+
+      resultsDiv.innerHTML = resultsHtml;
+
+      // Enable close button
+      confirmCanvaZipUploadBtn.textContent = 'Close';
+      confirmCanvaZipUploadBtn.disabled = false;
+      confirmCanvaZipUploadBtn.onclick = function() {
+        bootstrap.Modal.getInstance(document.getElementById('uploadCanvaZipModal')).hide();
+        // Reload page to show updated images
+        setTimeout(() => location.reload(), 500);
+      };
+
+    } catch (error) {
+      console.error('Error uploading ZIP:', error);
+
+      // Show error
+      progressBar.classList.remove('progress-bar-animated');
+      progressBar.classList.add('bg-danger');
+      statusMessage.innerHTML = `<span class="text-danger"><i class="fas fa-times-circle me-2"></i>${error.message}</span>`;
+
+      document.getElementById('zipUploadResults').style.display = 'block';
+      document.getElementById('zipUploadResults').innerHTML = `
+        <div class="alert alert-danger">
+          <h6><i class="fas fa-exclamation-circle me-2"></i>Upload Failed</h6>
+          <p class="mb-0">${error.message}</p>
+        </div>
+      `;
+
+      confirmCanvaZipUploadBtn.disabled = false;
+    }
+  });
+}
+
+// Pinterest Image Generation Functionality
+if (generatePinterestImagesBtn) {
+  generatePinterestImagesBtn.addEventListener('click', async function() {
+    const selectedCheckboxes = document.querySelectorAll('.recipe-checkbox:checked');
+    
+    if (selectedCheckboxes.length === 0) {
+      alert('Please select at least one recipe to generate Pinterest images.');
+      return;
+    }
+
+    const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+    const selectedNames = Array.from(selectedCheckboxes).map(cb => cb.getAttribute('data-recipe-name'));
+
+    // Confirm with user
+    const confirmMessage = `Generate Pinterest images for ${selectedIds.length} selected recipes?\n\n${selectedNames.slice(0, 5).join('\n')}${selectedIds.length > 5 ? '\n...' : ''}`;
+    
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+
+    // Disable button and show loading
+    generatePinterestImagesBtn.disabled = true;
+    generatePinterestImagesBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating Pinterest Images...';
+
+    try {
+      // Get selected design variation and handle random selection
+      const selectedVariation = document.getElementById('batchVariationSelect')?.value || 'random';
+      let actualVariation;
+      
+      if (selectedVariation === 'random') {
+        // Array of available style numbers (all 22 styles)
+        const availableStyles = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22];
+        // Pick a random style for batch generation
+        actualVariation = availableStyles[Math.floor(Math.random() * availableStyles.length)];
+        console.log('🎲 Random style selected for batch:', actualVariation);
+      } else {
+        actualVariation = parseInt(selectedVariation);
+        console.log('🎨 Using selected style for batch:', actualVariation);
+      }
+      
+      const response = await fetch('/api/pinterest/generate-images/batch', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          recipeIds: selectedIds,
+          variation: actualVariation
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        const summary = result.summary;
+        alert(`Pinterest image generation complete!\n\nSuccessful: ${summary.successful}\nFailed: ${summary.failed}\nTotal: ${summary.total}`);
+        
+        // Optionally show detailed results
+        if (summary.failed > 0 && result.errors.length > 0) {
+          const failedList = result.errors.map(err => `• ${err.keyword}: ${err.error}`).join('\n');
+          console.error('Failed Pinterest image generations:', failedList);
+        }
+      } else {
+        alert('Pinterest image generation failed: ' + result.message);
+      }
+
+    } catch (error) {
+      console.error('Pinterest generation error:', error);
+      alert('Network error during Pinterest image generation: ' + error.message);
+    } finally {
+      // Re-enable button
+      generatePinterestImagesBtn.disabled = false;
+      generatePinterestImagesBtn.innerHTML = '<i class="fas fa-image me-2"></i>Generate Pinterest Images (<span id="selectedCountImages">0</span>)';
+      
+      // Update the count
+      if (selectedCountImages) {
+        selectedCountImages.textContent = selectedIds.length;
+      }
+    }
+  });
+}
+
+// Buffer Bulk Publishing Functionality
+const publishBufferBtnHandler = document.getElementById('publishBufferBtn');
+if (publishBufferBtnHandler) {
+  publishBufferBtnHandler.addEventListener('click', function() {
+    const selectedIds = Array.from(document.querySelectorAll('.recipe-checkbox:checked')).map(cb => cb.value);
+    
+    if (selectedIds.length === 0) {
+      alert('Please select recipes to publish to Buffer');
+      return;
+    }
+    
+    // Show the bulk Buffer modal
+    showBulkBufferModal(selectedIds);
+  });
+}
+
+// Utility function to properly close modals and clean up
+function forceCloseModal(modalId) {
+  try {
+    const modalElement = document.getElementById(modalId);
+    if (modalElement) {
+      const modal = bootstrap.Modal.getInstance(modalElement);
+      if (modal) {
+        modal.hide();
+      }
+      
+      // Force cleanup after a short delay
+      setTimeout(() => {
+        // Remove any remaining backdrops
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+        backdrops.forEach(backdrop => backdrop.remove());
+        
+        // Clean up body classes and styles
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+        document.body.style.marginRight = '';
+        
+        // Also clean up HTML element styles that might block scrolling
+        document.documentElement.style.overflow = '';
+        document.documentElement.style.paddingRight = '';
+        document.documentElement.classList.remove('modal-open');
+        
+        // Clean up any container elements that might have scroll locks
+        const containers = document.querySelectorAll('.container, .container-fluid, main, #app, .app-wrapper');
+        containers.forEach(container => {
+          container.style.overflow = '';
+          container.style.height = '';
+          container.style.maxHeight = '';
+        });
+        
+        // Force enable scrolling on common elements
+        const scrollElements = [document.body, document.documentElement];
+        scrollElements.forEach(element => {
+          element.style.overflowY = '';
+          element.style.position = '';
+          element.style.width = '';
+          element.style.height = '';
+        });
+        
+        // Hide the modal element itself if still visible
+        modalElement.style.display = 'none';
+        modalElement.classList.remove('show');
+        modalElement.setAttribute('aria-hidden', 'true');
+        modalElement.removeAttribute('aria-modal');
+        
+        // Final force scroll restoration
+        setTimeout(() => {
+          document.body.style.overflow = 'visible';
+          document.documentElement.style.overflow = 'visible';
+          window.scrollTo(window.scrollX, window.scrollY); // Trigger scroll recalculation
+        }, 50);
+        
+        console.log(`✅ Modal ${modalId} fully cleaned and closed with scroll restoration`);
+      }, 150);
+    }
+  } catch (error) {
+    console.error(`❌ Error closing modal ${modalId}:`, error);
+    // Emergency scroll restoration
+    document.body.style.overflow = '';
+    document.documentElement.style.overflow = '';
+  }
+}
+
+// Emergency scroll restoration - press ESC twice to force restore scrolling
+let escapePressed = 0;
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    escapePressed++;
+    if (escapePressed >= 2) {
+      console.log('🚨 Emergency scroll restoration triggered');
+      
+      // Force restore scrolling on all possible elements
+      document.body.style.overflow = '';
+      document.body.style.overflowY = '';
+      document.documentElement.style.overflow = '';
+      document.documentElement.style.overflowY = '';
+      document.body.classList.remove('modal-open');
+      document.documentElement.classList.remove('modal-open');
+      
+      // Remove any lingering backdrops
+      const backdrops = document.querySelectorAll('.modal-backdrop');
+      backdrops.forEach(backdrop => backdrop.remove());
+      
+      // Force scroll recalculation
+      window.scrollTo(window.scrollX, window.scrollY);
+      
+      alert('Emergency scroll restoration applied! You can now scroll normally.');
+      escapePressed = 0;
+    }
+    
+    // Reset counter after 2 seconds
+    setTimeout(() => {
+      escapePressed = 0;
+    }, 2000);
+  }
+});
+
+// Show bulk Buffer publishing modal
+async function showBulkBufferModal(selectedIds) {
+  // Load Buffer boards
+  await loadBulkBufferBoards();
+  
+  // Populate selected recipes list
+  const selectedRecipesList = document.getElementById('selectedRecipesBufferList');
+  const checkboxes = document.querySelectorAll('.recipe-checkbox:checked');
+  
+  let recipeListHtml = '';
+  checkboxes.forEach(checkbox => {
+    const recipeName = checkbox.getAttribute('data-recipe-name');
+    recipeListHtml += `<div class="selected-recipe-item">• ${recipeName}</div>`;
+  });
+  selectedRecipesList.innerHTML = recipeListHtml;
+  
+  // Clear any previous status
+  document.getElementById('bufferPublishStatus').innerHTML = '';
+  
+  // Show modal
+  const modal = new bootstrap.Modal(document.getElementById('bulkBufferPublishModal'));
+  modal.show();
+}
+
+// Load Buffer boards for bulk publishing
+async function loadBulkBufferBoards() {
+  try {
+    const response = await fetch('/api/buffer/boards');
+    if (response.ok) {
+      const data = await response.json();
+      const boardSelect = document.getElementById('bulkBufferBoardSelect');
+      
+      // Clear existing options
+      boardSelect.innerHTML = '';
+      
+      if (data.boards && data.boards.length > 0) {
+        data.boards.forEach(board => {
+          const option = document.createElement('option');
+          option.value = board.id;
+          option.textContent = board.name;
+          boardSelect.appendChild(option);
+        });
+        
+        // Select first board by default
+        if (data.boards.length > 0) {
+          boardSelect.value = data.boards[0].id;
+        }
+      } else {
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'No boards configured';
+        boardSelect.appendChild(option);
+      }
+    } else {
+      console.error('Failed to load Buffer boards');
+      const boardSelect = document.getElementById('bulkBufferBoardSelect');
+      boardSelect.innerHTML = '<option value="">Error loading boards</option>';
+    }
+  } catch (error) {
+    console.error('Error loading Buffer boards:', error);
+    const boardSelect = document.getElementById('bulkBufferBoardSelect');
+    boardSelect.innerHTML = '<option value="">Error loading boards</option>';
+  }
+}
+
+// Handle bulk Buffer publishing confirmation
+const confirmBulkBufferPublishBtn = document.getElementById('confirmBulkBufferPublishBtn');
+if (confirmBulkBufferPublishBtn) {
+  confirmBulkBufferPublishBtn.addEventListener('click', async function() {
+    const selectedBoardId = document.getElementById('bulkBufferBoardSelect').value;
+    const selectedIds = Array.from(document.querySelectorAll('.recipe-checkbox:checked')).map(cb => cb.value);
+    
+    if (!selectedBoardId) {
+      alert('Please select a Buffer board');
+      return;
+    }
+    
+    // Disable button and show loading state
+    confirmBulkBufferPublishBtn.disabled = true;
+    confirmBulkBufferPublishBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Publishing...';
+    
+    try {
+      const response = await fetch('/api/buffer/publish-bulk', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          recipeIds: selectedIds,
+          boardId: selectedBoardId
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        const summary = result.summary;
+        alert(`Buffer publishing complete!\n\nSuccessful: ${summary.successful}\nFailed: ${summary.failed}\nTotal: ${summary.total}`);
+        
+        // Show detailed results if there were failures
+        if (summary.failed > 0 && result.errors && result.errors.length > 0) {
+          const failedList = result.errors.map(err => `• ${err.recipe}: ${err.error}`).join('\n');
+          console.error('Failed Buffer publications:', failedList);
+          
+          // Optional: Show detailed failure notification
+          if (confirm('Some publications failed. Would you like to see the details?')) {
+            alert('Failed Publications:\n\n' + failedList);
+          }
+        }
+        
+        // Close modal and refresh page if successful
+        if (summary.successful > 0) {
+          // Force close modal with proper cleanup
+          forceCloseModal('bulkBufferPublishModal');
+          
+          // Ask for refresh after a short delay to allow cleanup
+          setTimeout(() => {
+            const shouldRefresh = confirm('Buffer publishing successful! Refresh page to see updated statuses?');
+            if (shouldRefresh) {
+              window.location.reload();
+            }
+          }, 300);
+        }
+        
+      } else {
+        alert('Buffer bulk publishing failed: ' + result.message);
+      }
+
+    } catch (error) {
+      console.error('Buffer publishing error:', error);
+      alert('Network error during Buffer publishing: ' + error.message);
+    } finally {
+      // Re-enable button
+      confirmBulkBufferPublishBtn.disabled = false;
+      confirmBulkBufferPublishBtn.innerHTML = '<i class="bi bi-send me-2"></i> Publish to Buffer';
+    }
+  });
+}
+    
+    console.log('✅ Enhanced bulk publish checkbox system loaded');
+  });
+</script>
+
+<style>
+/* Redesigned Bulk Actions Section */
+.bulk-actions-redesigned {
+  background: var(--dark-card);
+  border: 1px solid var(--border-dark);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Selection Info Card */
+.selection-info-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--sidebar-bg);
+  border: 1px solid var(--border-dark);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  min-height: 56px;
+}
+
+.selection-count {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.count-number {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--accent-teal);
+  line-height: 1;
+}
+
+.count-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+}
+
+#clearSelectionBtn {
+  color: var(--text-muted) !important;
+  font-size: 0.8rem;
+  text-decoration: none !important;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+#clearSelectionBtn:hover {
+  opacity: 1;
+  color: var(--danger-red) !important;
+}
+
+/* Action Buttons Group */
+.action-buttons-group {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.action-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Pinterest Group Styling */
+.pinterest-group .pinterest-style-select {
+  min-width: 200px;
+  background: var(--sidebar-bg);
+  border: 1px solid var(--border-dark);
+  color: var(--text-light);
+  border-radius: 6px;
+  padding: 0.375rem 0.75rem;
+}
+
+.pinterest-group .pinterest-style-select:focus {
+  border-color: var(--primary-purple);
+  box-shadow: 0 0 0 0.2rem rgba(139, 92, 246, 0.25);
+}
+
+.btn-pinterest {
+  background: linear-gradient(135deg, #E60023, #BD081C);
+  border: none;
+  color: white;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  min-width: 140px;
+}
+
+.btn-pinterest:hover {
+  background: linear-gradient(135deg, #BD081C, #A0071A);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(230, 0, 35, 0.3);
+}
+
+.btn-pinterest:disabled {
+  background: var(--bg-dark-secondary);
+  color: var(--text-muted);
+  opacity: 0.5;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Publishing Group Styling */
+.publishing-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.publishing-group .btn {
+  min-width: 120px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.publishing-group .btn:hover {
+  transform: translateY(-1px);
+}
+
+.publishing-group .btn:disabled {
+  opacity: 0.5;
+  transform: none;
+}
+
+#publishBufferBtn {
+  background: linear-gradient(135deg, #ffa500, #e69500);
+  border: none;
+  color: white;
+}
+
+#publishBufferBtn:hover {
+  background: linear-gradient(135deg, #e69500, #cc8400);
+  color: white;
+  box-shadow: 0 4px 12px rgba(255, 165, 0, 0.3);
+}
+
+#publishSelectedBtn {
+  background: linear-gradient(135deg, #21759B, #1e6b96);
+  border: none;
+  color: white;
+}
+
+#publishSelectedBtn:hover {
+  background: linear-gradient(135deg, #1e6b96, #1a5d84);
+  color: white;
+  box-shadow: 0 4px 12px rgba(33, 117, 155, 0.3);
+}
+
+/* Export & Danger Actions */
+.dropdown-menu {
+  background: var(--dark-card);
+  border: 1px solid var(--border-dark);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.dropdown-item {
+  color: var(--text-light);
+  transition: all 0.2s ease;
+}
+
+.dropdown-item:hover {
+  background: var(--sidebar-bg);
+  color: var(--accent-teal);
+}
+
+.dropdown-item:disabled {
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+.btn-outline-secondary {
+  border-color: var(--border-dark);
+  color: var(--text-muted);
+  background: transparent;
+}
+
+.btn-outline-secondary:hover {
+  background: var(--sidebar-bg);
+  border-color: var(--accent-teal);
+  color: var(--accent-teal);
+}
+
+.btn-outline-danger {
+  border-color: var(--danger-red);
+  color: var(--danger-red);
+  background: transparent;
+}
+
+.btn-outline-danger:hover {
+  background: var(--danger-red);
+  border-color: var(--danger-red);
+  color: white;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.btn-outline-danger:disabled {
+  opacity: 0.5;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .bulk-actions-redesigned .row {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .action-buttons-group {
+    justify-content: center;
+    gap: 1rem;
+  }
+  
+  .action-group {
+    width: 100%;
+  }
+  
+  .pinterest-group .d-flex {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .pinterest-style-select {
+    min-width: unset;
+    width: 100%;
+  }
+  
+  .publishing-group {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .publishing-group .btn {
+    width: 100%;
+  }
+}
+
+/* Buffer Modal Styles */
+.selected-recipes-list {
+  max-height: 200px;
+  overflow-y: auto;
+  background: var(--sidebar-bg);
+  border: 1px solid var(--border-dark);
+  border-radius: 6px;
+  padding: 0.75rem;
+}
+
+.selected-recipe-item {
+  color: var(--text-light);
+  padding: 0.25rem 0;
+  font-size: 0.9rem;
+}
+
+.selected-recipe-item:not(:last-child) {
+  border-bottom: 1px solid var(--border-dark);
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+#bufferPublishStatus .alert {
+  margin-bottom: 0;
+}
+</style>

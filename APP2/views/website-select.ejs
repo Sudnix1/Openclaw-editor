@@ -1,0 +1,47 @@
+<!-- views/website-select.ejs -->
+<%- include('layout', { title: 'Select Website' }) %>
+
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow">
+        <div class="card-header">
+          <h3 class="mb-0">Select a Website</h3>
+        </div>
+        <div class="card-body">
+          <% if (locals.errorMessage) { %>
+            <div class="alert alert-danger" role="alert">
+              <%= errorMessage %>
+            </div>
+          <% } %>
+          
+          <p>Please select which website you want to work with:</p>
+          
+          <div class="list-group mt-4">
+            <% websites.forEach(website => { %>
+              <form action="/websites/switch" method="POST" class="mb-2">
+                <input type="hidden" name="websiteId" value="<%= website.id %>">
+                <input type="hidden" name="returnUrl" value="/">
+                <button type="submit" class="list-group-item list-group-item-action">
+                  <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1"><%= website.name %></h5>
+                    <small><%= website.url || 'No URL set' %></small>
+                  </div>
+                  <p class="mb-1">
+                    <small class="text-muted">Created: <%= new Date(website.created_at).toLocaleDateString() %></small>
+                  </p>
+                </button>
+              </form>
+            <% }); %>
+          </div>
+          
+          <% if (websites.length === 0) { %>
+            <div class="alert alert-info mt-3">
+              You don't have access to any websites. Please contact your administrator.
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

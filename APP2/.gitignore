@@ -1,0 +1,60 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Database (will be handled by Railway)
+data/recipes.db
+data/*.db
+
+# Logs
+*.log
+logs/
+debug-output.log
+prompt_logs/
+
+# Temporary files
+temp/
+*.tmp
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Generated images (will be handled by cloud storage)
+public/images/pinterest/
+public/images/pinterest-templates/
+recipe_images/
+
+# Configuration files with sensitive data
+data/config-*.json
+
+# Development files
+*.backup
+*_backup*
+*_WORKING_BACKUP*
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build files
+dist/
+build/
+
+# Test files
+coverage/
+
+# Miscellaneous
+nul

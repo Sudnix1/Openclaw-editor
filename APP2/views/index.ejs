@@ -1,0 +1,1716 @@
+<!-- Enhanced Dashboard with Calendar Filter (index.ejs) -->
+<div class="row">
+  <!-- Date Filter Section -->
+  <div class="col-lg-12 mb-4">
+    <div class="section-card">
+      <div class="section-header">
+        <h2><i class="bi bi-calendar3"></i> Date Filter</h2>
+      </div>
+      <div class="section-body">
+        <div class="row align-items-center">
+          <div class="col-md-6">
+            <div class="btn-group" role="group" aria-label="Date filter buttons">
+              <button type="button" class="btn btn-outline-primary date-filter-btn active" data-filter="all">
+                All Time
+              </button>
+              <button type="button" class="btn btn-outline-primary date-filter-btn" data-filter="today">
+                Today
+              </button>
+              <button type="button" class="btn btn-outline-primary date-filter-btn" data-filter="yesterday">
+                Yesterday
+              </button>
+              <button type="button" class="btn btn-outline-primary date-filter-btn" data-filter="last7days">
+                Last 7 Days
+              </button>
+              <button type="button" class="btn btn-outline-primary date-filter-btn" data-filter="last30days">
+                Last 30 Days
+              </button>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="row">
+              <div class="col-md-5">
+                <label for="startDate" class="form-label">From:</label>
+                <input type="date" class="form-control form-control-sm" id="startDate" name="startDate">
+              </div>
+              <div class="col-md-5">
+                <label for="endDate" class="form-label">To:</label>
+                <input type="date" class="form-control form-control-sm" id="endDate" name="endDate">
+              </div>
+              <div class="col-md-2 d-flex align-items-end">
+                <button type="button" class="btn btn-primary btn-sm" id="applyCustomFilter">
+                  Apply
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-2">
+          <small class="text-muted" id="currentFilterText">Showing data for: All time</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Employee Selection (Admin Only) -->
+  <% if (isAdmin) { %>
+  <div class="col-lg-12 mb-4">
+    <div class="section-card">
+      <div class="section-header">
+        <h2><i class="bi bi-person-badge"></i> Employee View</h2>
+      </div>
+      <div class="section-body">
+        <div class="row align-items-center">
+          <div class="col-md-6">
+            <label for="employeeSelect" class="form-label">Select Employee:</label>
+            <select class="form-select" id="employeeSelect">
+              <option value="">All Employees (Overview)</option>
+              <!-- Will be populated dynamically -->
+            </select>
+          </div>
+          <div class="col-md-6">
+            <div class="mt-2">
+              <small class="text-muted" id="selectedEmployeeText">Showing overview for all employees</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <% } %>
+
+  <!-- Stats Overview -->
+  <div class="col-lg-12">
+    <div class="dashboard-stats" id="statsContainer">
+      <div class="stat-card bg-dark-card">
+        <div class="stat-icon icon-blue">
+          <i class="bi bi-journal-richtext"></i>
+        </div>
+        <div class="stat-info">
+          <h3 id="stat-recipes"><%= stats.recipes || 0 %></h3>
+          <p>Total Recipes</p>
+        </div>
+      </div>
+      
+      <div class="stat-card bg-dark-card">
+        <div class="stat-icon icon-green">
+          <i class="bi bi-list-check"></i>
+        </div>
+        <div class="stat-info">
+          <h3 id="stat-processed"><%= stats.processedKeywords || 0 %></h3>
+          <p>Processed Keywords</p>
+        </div>
+      </div>
+      
+      <div class="stat-card bg-dark-card">
+        <div class="stat-icon icon-yellow">
+          <i class="bi bi-hourglass-split"></i>
+        </div>
+        <div class="stat-info">
+          <h3 id="stat-pending"><%= stats.pendingKeywords || 0 %></h3>
+          <p>Pending Keywords</p>
+        </div>
+      </div>
+      
+      <div class="stat-card bg-dark-card">
+        <div class="stat-icon icon-red">
+          <i class="bi bi-wordpress"></i>
+        </div>
+        <div class="stat-info">
+          <h3 id="stat-wordpress"><%= stats.wordpressPosts || 0 %></h3>
+          <p>WordPress Posts</p>
+        </div>
+      </div>
+      
+      <% if (isAdmin) { %>
+        <div class="stat-card bg-dark-card">
+          <div class="stat-icon icon-purple">
+            <i class="bi bi-people"></i>
+          </div>
+          <div class="stat-info">
+            <h3 id="stat-users"><%= stats.userCount || 0 %></h3>
+            <p>Team Members</p>
+          </div>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Employee Details Section (Admin Only, Hidden by default) -->
+  <% if (isAdmin) { %>
+  <div class="col-lg-12 mb-4" id="employeeDetailsSection" style="display: none;">
+    <div class="section-card">
+      <div class="section-header">
+        <h2><i class="bi bi-person-circle"></i> Employee Details: <span id="employeeDetailsName"></span></h2>
+      </div>
+      <div class="section-body">
+        <!-- Summary Stats -->
+        <div class="row mb-4">
+          <div class="col-md-3">
+            <div class="stat-card recipes">
+              <div class="stat-icon">
+                <i class="bi bi-journal-richtext"></i>
+              </div>
+              <div class="stat-content">
+                <div class="stat-number" id="employeeTotalRecipes">0</div>
+                <div class="stat-label">Recipes Generated</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="stat-card posts">
+              <div class="stat-icon">
+                <i class="bi bi-wordpress"></i>
+              </div>
+              <div class="stat-content">
+                <div class="stat-number" id="employeeTotalPosts">0</div>
+                <div class="stat-label">WordPress Posts</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="stat-card websites">
+              <div class="stat-icon">
+                <i class="bi bi-globe"></i>
+              </div>
+              <div class="stat-content">
+                <div class="stat-number" id="employeeActiveWebsites">0</div>
+                <div class="stat-label">Active Websites</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="stat-card productivity">
+              <div class="stat-icon">
+                <i class="bi bi-graph-up"></i>
+              </div>
+              <div class="stat-content">
+                <div class="stat-number" id="employeeAvgDaily">0</div>
+                <div class="stat-label">Daily Average</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="row">
+          <!-- Recipes by Website Chart -->
+          <div class="col-md-6">
+            <div class="chart-container">
+              <h4><i class="bi bi-journal-richtext"></i> Recipes by Website</h4>
+              <canvas id="employeeRecipesChart" width="400" height="300"></canvas>
+              <div id="employeeRecipesEmpty" class="text-center text-muted" style="display: none;">
+                <i class="bi bi-journal-x"></i>
+                <p>No recipes found for selected period</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- WordPress Posts by Website Chart -->
+          <div class="col-md-6">
+            <div class="chart-container">
+              <h4><i class="bi bi-wordpress"></i> WordPress Posts by Website</h4>
+              <canvas id="employeePostsChart" width="400" height="300"></canvas>
+              <div id="employeePostsEmpty" class="text-center text-muted" style="display: none;">
+                <i class="bi bi-file-x"></i>
+                <p>No posts found for selected period</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Combined Performance Chart -->
+        <div class="row mt-4">
+          <div class="col-12">
+            <div class="chart-container">
+              <h4><i class="bi bi-bar-chart"></i> Performance Overview by Website</h4>
+              <canvas id="employeePerformanceChart" width="800" height="400"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <% } %>
+  
+  <!-- Main Content Section -->
+  <div class="col-lg-8">
+    <!-- Recent Recipes Section with Attribution -->
+    <div class="section-card">
+      <div class="section-header">
+        <h2><i class="bi bi-journal-check"></i> Recent Recipes</h2>
+      </div>
+      <div class="section-body" id="recentRecipesContainer">
+        <% if (recentRecipes && recentRecipes.length > 0) { %>
+          <div class="list-group">
+            <% recentRecipes.forEach(function(recipe) { %>
+              <a href="/recipe/<%= recipe.id %>" class="list-group-item list-group-item-action">
+                <div class="d-flex w-100 justify-content-between">
+                  <h5 class="mb-1"><%= recipe.recipe_idea %></h5>
+                  <small class="text-muted"><%= moment(recipe.created_at).fromNow() %></small>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                  <span>
+                    <% if (recipe.category) { %>
+                      <span class="badge bg-secondary"><%= recipe.category %></span>
+                    <% } %>
+                    
+                    <!-- Content Attribution -->
+                    <% if (isAdmin && recipe.owner_id) { %>
+                      <span class="badge bg-primary">
+                        <i class="bi bi-person"></i> 
+                        Created by <%= recipe.owner_name || 'Staff' %>
+                      </span>
+                    <% } %>
+                  </span>
+                </div>
+              </a>
+            <% }); %>
+          </div>
+          <div class="mt-3">
+            <a href="/recipes" class="btn btn-outline-primary">View All Recipes</a>
+          </div>
+        <% } else { %>
+          <p>No recipes generated yet. Create your first recipe using the generators!</p>
+          <div class="d-grid gap-2 d-md-flex mt-4">
+            <a href="/generate/all" class="btn btn-success">
+              <i class="bi bi-magic"></i> Generate Your First Recipe
+            </a>
+          </div>
+        <% } %>
+      </div>
+    </div>
+    
+    <!-- Recent Activity Feed -->
+    <div class="section-card mt-4">
+      <div class="section-header">
+        <h2><i class="bi bi-activity"></i> Recent Activity</h2>
+      </div>
+      <div class="section-body" id="recentActivityContainer">
+        <% if (stats.recentActivity && stats.recentActivity.length > 0) { %>
+          <div class="activity-feed">
+            <% stats.recentActivity.forEach(function(activity) { %>
+              <div class="activity-item">
+                <div class="activity-icon">
+                  <% if (activity.action_type === 'create') { %>
+                    <i class="bi bi-plus-circle text-success"></i>
+                  <% } else if (activity.action_type === 'update') { %>
+                    <i class="bi bi-pencil text-primary"></i>
+                  <% } else if (activity.action_type === 'delete') { %>
+                    <i class="bi bi-trash text-danger"></i>
+                  <% } else if (activity.action_type === 'publish') { %>
+                    <i class="bi bi-cloud-upload text-info"></i>
+                  <% } else { %>
+                    <i class="bi bi-check-circle text-secondary"></i>
+                  <% } %>
+                </div>
+                <div class="activity-content">
+                  <div class="activity-title">
+                    <strong><%= activity.user_name %></strong>
+                    <%= activity.action_type %>d
+                    <%= activity.entity_type.toLowerCase() %>
+                    <% if (activity.entity_id) { %>
+                      <a href="/<%= activity.entity_type.toLowerCase() %>/<%= activity.entity_id %>">
+                        <%= activity.details ? activity.details.substring(0, 30) : '#' + activity.entity_id.substring(0, 8) %>
+                      </a>
+                    <% } %>
+                  </div>
+                  <div class="activity-time">
+                    <%= moment(activity.created_at).fromNow() %>
+                  </div>
+                </div>
+              </div>
+            <% }); %>
+          </div>
+        <% } else { %>
+          <p>No recent activity found.</p>
+        <% } %>
+      </div>
+    </div>
+    
+    <!-- Employee Performance Section (Admin Only) -->
+    <% if (isAdmin && stats.employeeStats && stats.employeeStats.length > 0) { %>
+      <div class="section-card mt-4">
+        <div class="section-header">
+          <h2><i class="bi bi-graph-up"></i> Team Performance</h2>
+        </div>
+        <div class="section-body" id="teamPerformanceContainer">
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Employee</th>
+                  <th>Recipes</th>
+                  <th>Keywords</th>
+                  <th>Published</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% stats.employeeStats.forEach(function(employee) { %>
+                  <tr>
+                    <td><%= employee.name %></td>
+                    <td><%= employee.recipeCount %></td>
+                    <td>
+                      <span class="badge bg-success"><%= employee.keywordCounts.processed %></span>
+                      <span class="badge bg-warning"><%= employee.keywordCounts.pending %></span>
+                      <span class="badge bg-danger"><%= employee.keywordCounts.failed %></span>
+                    </td>
+                    <td><%= employee.wpPostCount %></td>
+                    <td>
+                      <% if (employee.totalContent > 20) { %>
+                        <span class="badge bg-success">Excellent</span>
+                      <% } else if (employee.totalContent > 10) { %>
+                        <span class="badge bg-primary">Good</span>
+                      <% } else if (employee.totalContent > 5) { %>
+                        <span class="badge bg-warning">Average</span>
+                      <% } else { %>
+                        <span class="badge bg-secondary">Getting Started</span>
+                      <% } %>
+                    </td>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    <% } %>
+    
+    <!-- Content Filter Section (Admin Only) - Integrated from first file -->
+    <% if (isAdmin && stats.employeeStats && stats.employeeStats.length > 0) { %>
+      <div class="section-card mt-4">
+        <div class="section-header d-flex justify-content-between align-items-center">
+          <h2><i class="bi bi-filter"></i> Content Filter</h2>
+          <div>
+            <select id="employeeFilter" class="form-select form-select-sm">
+              <option value="">All Team Members</option>
+              <% stats.employeeStats.forEach(function(employee) { %>
+                <option value="<%= employee.id %>"><%= employee.name %></option>
+              <% }); %>
+            </select>
+          </div>
+        </div>
+        <div class="section-body">
+          <div class="d-flex flex-wrap gap-2">
+            <button class="btn btn-sm btn-outline-primary filter-btn" data-type="all">
+              All Content
+            </button>
+            <button class="btn btn-sm btn-outline-success filter-btn" data-type="recipe">
+              Recipes
+            </button>
+            <button class="btn btn-sm btn-outline-info filter-btn" data-type="keyword">
+              Keywords
+            </button>
+            <button class="btn btn-sm btn-outline-warning filter-btn" data-type="blog">
+              Blog Posts
+            </button>
+          </div>
+          
+          <div id="filteredContent" class="mt-3">
+            <!-- Content will be loaded here -->
+          </div>
+        </div>
+      </div>
+    <% } %>
+  </div>
+  
+  <!-- Sidebar Section -->
+  <div class="col-lg-4">
+    <!-- Quick Actions Section -->
+    <div class="section-card">
+      <div class="section-header">
+        <h2><i class="bi bi-lightning-charge"></i> Quick Actions</h2>
+      </div>
+      <div class="section-body">
+        <div class="d-grid gap-2">
+          <a href="/keywords" class="btn btn-primary mb-2">
+            <i class="bi bi-list-check"></i> Manage Keywords
+          </a>
+          <a href="/generate/facebook" class="btn btn-info mb-2">
+            <i class="bi bi-facebook"></i> Facebook & Midjourney
+          </a>
+          <a href="/generate/pinterest" class="btn btn-danger mb-2">
+            <i class="bi bi-pinterest"></i> Pinterest & Blog
+          </a>
+          <a href="/generate/all" class="btn btn-success mb-2">
+            <i class="bi bi-collection"></i> Generate All Content
+          </a>
+          <% if (isAdmin) { %>
+            <a href="/settings" class="btn btn-outline-warning">
+              <i class="bi bi-gear"></i> Adjust Settings
+            </a>
+          <% } %>
+        </div>
+      </div>
+    </div>
+    
+    <!-- System Status Section -->
+    <div class="section-card mt-4">
+      <div class="section-header">
+        <h2><i class="bi bi-info-circle"></i> System Status</h2>
+      </div>
+      <div class="section-body">
+        <div class="config-item">
+          <div class="config-label">Model</div>
+          <div class="config-value"><%= promptConfig.model || 'gpt-4-turbo-preview' %></div>
+        </div>
+        <div class="config-item">
+          <div class="config-label">Language</div>
+          <div class="config-value"><%= promptConfig.language || 'English' %></div>
+        </div>
+        <div class="config-item">
+          <div class="config-label">Temperature</div>
+          <div class="config-value"><%= promptConfig.temperature || 0.7 %></div>
+        </div>
+        <div class="config-item">
+          <div class="config-label">Pinterest Variations</div>
+          <div class="config-value"><%= promptConfig.pinCount || 10 %></div>
+        </div>
+        
+        <!-- API Connection Status -->
+        <div class="config-item">
+          <div class="config-label">API Status</div>
+          <div class="config-value">
+            <% if (promptConfig.apiKey) { %>
+              <span class="badge bg-success">Connected</span>
+            <% } else { %>
+              <span class="badge bg-danger">Not Connected</span>
+            <% } %>
+          </div>
+        </div>
+        
+        <!-- WordPress Status (if applicable) -->
+        <div class="config-item">
+          <div class="config-label">WordPress</div>
+          <div class="config-value">
+            <% if (stats.wordpressPosts > 0) { %>
+              <span class="badge bg-success">Connected</span>
+            <% } else { %>
+              <span class="badge bg-warning">Not Configured</span>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Content Generation Overview -->
+    <div class="section-card mt-4">
+      <div class="section-header">
+        <h2><i class="bi bi-bar-chart"></i> Content Stats</h2>
+      </div>
+      <div class="section-body">
+        <canvas id="contentChart" width="100%" height="250"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JavaScript for Chart and Calendar Filter -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    let currentChart = null;
+    
+    // Initialize chart
+    function initChart(data) {
+      const ctx = document.getElementById('contentChart').getContext('2d');
+      
+      if (currentChart) {
+        currentChart.destroy();
+      }
+      
+      currentChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: ['Recipes', 'Processed Keywords', 'Pending Keywords', 'Failed Keywords', 'WordPress Posts'],
+          datasets: [{
+            data: [
+              data.recipes || 0, 
+              data.processedKeywords || 0, 
+              data.pendingKeywords || 0, 
+              data.failedKeywords || 0, 
+              data.wordpressPosts || 0
+            ],
+            backgroundColor: [
+              'rgba(54, 162, 235, 0.7)',
+              'rgba(75, 192, 192, 0.7)',
+              'rgba(255, 206, 86, 0.7)',
+              'rgba(255, 99, 132, 0.7)',
+              'rgba(153, 102, 255, 0.7)'
+            ],
+            borderColor: [
+              'rgba(54, 162, 235, 1)',
+              'rgba(75, 192, 192, 1)',
+              'rgba(255, 206, 86, 1)',
+              'rgba(255, 99, 132, 1)',
+              'rgba(153, 102, 255, 1)'
+            ],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'bottom',
+            }
+          }
+        }
+      });
+    }
+    
+    // Initialize with server data
+    const initialData = {
+      recipes: <%= stats.recipes || 0 %>,
+      processedKeywords: <%= stats.processedKeywords || 0 %>,
+      pendingKeywords: <%= stats.pendingKeywords || 0 %>,
+      failedKeywords: <%= stats.failedKeywords || 0 %>,
+      wordpressPosts: <%= stats.wordpressPosts || 0 %>
+    };
+    
+    initChart(initialData);
+    
+    // Calendar Filter Functionality
+    const dateFilterBtns = document.querySelectorAll('.date-filter-btn');
+    const startDateInput = document.getElementById('startDate');
+    const endDateInput = document.getElementById('endDate');
+    const applyCustomBtn = document.getElementById('applyCustomFilter');
+    const currentFilterText = document.getElementById('currentFilterText');
+    
+    // Format date for input - FIXED to avoid timezone issues
+    function formatDateForInput(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const formatted = `${year}-${month}-${day}`;
+      
+      console.log('🗓️ formatDateForInput:', {
+        input: date.toString(),
+        inputISO: date.toISOString(),
+        formatted: formatted
+      });
+      
+      return formatted;
+    }
+    
+    // Format date for display
+    function formatDateForDisplay(date) {
+      return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+      });
+    }
+    
+    // Helper function to get date boundaries - COMPLETELY FIXED for timezone issues
+    function getDateBoundaries(date) {
+      // Get the local date components to avoid any timezone conversion
+      const year = date.getFullYear();
+      const month = date.getMonth();
+      const day = date.getDate();
+      
+      // Create dates using local timezone components - this stays in local time
+      const startOfDay = new Date(year, month, day, 0, 0, 0, 0);
+      const endOfDay = new Date(year, month, day, 23, 59, 59, 999);
+      
+      console.log('🗓️ getDateBoundaries FIXED for:', date.toString(), {
+        inputDate: date.toISOString(),
+        year, month, day,
+        startOfDay_local: startOfDay.toString(),
+        endOfDay_local: endOfDay.toString(),
+        startOfDay_UTC: startOfDay.toISOString(),
+        endOfDay_UTC: endOfDay.toISOString()
+      });
+      
+      return { startOfDay, endOfDay };
+    }
+    
+    // Handle date filter button clicks
+    dateFilterBtns.forEach(btn => {
+      btn.addEventListener('click', function() {
+        // Remove active class from all buttons
+        dateFilterBtns.forEach(b => b.classList.remove('active'));
+        // Add active class to clicked button
+        this.classList.add('active');
+        
+        const filter = this.getAttribute('data-filter');
+        let startDate, endDate, filterText;
+        
+        const now = new Date();
+        
+        switch(filter) {
+          case 'all':
+            startDate = null;
+            endDate = null;
+            filterText = 'All time';
+            break;
+          case 'today':
+            const todayBounds = getDateBoundaries(now);
+            startDate = todayBounds.startOfDay;
+            endDate = todayBounds.endOfDay;
+            filterText = 'Today';
+            console.log('🗓️ Today filter calculated:', { 
+              now: now.toISOString(),
+              nowLocal: now.toString(),
+              startDate: startDate.toISOString(),
+              startDateLocal: startDate.toString(),
+              endDate: endDate.toISOString(),
+              endDateLocal: endDate.toString(),
+              startFormatted: formatDateForInput(startDate),
+              endFormatted: formatDateForInput(endDate)
+            });
+            break;
+          case 'yesterday':
+            const yesterdayDate = new Date(now);
+            yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+            const yesterdayBounds = getDateBoundaries(yesterdayDate);
+            startDate = yesterdayBounds.startOfDay;
+            endDate = yesterdayBounds.endOfDay;
+            filterText = 'Yesterday';
+            console.log('Yesterday filter:', { startDate: startDate.toISOString(), endDate: endDate.toISOString() });
+            break;
+          case 'last7days':
+            const sevenDaysAgo = new Date(now);
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+            const sevenDaysBounds = getDateBoundaries(sevenDaysAgo);
+            const todayBounds7 = getDateBoundaries(now);
+            startDate = sevenDaysBounds.startOfDay;
+            endDate = todayBounds7.endOfDay;
+            filterText = 'Last 7 days';
+            break;
+          case 'last30days':
+            const thirtyDaysAgo = new Date(now);
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            const thirtyDaysBounds = getDateBoundaries(thirtyDaysAgo);
+            const todayBounds30 = getDateBoundaries(now);
+            startDate = thirtyDaysBounds.startOfDay;
+            endDate = todayBounds30.endOfDay;
+            filterText = 'Last 30 days';
+            break;
+        }
+        
+        // Update date inputs
+        startDateInput.value = startDate ? formatDateForInput(startDate) : '';
+        endDateInput.value = endDate ? formatDateForInput(endDate) : '';
+        
+        // Apply filter
+        applyDateFilter(startDate, endDate, filterText);
+      });
+    });
+    
+    // Handle custom date range
+    applyCustomBtn.addEventListener('click', function() {
+      const startDate = startDateInput.value ? new Date(startDateInput.value) : null;
+      const endDate = endDateInput.value ? new Date(endDateInput.value) : null;
+      
+      if (startDate && endDate && startDate > endDate) {
+        alert('Start date cannot be after end date');
+        return;
+      }
+      
+      // Remove active class from preset buttons
+      dateFilterBtns.forEach(b => b.classList.remove('active'));
+      
+      let filterText = 'Custom range';
+      if (startDate && endDate) {
+        filterText = `${formatDateForDisplay(startDate)} to ${formatDateForDisplay(endDate)}`;
+      } else if (startDate) {
+        filterText = `From ${formatDateForDisplay(startDate)}`;
+      } else if (endDate) {
+        filterText = `Until ${formatDateForDisplay(endDate)}`;
+      }
+      
+      applyDateFilter(startDate, endDate, filterText);
+    });
+    
+    // Apply date filter function
+    function applyDateFilter(startDate, endDate, filterText) {
+      // Update filter text
+      currentFilterText.textContent = `Showing data for: ${filterText}`;
+      
+      // Trigger event for employee details to update with actual dates
+      const event = new CustomEvent('dateFilterChanged', {
+        detail: {
+          startDate: startDate ? formatDateForInput(startDate) : '',
+          endDate: endDate ? formatDateForInput(endDate) : '',
+          filterText: filterText
+        }
+      });
+      window.dispatchEvent(event);
+      
+      // Show loading state
+      const statsContainer = document.getElementById('statsContainer');
+      statsContainer.style.opacity = '0.5';
+      
+      // Prepare parameters
+      const params = new URLSearchParams();
+      if (startDate) params.append('startDate', formatDateForInput(startDate));
+      if (endDate) params.append('endDate', formatDateForInput(endDate));
+      
+      // Fetch filtered data
+      fetch(`/api/dashboard/filtered-stats?${params.toString()}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            // Update stats display
+            updateStatsDisplay(data.stats);
+            
+            // Update chart
+            initChart(data.stats);
+            
+            // Update recent recipes if provided
+            if (data.recentRecipes) {
+              updateRecentRecipes(data.recentRecipes);
+            }
+            
+            // Update recent activity if provided
+            if (data.recentActivity) {
+              updateRecentActivity(data.recentActivity);
+            }
+            
+            // Update team performance if provided
+            if (data.employeeStats) {
+              updateTeamPerformance(data.employeeStats);
+            }
+          } else {
+            console.error('Error fetching filtered stats:', data.message);
+            alert('Error fetching filtered data: ' + data.message);
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Error fetching filtered data');
+        })
+        .finally(() => {
+          // Remove loading state
+          statsContainer.style.opacity = '1';
+        });
+    }
+    
+    // Update stats display
+    function updateStatsDisplay(stats) {
+      document.getElementById('stat-recipes').textContent = stats.recipes || 0;
+      document.getElementById('stat-processed').textContent = stats.processedKeywords || 0;
+      document.getElementById('stat-pending').textContent = stats.pendingKeywords || 0;
+      document.getElementById('stat-wordpress').textContent = stats.wordpressPosts || 0;
+      
+      const usersStat = document.getElementById('stat-users');
+      if (usersStat) {
+        usersStat.textContent = stats.userCount || 0;
+      }
+    }
+    
+    // Update recent recipes section
+    function updateRecentRecipes(recipes) {
+      const container = document.getElementById('recentRecipesContainer');
+      if (!container) return;
+      
+      if (recipes && recipes.length > 0) {
+        let html = '<div class="list-group">';
+        recipes.forEach(recipe => {
+          html += `
+            <a href="/recipe/${recipe.id}" class="list-group-item list-group-item-action">
+              <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">${recipe.recipe_idea}</h5>
+                <small class="text-muted">${new Date(recipe.created_at).toLocaleDateString()}</small>
+              </div>
+              <div class="d-flex justify-content-between align-items-center">
+                <span>
+                  ${recipe.category ? `<span class="badge bg-secondary">${recipe.category}</span>` : ''}
+                  ${recipe.owner_name ? `<span class="badge bg-primary"><i class="bi bi-person"></i> Created by ${recipe.owner_name}</span>` : ''}
+                </span>
+              </div>
+            </a>
+          `;
+        });
+        html += '</div><div class="mt-3"><a href="/recipes" class="btn btn-outline-primary">View All Recipes</a></div>';
+        container.innerHTML = html;
+      } else {
+        container.innerHTML = '<p>No recipes found for the selected date range.</p>';
+      }
+    }
+    
+    // Update recent activity section
+    function updateRecentActivity(activities) {
+      const container = document.getElementById('recentActivityContainer');
+      if (!container) return;
+      
+      if (activities && activities.length > 0) {
+        let html = '<div class="activity-feed">';
+        activities.forEach(activity => {
+          let iconClass = 'bi-check-circle text-secondary';
+          switch(activity.action_type) {
+            case 'create': iconClass = 'bi-plus-circle text-success'; break;
+            case 'update': iconClass = 'bi-pencil text-primary'; break;
+            case 'delete': iconClass = 'bi-trash text-danger'; break;
+            case 'publish': iconClass = 'bi-cloud-upload text-info'; break;
+          }
+          
+          html += `
+            <div class="activity-item">
+              <div class="activity-icon">
+                <i class="bi ${iconClass}"></i>
+              </div>
+              <div class="activity-content">
+                <div class="activity-title">
+                  <strong>${activity.user_name}</strong> ${activity.action_type}d ${activity.entity_type.toLowerCase()}
+                  ${activity.entity_id ? `<a href="/${activity.entity_type.toLowerCase()}/${activity.entity_id}">${activity.details ? activity.details.substring(0, 30) : '#' + activity.entity_id.substring(0, 8)}</a>` : ''}
+                </div>
+                <div class="activity-time">
+                  ${new Date(activity.created_at).toLocaleDateString()}
+                </div>
+              </div>
+            </div>
+          `;
+        });
+        html += '</div>';
+        container.innerHTML = html;
+      } else {
+        container.innerHTML = '<p>No activity found for the selected date range.</p>';
+      }
+    }
+    
+    // Update team performance section
+    function updateTeamPerformance(employeeStats) {
+      const container = document.getElementById('teamPerformanceContainer');
+      if (!container || !employeeStats) return;
+      
+      let html = `
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Recipes</th>
+                <th>Keywords</th>
+                <th>Published</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+      
+      employeeStats.forEach(employee => {
+        let statusBadge = 'bg-secondary">Getting Started';
+        if (employee.totalContent > 20) statusBadge = 'bg-success">Excellent';
+        else if (employee.totalContent > 10) statusBadge = 'bg-primary">Good';
+        else if (employee.totalContent > 5) statusBadge = 'bg-warning">Average';
+        
+        html += `
+          <tr>
+            <td>${employee.name}</td>
+            <td>${employee.recipeCount}</td>
+            <td>
+              <span class="badge bg-success">${employee.keywordCounts.processed}</span>
+              <span class="badge bg-warning">${employee.keywordCounts.pending}</span>
+              <span class="badge bg-danger">${employee.keywordCounts.failed}</span>
+            </td>
+            <td>${employee.wpPostCount}</td>
+            <td><span class="badge ${statusBadge}</span></td>
+          </tr>
+        `;
+      });
+      
+      html += '</tbody></table></div>';
+      container.innerHTML = html;
+    }
+    
+    // Content Filter JavaScript (existing functionality)
+    const employeeFilter = document.getElementById('employeeFilter');
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const filteredContent = document.getElementById('filteredContent');
+    
+    if (employeeFilter && filterBtns.length > 0 && filteredContent) {
+      let activeEmployee = '';
+      let activeType = 'all';
+      
+      // Filter change event
+      employeeFilter.addEventListener('change', function() {
+        activeEmployee = this.value;
+        loadFilteredContent();
+      });
+      
+      // Type filter buttons
+      filterBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+          // Reset active state
+          filterBtns.forEach(b => b.classList.remove('active', 'btn-primary', 'btn-success', 'btn-info', 'btn-warning'));
+          
+          // Set active state for clicked button
+          this.classList.add('active');
+          
+          // Add appropriate color based on type
+          const type = this.getAttribute('data-type');
+          if (type === 'all') this.classList.add('btn-primary');
+          else if (type === 'recipe') this.classList.add('btn-success');
+          else if (type === 'keyword') this.classList.add('btn-info');
+          else if (type === 'blog') this.classList.add('btn-warning');
+          
+          activeType = type;
+          loadFilteredContent();
+        });
+      });
+      
+      // Set initial active state
+      filterBtns[0].classList.add('active', 'btn-primary');
+      
+      // Load filtered content function
+      function loadFilteredContent() {
+        filteredContent.innerHTML = '<div class="text-center"><div class="spinner-border" role="status"></div><p>Loading content...</p></div>';
+        
+        fetch(`/api/filtered-content?type=${activeType}&employeeId=${activeEmployee}`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.success && data.content && data.content.length > 0) {
+              let html = '';
+              
+              data.content.forEach(item => {
+                let itemHtml = `
+                  <div class="content-card ${item.owner_role === 'admin' ? 'admin-content' : 'employee-content'}">
+                    <div class="content-badge ${item.owner_role === 'admin' ? 'admin-badge' : 'employee-badge'}">
+                      ${item.owner_role}
+                    </div>
+                    <div class="card-body">
+                      <h5 class="card-title">
+                        <a href="${item.type === 'recipe' ? '/recipe/' + item.id : '#'}">
+                          ${item.title || item.keyword || 'Untitled'}
+                        </a>
+                      </h5>
+                      <div class="d-flex justify-content-between">
+                        <span class="badge ${item.type === 'recipe' ? 'bg-success' : item.type === 'keyword' ? 'bg-info' : 'bg-warning'}">
+                          ${item.type}
+                        </span>
+                        <small class="text-muted">${item.created_at}</small>
+                      </div>
+                      <div class="mt-2">
+                        <small>Created by: ${item.owner_name}</small>
+                      </div>
+                    </div>
+                  </div>
+                `;
+                
+                html += itemHtml;
+              });
+              
+              filteredContent.innerHTML = html;
+            } else {
+              filteredContent.innerHTML = '<p class="text-center">No content found with the selected filters.</p>';
+            }
+          })
+          .catch(error => {
+            console.error('Error loading filtered content:', error);
+            filteredContent.innerHTML = '<p class="text-center text-danger">Error loading content. Please try again.</p>';
+          });
+      }
+      
+      // Initial load
+      loadFilteredContent();
+    }
+  });
+
+  // Employee selection functionality (Admin only)
+  <% if (isAdmin) { %>
+  document.addEventListener('DOMContentLoaded', function() {
+    const employeeSelect = document.getElementById('employeeSelect');
+    const selectedEmployeeText = document.getElementById('selectedEmployeeText');
+    const employeeDetailsSection = document.getElementById('employeeDetailsSection');
+    const employeeDetailsName = document.getElementById('employeeDetailsName');
+    // Chart containers are now handled in chart functions
+
+    // Local formatDateForInput function for employee section
+    function formatDateForInput(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    // Load employees on page load
+    loadEmployees();
+    
+    // Ensure date inputs have today's date if no filter is set
+    const startDateInput = document.getElementById('startDate');
+    const endDateInput = document.getElementById('endDate');
+    if (!startDateInput.value && !endDateInput.value) {
+      // Set today's date as default
+      const today = new Date();
+      const todayString = formatDateForInput(today);
+      startDateInput.value = todayString;
+      endDateInput.value = todayString;
+      console.log('🗓️ Set default today date for employee details:', todayString);
+    }
+
+    // Handle employee selection change
+    employeeSelect.addEventListener('change', function() {
+      const selectedEmployeeId = this.value;
+      
+      if (selectedEmployeeId) {
+        // Show employee details section
+        employeeDetailsSection.style.display = 'block';
+        const selectedOption = this.options[this.selectedIndex];
+        const employeeName = selectedOption.text;
+        
+        employeeDetailsName.textContent = employeeName;
+        selectedEmployeeText.textContent = `Showing data for: ${employeeName}`;
+        
+        // Load employee details
+        loadEmployeeDetails(selectedEmployeeId);
+      } else {
+        // Hide employee details section
+        employeeDetailsSection.style.display = 'none';
+        selectedEmployeeText.textContent = 'Showing overview for all employees';
+      }
+    });
+
+    // Function to load employees list
+    function loadEmployees() {
+      console.log('📊 Loading employees...');
+      fetch('/api/dashboard/employees')
+        .then(response => {
+          console.log('📊 Employee API response status:', response.status);
+          return response.json();
+        })
+        .then(data => {
+          console.log('📊 Employee API data:', data);
+          if (data.success) {
+            console.log(`📊 Found ${data.employees.length} employees`);
+            // Clear existing options (except the first one)
+            employeeSelect.innerHTML = '<option value="">All Employees (Overview)</option>';
+            
+            // Add employee options
+            data.employees.forEach(emp => {
+              const option = document.createElement('option');
+              option.value = emp.id;
+              option.textContent = emp.name;
+              employeeSelect.appendChild(option);
+              console.log(`📊 Added employee: ${emp.name} (ID: ${emp.id})`);
+            });
+          } else {
+            console.error('📊 Employee API returned error:', data.error || data.message);
+          }
+        })
+        .catch(error => {
+          console.error('📊 Error loading employees:', error);
+        });
+    }
+
+    // Function to load employee details (reads from inputs)
+    function loadEmployeeDetails(employeeId) {
+      // Get current date filter
+      const startDateInput = document.getElementById('startDate');
+      const endDateInput = document.getElementById('endDate');
+      const startDate = startDateInput.value;
+      const endDate = endDateInput.value;
+      
+      loadEmployeeDetailsWithDates(employeeId, startDate, endDate);
+    }
+
+    // Function to load employee details with specific dates
+    // Global chart variables
+    let employeeRecipesChart = null;
+    let employeePostsChart = null;
+    let employeePerformanceChart = null;
+
+    function loadEmployeeDetailsWithDates(employeeId, startDate, endDate) {
+      // Reset stats
+      document.getElementById('employeeTotalRecipes').textContent = '...';
+      document.getElementById('employeeTotalPosts').textContent = '...';
+      document.getElementById('employeeActiveWebsites').textContent = '...';
+      document.getElementById('employeeAvgDaily').textContent = '...';
+      
+      console.log('🔍 Employee details loading with specific dates:', {
+        startDate: startDate,
+        endDate: endDate,
+        employeeId: employeeId
+      });
+
+      // Build query parameters
+      const params = new URLSearchParams();
+      if (startDate) params.append('startDate', startDate);
+      if (endDate) params.append('endDate', endDate);
+
+      fetch(`/api/dashboard/employee-details/${employeeId}?${params.toString()}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            displayEmployeeCharts(data.recipes, data.wordpressPosts, startDate, endDate);
+          } else {
+            displayEmployeeError('Error loading employee data');
+          }
+        })
+        .catch(error => {
+          console.error('Error loading employee details:', error);
+          displayEmployeeError('Error loading employee data');
+        });
+    }
+
+    // Function to display employee charts
+    function displayEmployeeCharts(recipes, posts, startDate, endDate) {
+      // Aggregate data by website
+      const websiteStats = {};
+      
+      // Process recipes
+      recipes.forEach(recipe => {
+        const website = recipe.website_name || recipe.website || 'Unknown Website';
+        if (!websiteStats[website]) {
+          websiteStats[website] = { recipes: 0, posts: 0 };
+        }
+        websiteStats[website].recipes++;
+      });
+      
+      // Process posts
+      posts.forEach(post => {
+        const website = post.website_name || post.website || 'Unknown Website';
+        if (!websiteStats[website]) {
+          websiteStats[website] = { recipes: 0, posts: 0 };
+        }
+        websiteStats[website].posts++;
+      });
+
+      // Calculate totals from aggregated data to ensure consistency
+      const websites = Object.keys(websiteStats);
+      const recipeData = websites.map(w => websiteStats[w].recipes);
+      const postData = websites.map(w => websiteStats[w].posts);
+      
+      // Calculate totals from chart data to ensure they match
+      const totalRecipesFromChart = recipeData.reduce((sum, count) => sum + count, 0);
+      const totalPostsFromChart = postData.reduce((sum, count) => sum + count, 0);
+      
+      // Debug logging to identify discrepancies
+      console.log('📊 Data consistency check:', {
+        recipesFromArray: recipes.length,
+        recipesFromChart: totalRecipesFromChart,
+        postsFromArray: posts.length,
+        postsFromChart: totalPostsFromChart,
+        websiteStats: websiteStats,
+        recipes: recipes.map(r => ({ title: r.title || r.recipe_idea, website: r.website_name || r.website })),
+        posts: posts.map(p => ({ title: p.title, website: p.website_name || p.website }))
+      });
+
+      // Use chart data for totals to ensure consistency
+      const totalRecipes = totalRecipesFromChart;
+      const totalPosts = totalPostsFromChart;
+      const activeWebsites = websites.length;
+      const daysDiff = calculateDaysDifference(startDate, endDate);
+      const avgDaily = daysDiff > 0 ? ((totalRecipes + totalPosts) / daysDiff).toFixed(1) : (totalRecipes + totalPosts);
+
+      document.getElementById('employeeTotalRecipes').textContent = totalRecipes;
+      document.getElementById('employeeTotalPosts').textContent = totalPosts;
+      document.getElementById('employeeActiveWebsites').textContent = activeWebsites;
+      document.getElementById('employeeAvgDaily').textContent = avgDaily;
+
+      // Create charts
+      createEmployeeRecipesChart(websites, recipeData);
+      createEmployeePostsChart(websites, postData);
+      createEmployeePerformanceChart(websites, recipeData, postData);
+    }
+
+    function calculateDaysDifference(startDate, endDate) {
+      if (!startDate || !endDate) return 1;
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      const diffTime = Math.abs(end - start);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return Math.max(diffDays, 1);
+    }
+
+    function createEmployeeRecipesChart(websites, data) {
+      // Destroy existing chart
+      if (employeeRecipesChart) {
+        employeeRecipesChart.destroy();
+      }
+
+      const ctx = document.getElementById('employeeRecipesChart').getContext('2d');
+      
+      if (data.every(d => d === 0)) {
+        document.getElementById('employeeRecipesEmpty').style.display = 'block';
+        ctx.canvas.style.display = 'none';
+        return;
+      }
+
+      document.getElementById('employeeRecipesEmpty').style.display = 'none';
+      ctx.canvas.style.display = 'block';
+
+      employeeRecipesChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: websites,
+          datasets: [{
+            data: data,
+            backgroundColor: [
+              '#28a745', '#007bff', '#ffc107', '#dc3545', '#6f42c1',
+              '#20c997', '#fd7e14', '#e83e8c', '#6610f2', '#17a2b8'
+            ],
+            borderWidth: 2,
+            borderColor: '#2c2c2c'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                padding: 15,
+                usePointStyle: true,
+                color: '#ffffff'
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function createEmployeePostsChart(websites, data) {
+      // Destroy existing chart
+      if (employeePostsChart) {
+        employeePostsChart.destroy();
+      }
+
+      const ctx = document.getElementById('employeePostsChart').getContext('2d');
+      
+      if (data.every(d => d === 0)) {
+        document.getElementById('employeePostsEmpty').style.display = 'block';
+        ctx.canvas.style.display = 'none';
+        return;
+      }
+
+      document.getElementById('employeePostsEmpty').style.display = 'none';
+      ctx.canvas.style.display = 'block';
+
+      employeePostsChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: websites,
+          datasets: [{
+            data: data,
+            backgroundColor: [
+              '#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1',
+              '#20c997', '#fd7e14', '#e83e8c', '#6610f2', '#17a2b8'
+            ],
+            borderWidth: 2,
+            borderColor: '#2c2c2c'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                padding: 15,
+                usePointStyle: true,
+                color: '#ffffff'
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function createEmployeePerformanceChart(websites, recipeData, postData) {
+      // Destroy existing chart
+      if (employeePerformanceChart) {
+        employeePerformanceChart.destroy();
+      }
+
+      const ctx = document.getElementById('employeePerformanceChart').getContext('2d');
+
+      employeePerformanceChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: websites,
+          datasets: [
+            {
+              label: 'Recipes Generated',
+              data: recipeData,
+              backgroundColor: '#28a745',
+              borderColor: '#1e7e34',
+              borderWidth: 1
+            },
+            {
+              label: 'WordPress Posts',
+              data: postData,
+              backgroundColor: '#007bff',
+              borderColor: '#0056b3',
+              borderWidth: 1
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                color: '#ffffff',
+                stepSize: 1
+              },
+              grid: {
+                color: '#444444'
+              }
+            },
+            x: {
+              ticks: {
+                color: '#ffffff'
+              },
+              grid: {
+                color: '#444444'
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              labels: {
+                color: '#ffffff'
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function displayEmployeeError(message) {
+      document.getElementById('employeeTotalRecipes').textContent = '0';
+      document.getElementById('employeeTotalPosts').textContent = '0';
+      document.getElementById('employeeActiveWebsites').textContent = '0';
+      document.getElementById('employeeAvgDaily').textContent = '0';
+      
+      // Hide charts and show error
+      document.getElementById('employeeRecipesEmpty').innerHTML = `<i class="bi bi-exclamation-triangle"></i><p>${message}</p>`;
+      document.getElementById('employeeRecipesEmpty').style.display = 'block';
+      document.getElementById('employeePostsEmpty').innerHTML = `<i class="bi bi-exclamation-triangle"></i><p>${message}</p>`;
+      document.getElementById('employeePostsEmpty').style.display = 'block';
+      
+      const recipesCtx = document.getElementById('employeeRecipesChart');
+      const postsCtx = document.getElementById('employeePostsChart');
+      if (recipesCtx) recipesCtx.style.display = 'none';
+      if (postsCtx) postsCtx.style.display = 'none';
+    }
+    // Old function removed - now using chart display
+
+    // Update employee details when date filter changes
+    window.addEventListener('dateFilterChanged', function(event) {
+      const selectedEmployeeId = employeeSelect.value;
+      if (selectedEmployeeId && event.detail) {
+        console.log('🔄 Date filter changed, reloading employee details with dates:', event.detail);
+        // Use dates from the event instead of reading from inputs
+        loadEmployeeDetailsWithDates(selectedEmployeeId, event.detail.startDate, event.detail.endDate);
+      }
+    });
+  });
+  <% } %>
+</script>
+
+<style>
+  /* Existing styles plus new date filter styles */
+  .date-filter-btn.active {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    color: white;
+  }
+  
+  .date-filter-btn:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+    color: white;
+  }
+  
+  /* Activity Feed Styling */
+  .activity-feed {
+    margin: 0;
+    padding: 0;
+  }
+  
+  .activity-item {
+    display: flex;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 15px;
+  }
+  
+  .activity-icon {
+    margin-right: 15px;
+    font-size: 1.5rem;
+    min-width: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .activity-content {
+    flex: 1;
+  }
+  
+  .activity-title {
+    margin-bottom: 5px;
+  }
+  
+  .activity-time {
+    font-size: 0.8rem;
+    color: #6c757d;
+  }
+  
+  /* Employee Stats Cards */
+  .stat-card {
+    background: linear-gradient(135deg, var(--dark-card) 0%, #2a2a2a 100%);
+    border: 1px solid #444;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    transition: all 0.3s ease;
+    height: 100%;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  }
+
+  .stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.4);
+  }
+
+  .stat-card.recipes {
+    border-left: 4px solid #28a745;
+  }
+
+  .stat-card.posts {
+    border-left: 4px solid #007bff;
+  }
+
+  .stat-card.websites {
+    border-left: 4px solid #ffc107;
+  }
+
+  .stat-card.productivity {
+    border-left: 4px solid #20c997;
+  }
+
+  .stat-icon {
+    font-size: 2.5rem;
+    margin-right: 15px;
+    opacity: 0.8;
+  }
+
+  .stat-card.recipes .stat-icon {
+    color: #28a745;
+  }
+
+  .stat-card.posts .stat-icon {
+    color: #007bff;
+  }
+
+  .stat-card.websites .stat-icon {
+    color: #ffc107;
+  }
+
+  .stat-card.productivity .stat-icon {
+    color: #20c997;
+  }
+
+  .stat-content {
+    flex: 1;
+  }
+
+  .stat-number {
+    font-size: 2.2rem;
+    font-weight: bold;
+    color: #ffffff;
+    margin-bottom: 5px;
+  }
+
+  .stat-label {
+    font-size: 0.9rem;
+    color: #b0b0b0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* Chart Containers */
+  .chart-container {
+    background: var(--dark-card);
+    border: 1px solid #444;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  }
+
+  .chart-container h4 {
+    color: #ffffff;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    font-size: 1.1rem;
+  }
+
+  .chart-container h4 i {
+    margin-right: 10px;
+    color: var(--accent-teal);
+  }
+
+  .chart-container canvas {
+    max-height: 300px;
+  }
+
+  /* Chart containers for performance overview */
+  .chart-container canvas#employeePerformanceChart {
+    max-height: 400px;
+  }
+
+  /* Empty state styling */
+  .text-muted i {
+    font-size: 2rem;
+    margin-bottom: 10px;
+    display: block;
+  }
+
+  /* Enhanced Stats Styling */
+  .dashboard-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 20px;
+  }
+  
+  .stat-card {
+    flex: 1;
+    min-width: 200px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    padding: 20px;
+    display: flex;
+    align-items: center;
+  }
+  
+  .stat-icon {
+    font-size: 2rem;
+    margin-right: 15px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+  }
+  
+  .icon-blue {
+    background-color: #4e73df;
+  }
+  
+  .icon-green {
+    background-color: #1cc88a;
+  }
+  
+  .icon-yellow {
+    background-color: #f6c23e;
+  }
+  
+  .icon-red {
+    background-color: #e74a3b;
+  }
+  
+  .icon-purple {
+    background-color: #9c27b0;
+  }
+  
+  .stat-info h3 {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 700;
+  }
+  
+  .stat-info p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #858796;
+  }
+  
+  /* Section Card Styling */
+  .section-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    overflow: hidden;
+  }
+  
+  .section-header {
+    background: #f8f9fc;
+    padding: 15px 20px;
+    border-bottom: 1px solid #e3e6f0;
+  }
+  
+  .section-header h2 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #4e73df;
+  }
+  
+  .section-body {
+    padding: 20px;
+  }
+  
+  /* Config Item Styling */
+  .config-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .config-label {
+    font-weight: 600;
+    color: #555;
+  }
+  
+  .config-value {
+    text-align: right;
+  }
+  
+  /* Employee Table Styling */
+  .table > :not(caption) > * > * {
+    padding: 0.5rem 0.75rem;
+  }
+  
+  /* Content Filter Styling */
+  .content-card {
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    margin-bottom: 15px;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .content-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    color: white;
+  }
+  
+  .admin-badge {
+    background-color: #4e73df;
+  }
+  
+  .employee-badge {
+    background-color: #1cc88a;
+  }
+  
+  .admin-content {
+    border-left: 3px solid #4e73df;
+  }
+  
+  .employee-content {
+    border-left: 3px solid #1cc88a;
+  }
+</style>

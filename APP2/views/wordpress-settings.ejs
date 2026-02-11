@@ -1,0 +1,211 @@
+<!-- Add this near the top of your settings pages -->
+<% if (locals.websites && locals.websites.length > 0 && locals.currentWebsiteId) { %>
+  <% const currentWebsite = locals.websites.find(w => w.id === locals.currentWebsiteId); %>
+  <div class="alert alert-info">
+    <i class="fas fa-info-circle"></i> 
+    You are editing settings for website: <strong><%= currentWebsite ? currentWebsite.name : 'Unknown' %></strong>
+    <div class="mt-2">
+      Use the website switcher in the navbar to edit settings for a different website.
+    </div>
+  </div>
+<% } %>
+
+<!-- views/wordpress-settings.ejs -->
+<div class="row">
+  <div class="col-md-8 mx-auto">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title">WordPress Integration Settings</h5>
+      </div>
+      <div class="card-body">
+        <% if (typeof errorMessage !== 'undefined' && errorMessage) { %>
+          <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <%= errorMessage %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        <% } %>
+        
+        <% if (typeof successMessage !== 'undefined' && successMessage) { %>
+          <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <%= successMessage %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        <% } %>
+
+        <form action="/wordpress-settings" method="post">
+          <div class="mb-3">
+            <label for="siteUrl" class="form-label">WordPress Site URL</label>
+            <input type="url" class="form-control" id="siteUrl" name="siteUrl" value="<%= settings && settings.site_url ? settings.site_url : '' %>" placeholder="https://yourblog.com" required>
+            <div class="form-text">Enter the full URL to your WordPress site (e.g., https://yourblog.com)</div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="username" class="form-label">Username</label>
+            <input type="text" class="form-control" id="username" name="username" value="<%= settings && settings.username ? settings.username : '' %>" required>
+            <div class="form-text">Enter your WordPress username</div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="password" class="form-label">Password or Application Password</label>
+            <input type="password" class="form-control" id="password" name="password" value="<%= settings && settings.password ? settings.password : '' %>" required>
+            <div class="form-text">For better security, it's recommended to use an <a href="https://wordpress.org/documentation/article/application-passwords/" target="_blank">Application Password</a></div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="defaultStatus" class="form-label">Default Publication Status</label>
+            <select class="form-select" id="defaultStatus" name="defaultStatus">
+              <option value="draft" <%= (settings && settings.default_status === 'draft' || !settings || !settings.default_status) ? 'selected' : '' %>>Draft</option>
+              <option value="publish" <%= (settings && settings.default_status === 'publish') ? 'selected' : '' %>>Published</option>
+              <option value="pending" <%= (settings && settings.default_status === 'pending') ? 'selected' : '' %>>Pending Review</option>
+              <option value="private" <%= (settings && settings.default_status === 'private') ? 'selected' : '' %>>Private</option>
+            </select>
+            <div class="form-text">Choose the default status for new posts</div>
+          </div>
+          
+          <!-- Pinterest Image Integration Option -->
+          <div class="mb-3">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="includePinterestImages" name="includePinterestImages" <%= (settings && (settings.include_pinterest_images === 1 || settings.include_pinterest_images === true)) ? 'checked' : '' %>>
+              <label class="form-check-label" for="includePinterestImages">
+                <i class="fab fa-pinterest" style="color: #E60023;"></i> Include Pinterest Images in Articles
+              </label>
+            </div>
+            <div class="form-text">
+              <small>
+                When enabled, generated Pinterest images will be automatically added to WordPress articles as gallery images.
+                <br><strong>Note:</strong> This will add Pinterest images to the article content, in addition to the featured image.
+              </small>
+            </div>
+          </div>
+          
+          <div class="d-flex justify-content-between align-items-center">
+            <button type="submit" class="btn btn-primary">Save Settings</button>
+            <div>
+              <button type="button" id="fetchCategoriesBtn" class="btn btn-outline-info me-2">
+                <i class="fas fa-folder-open me-1"></i>Fetch Categories
+              </button>
+              <button type="button" id="testConnectionBtn" class="btn btn-outline-secondary">Test Connection</button>
+            </div>
+          </div>
+        </form>
+
+        <!-- Categories Display Section -->
+        <div id="categoriesSection" class="mt-4" style="display: none;">
+          <hr>
+          <h6 class="mb-3"><i class="fas fa-folder-tree me-2"></i>WordPress Categories</h6>
+          <div id="categoriesList" class="list-group"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const testConnectionBtn = document.getElementById('testConnectionBtn');
+  const fetchCategoriesBtn = document.getElementById('fetchCategoriesBtn');
+  
+  testConnectionBtn.addEventListener('click', async function() {
+    const siteUrl = document.getElementById('siteUrl').value.trim();
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+    
+    if (!siteUrl || !username || !password) {
+      alert('Please fill in all fields before testing the connection');
+      return;
+    }
+    
+    // Update button state
+    testConnectionBtn.disabled = true;
+    testConnectionBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Testing...';
+    
+    try {
+      const response = await fetch('/api/wordpress/test-connection', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ siteUrl, username, password })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        alert(`Connection successful!\nConnected to: ${data.data.name}\n${data.data.description}`);
+      } else {
+        alert(`Connection failed: ${data.message}`);
+      }
+    } catch (error) {
+      console.error('Error testing connection:', error);
+      alert('Connection test failed. Please check your console for details.');
+    } finally {
+      // Reset button state
+      testConnectionBtn.disabled = false;
+      testConnectionBtn.innerHTML = 'Test Connection';
+    }
+  });
+
+  // Fetch Categories button handler
+  fetchCategoriesBtn.addEventListener('click', async function() {
+    // Disable button and show loading
+    fetchCategoriesBtn.disabled = true;
+    fetchCategoriesBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Fetching...';
+
+    try {
+      const response = await fetch('/api/wordpress/categories');
+      const data = await response.json();
+
+      if (data.success && data.categories) {
+        // Show categories section
+        document.getElementById('categoriesSection').style.display = 'block';
+
+        // Display categories
+        const categoriesList = document.getElementById('categoriesList');
+        categoriesList.innerHTML = '';
+
+        if (data.categories.length === 0) {
+          categoriesList.innerHTML = '<div class="alert alert-info">No categories found in your WordPress site.</div>';
+        } else {
+          data.categories.forEach(category => {
+            const item = document.createElement('div');
+            item.className = 'list-group-item d-flex justify-content-between align-items-center';
+            item.innerHTML = `
+              <div>
+                <i class="fas fa-folder me-2 text-primary"></i>
+                <strong>${category.name}</strong>
+                <small class="text-muted ms-2">(${category.slug})</small>
+              </div>
+              <span class="badge bg-secondary rounded-pill">${category.count} posts</span>
+            `;
+            categoriesList.appendChild(item);
+          });
+
+          // Show success message
+          const alertDiv = document.createElement('div');
+          alertDiv.className = 'alert alert-success alert-dismissible fade show mt-3';
+          alertDiv.innerHTML = `
+            <i class="fas fa-check-circle me-2"></i>
+            Successfully fetched ${data.categories.length} categories from WordPress!
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          `;
+          document.querySelector('.card-body').prepend(alertDiv);
+
+          // Store categories in localStorage for bulk publish
+          localStorage.setItem('wordpressCategories', JSON.stringify(data.categories));
+        }
+      } else {
+        alert(data.message || 'Failed to fetch categories');
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      alert('Failed to fetch categories. Please check your WordPress settings and try again.');
+    } finally {
+      // Reset button
+      fetchCategoriesBtn.disabled = false;
+      fetchCategoriesBtn.innerHTML = '<i class="fas fa-folder-open me-1"></i>Fetch Categories';
+    }
+  });
+});
+
+</script>

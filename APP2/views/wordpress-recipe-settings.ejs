@@ -1,0 +1,126 @@
+<!-- views/wordpress-settings.ejs -->
+<!-- Website switcher notification at the top -->
+<% if (locals.websites && locals.websites.length > 0 && locals.currentWebsiteId) { %>
+  <% const currentWebsite = locals.websites.find(w => w.id === locals.currentWebsiteId); %>
+  <div class="alert alert-info">
+    <i class="fas fa-info-circle"></i> 
+    You are editing settings for website: <strong><%= currentWebsite ? currentWebsite.name : 'Unknown' %></strong>
+    <div class="mt-2">
+      Use the website switcher in the navbar to edit settings for a different website.
+    </div>
+  </div>
+<% } %>
+
+<div class="row">
+  <div class="col-md-8 mx-auto">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title">WordPress Integration Settings</h5>
+      </div>
+      <div class="card-body">
+        <!-- Error message display -->
+        <% if (typeof errorMessage !== 'undefined' && errorMessage) { %>
+          <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <%= errorMessage %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        <% } %>
+        
+        <!-- Success message display - combined from both versions -->
+        <% if ((typeof successMessage !== 'undefined' && successMessage) || (settings && settings.site_url)) { %>
+          <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <%= successMessage || 'WordPress settings saved successfully!' %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        <% } %>
+
+        <form action="/wordpress-settings" method="post">
+          <div class="mb-3">
+            <label for="siteUrl" class="form-label">WordPress Site URL</label>
+            <input type="url" class="form-control" id="siteUrl" name="siteUrl" 
+                   value="<%= settings && settings.site_url || '' %>" 
+                   placeholder="https://yourblog.com" required>
+            <div class="form-text">Enter the full URL to your WordPress site (e.g., https://yourblog.com)</div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="username" class="form-label">Username</label>
+            <input type="text" class="form-control" id="username" name="username" 
+                   value="<%= settings && settings.username || '' %>" required>
+            <div class="form-text">Enter your WordPress username</div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="password" class="form-label">Password or Application Password</label>
+            <input type="password" class="form-control" id="password" name="password" 
+                   value="<%= settings && settings.password ? settings.password : '' %>" required>
+            <div class="form-text">For better security, it's recommended to use an <a href="https://wordpress.org/documentation/article/application-passwords/" target="_blank">Application Password</a></div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="defaultStatus" class="form-label">Default Publication Status</label>
+            <select class="form-select" id="defaultStatus" name="defaultStatus">
+              <option value="draft" <%= (settings && settings.default_status === 'draft' || !settings || !settings.default_status) ? 'selected' : '' %>>Draft</option>
+              <option value="publish" <%= (settings && settings.default_status === 'publish') ? 'selected' : '' %>>Published</option>
+              <option value="pending" <%= (settings && settings.default_status === 'pending') ? 'selected' : '' %>>Pending Review</option>
+              <option value="private" <%= (settings && settings.default_status === 'private') ? 'selected' : '' %>>Private</option>
+            </select>
+            <div class="form-text">Choose the default status for new posts</div>
+          </div>
+          
+          <div class="d-flex justify-content-between">
+            <button type="submit" class="btn btn-primary">Save Settings</button>
+            <button type="button" id="testConnectionBtn" class="btn btn-outline-secondary">Test Connection</button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const testConnectionBtn = document.getElementById('testConnectionBtn');
+  
+  testConnectionBtn.addEventListener('click', async function() {
+    const siteUrl = document.getElementById('siteUrl').value.trim();
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+    
+    if (!siteUrl || !username || !password) {
+      alert('Please fill in all fields before testing the connection');
+      return;
+    }
+    
+    // Update button state
+    testConnectionBtn.disabled = true;
+    testConnectionBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Testing...';
+    
+    try {
+      const response = await fetch('/api/wordpress/test-connection', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ siteUrl, username, password })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        alert(`Connection successful!\nConnected to: ${data.data.name}\n${data.data.description}`);
+      } else {
+        alert(`Connection failed: ${data.message}`);
+      }
+    } catch (error) {
+      console.error('Error testing connection:', error);
+      alert('Connection test failed. Please check your console for details.');
+    } finally {
+      // Reset button state
+      testConnectionBtn.disabled = false;
+      testConnectionBtn.innerHTML = 'Test Connection';
+    }
+  });
+});
+</script>
